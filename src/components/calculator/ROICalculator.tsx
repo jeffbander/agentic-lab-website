@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, TrendingUp, DollarSign, Clock, Users, CheckCircle } from 'lucide-react';
+import { trackROICalculation, trackCTAClick } from '../../utils/analytics';
 
 type ProjectSize = 'small' | 'medium' | 'large' | 'enterprise';
 
@@ -59,6 +60,11 @@ export function ROICalculator() {
   const timeSaved = data.traditionalWeeks - agenticWeeks;
   const percentSavings = ((totalSavings / traditionalCost) * 100).toFixed(1);
   const roi = ((totalSavings / agenticCost) * 100).toFixed(0);
+
+  // Track ROI calculations
+  useEffect(() => {
+    trackROICalculation(projectSize, aiEfficiency, totalSavings);
+  }, [projectSize, aiEfficiency, totalSavings]);
 
   return (
     <section className="py-20 bg-gradient-to-b from-white to-gray-50">
@@ -300,16 +306,21 @@ export function ROICalculator() {
           viewport={{ once: true }}
           className="mt-12 text-center"
         >
-          <p className="text-gray-600 mb-6">
-            Ready to unlock these savings for your healthcare organization?
+          <p className="text-lg font-semibold text-gray-900 mb-2">
+            Save ${totalSavings.toLocaleString()} on Your Next Healthcare Project
           </p>
-          <motion.button
+          <p className="text-gray-600 mb-6">
+            Get a custom implementation plan and cost analysis for your organization
+          </p>
+          <motion.a
+            href="#contact"
+            onClick={() => trackCTAClick('ROI Calculator', 'Get Your Custom ROI Analysis')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 bg-sinai-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-sinai-blue-700 transition-colors shadow-lg"
+            className="inline-block px-8 py-4 bg-sinai-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-sinai-blue-700 transition-colors shadow-lg"
           >
-            Schedule a Consultation
-          </motion.button>
+            Get Your Custom ROI Analysis →
+          </motion.a>
         </motion.div>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ExternalLink, Github, Clock, DollarSign } from 'lucide-react';
 import type { Project } from '../../data/projects';
+import { trackCTAClick, trackGitHubClick } from '../../utils/analytics';
 
 interface ProjectCardProps {
   project: Project;
@@ -85,22 +86,26 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
 
           {/* Action Buttons */}
           <div className="flex space-x-3">
-            <motion.button
+            <motion.a
+              href="#contact"
+              onClick={() => trackCTAClick('Project Card', `Request Details - ${project.title}`)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-sinai-blue-600 text-white rounded-lg font-medium hover:bg-sinai-blue-700 transition-colors"
             >
-              <span>Learn More</span>
+              <span>Request Implementation Details →</span>
               <ExternalLink className="w-4 h-4" />
-            </motion.button>
+            </motion.a>
             {project.githubUrl && (
               <motion.a
                 href={project.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackGitHubClick(project.id)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 border-2 border-gray-300 rounded-lg hover:border-sinai-blue-600 hover:text-sinai-blue-600 transition-colors"
+                aria-label="View source code on GitHub"
               >
                 <Github className="w-5 h-5" />
               </motion.a>
