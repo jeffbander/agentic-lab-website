@@ -5,9 +5,13 @@
  * Sets up Replicate API (works with any cloud provider)
  */
 
-const readline = require('readline');
-const fs = require('fs');
-const path = require('path');
+import readline from 'readline';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -51,7 +55,7 @@ async function main() {
     console.log('3. Confirm your email');
     console.log('4. You get FREE credits to start!\n');
 
-    const ready = await question('Press Enter when you\'ve created your account...');
+    await question('Press Enter when you\'ve created your account...');
   }
 
   // Step 2: Get API token
@@ -63,7 +67,7 @@ async function main() {
 
   const apiToken = await question('Paste your Replicate API token here: ');
 
-  if (!apiToken || !apiToken.startsWith('r8_')) {
+  if (!apiToken || !apiToken.trim().startsWith('r8_')) {
     console.log('\n❌ Error: That doesn\'t look like a valid Replicate token.');
     console.log('Tokens should start with "r8_"');
     console.log('Please run this script again.\n');
@@ -84,7 +88,7 @@ async function main() {
   if (envChoice === '1' || envChoice === '3') {
     const envPath = path.join(process.cwd(), '.env');
     const envContent = `# Replicate API Configuration
-REPLICATE_API_TOKEN=${apiToken}
+REPLICATE_API_TOKEN=${apiToken.trim()}
 
 # Google Analytics (optional)
 VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
@@ -135,7 +139,7 @@ VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
   try {
     const testResponse = await fetch('https://api.replicate.com/v1/models', {
       headers: {
-        'Authorization': `Token ${apiToken}`
+        'Authorization': `Token ${apiToken.trim()}`
       }
     });
 
