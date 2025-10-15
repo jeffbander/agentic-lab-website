@@ -16,6 +16,7 @@ const VoiceBiomarkerFlow = lazy(() => import('./components/biomarkers/VoiceBioma
 const ClinicalImpactDashboard = lazy(() => import('./components/charts/ClinicalImpactDashboard').then(m => ({ default: m.ClinicalImpactDashboard })));
 const Impact = lazy(() => import('./components/sections/Impact').then(m => ({ default: m.Impact })));
 const ROICalculator = lazy(() => import('./components/calculator/ROICalculator').then(m => ({ default: m.ROICalculator })));
+const VideoGenerator = lazy(() => import('./components/sections/VideoGenerator').then(m => ({ default: m.VideoGenerator })));
 const Contact = lazy(() => import('./components/sections/Contact').then(m => ({ default: m.Contact })));
 const Footer = lazy(() => import('./components/Footer').then(m => ({ default: m.Footer })));
 
@@ -79,6 +80,11 @@ function App() {
           <Suspense fallback={<Loading message="Loading ROI calculator..." />}>
             <ErrorBoundary fallback={<SectionErrorFallback section="ROI Calculator" />}>
               <ROICalculator />
+            </ErrorBoundary>
+          </Suspense>
+          <Suspense fallback={<Loading message="Loading video generator..." />}>
+            <ErrorBoundary fallback={<SectionErrorFallback section="Video Generator" />}>
+              <VideoGenerator />
             </ErrorBoundary>
           </Suspense>
           <Suspense fallback={<Loading message="Loading contact form..." />}>

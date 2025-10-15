@@ -2,40 +2,46 @@
 
 An interactive, engaging showcase of the Mount Sinai West Agentic Laboratory's groundbreaking work in AI-driven healthcare software development.
 
-## 🚀 What's Been Built (Phase 1)
+## 🚀 What's Been Built
 
 ### ✅ Completed Features
 
 1. **Project Structure**
    - React 19 + Vite + TypeScript
-   - Tailwind CSS with custom Mount Sinai branding
-   - Organized component architecture
+   - Tailwind CSS with official Mount Sinai brand colors
+   - Organized component architecture with lazy loading
+   - Netlify serverless functions integration
 
-2. **Core Components**
+2. **Core Sections**
    - **Hero Section**: Animated statistics with counter animations
-     - 83.8% PR acceptance rate
-     - 70% time reduction
-     - $150k average annual savings
-     - 2.5 weeks early heart failure detection
-   - **Navigation**: Responsive nav with mobile menu
-   - **Projects Section**: Interactive cards for all 5 projects
-     - IRBVer2
-     - HIPAA-Compliant Voice AI Agent
-     - HeartVoice Monitor
-     - Clinical Staff PTO Management
-     - LEQVIO Patient Enrollment
-   - **Footer**: Complete with social links and branding
+   - **Overview Section**: Mission, problem/solution, key highlights, stats
+   - **Projects Section**: Interactive cards for all 5 healthcare applications
+   - **Approach Section**: 6-phase methodology, tech stack, guiding principles
+   - **Impact Section**: Clinical outcomes, financial metrics, operational efficiency
+   - **Video Generator** 🎬 NEW: AI-powered video generation with Sora 2
+   - **Contact Section**: Working contact form with validation
 
-3. **Animation Features**
+3. **Interactive Visualizations**
+   - Workflow diagram (6-phase development process)
+   - MCP architecture diagram with data flow
+   - Voice biomarker detection flow
+   - Clinical impact dashboard with charts
+   - ROI calculator with real-time calculations
+
+4. **AI Video Generator** 🎥 NEW
+   - OpenAI Sora 2 integration
+   - 4 preset prompts from SORA_VIDEO_GUIDE.md
+   - Custom prompt support
+   - Real-time video generation (2-5 minutes)
+   - Video gallery with download functionality
+   - Netlify serverless backend
+
+5. **Animation Features**
    - Animated counter component with scroll triggers
    - Scroll reveal animations
    - Smooth transitions and hover effects
    - Framer Motion integration
-
-4. **Data Structure**
-   - Complete project data with metrics
-   - Type-safe TypeScript interfaces
-   - Reusable project card components
+   - Reduced motion accessibility support
 
 ## 🎯 Current Status
 
@@ -86,11 +92,13 @@ The website currently features:
 
 - **Framework**: React 19 with TypeScript
 - **Build Tool**: Vite 7
-- **Styling**: Tailwind CSS 4 with custom Mount Sinai colors
+- **Styling**: Tailwind CSS 4 with official Mount Sinai brand colors
 - **Animations**: Framer Motion
-- **Charts** (ready): Recharts
-- **Diagrams** (ready): React Flow
+- **Charts**: Recharts
+- **Diagrams**: React Flow
 - **Icons**: Lucide React
+- **Serverless**: Netlify Functions
+- **AI Integration**: Azure OpenAI (Sora 2 for video generation)
 
 ## 📦 Dependencies Installed
 
@@ -124,11 +132,13 @@ The website currently features:
 
 ## 🚀 Getting Started
 
+### Basic Setup
+
 ```bash
 # Navigate to project
 cd agentic-lab-website
 
-# Install dependencies (already done)
+# Install dependencies
 npm install
 
 # Start development server
@@ -140,6 +150,33 @@ npm run build
 # Preview production build
 npm run preview
 ```
+
+### Video Generator Setup
+
+To enable the AI Video Generator feature:
+
+1. **Get Azure OpenAI Access**:
+   - Create account at https://portal.azure.com
+   - Apply for Azure OpenAI access
+   - Deploy Sora 2 model
+
+2. **Configure Environment Variables**:
+   ```bash
+   # Copy example env file
+   cp .env.example .env
+
+   # Edit .env with your credentials
+   VITE_AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+   VITE_AZURE_OPENAI_API_KEY=your-api-key-here
+   VITE_AZURE_OPENAI_API_VERSION=preview
+   VITE_AZURE_OPENAI_MODEL=sora
+   ```
+
+3. **Deploy to Netlify**:
+   - Add environment variables in Netlify Dashboard
+   - See `VIDEO_GENERATOR_SETUP.md` for detailed instructions
+
+📖 **Full Setup Guide**: See [VIDEO_GENERATOR_SETUP.md](./VIDEO_GENERATOR_SETUP.md)
 
 ## 📁 Project Structure
 

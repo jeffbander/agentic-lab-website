@@ -11,6 +11,7 @@ export function Navigation() {
     { name: 'Projects', href: '#projects' },
     { name: 'Approach', href: '#approach' },
     { name: 'Impact', href: '#impact' },
+    { name: 'Video Generator', href: '#video-generator' },
     { name: 'Contact', href: '#contact' },
   ];
 
