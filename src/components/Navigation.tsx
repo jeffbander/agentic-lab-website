@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Github } from 'lucide-react';
+import { MountSinaiLogo } from './MountSinaiLogo';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,13 +24,11 @@ export function Navigation() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-3"
-            aria-label="Agentic Laboratory home"
+            aria-label="Mount Sinai Agentic Laboratory home"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-sinai-blue-600 to-sinai-maroon-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl" aria-hidden="true">AL</span>
-            </div>
+            <MountSinaiLogo variant="icon" className="h-10 w-10" />
             <div>
-              <div className="text-sm font-bold text-gray-900">Agentic Laboratory</div>
+              <div className="text-sm font-bold text-sinai-navy">Agentic Laboratory</div>
               <div className="text-xs text-gray-600">Mount Sinai West</div>
             </div>
           </motion.a>
