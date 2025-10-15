@@ -1,22 +1,69 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Custom Theme - Tailwind v4 syntax */
+@theme {
+  /* Official Mount Sinai Health System brand colors */
+  --color-sinai-cyan: #06ABEB;
+  --color-sinai-magenta: #DC298D;
+  --color-sinai-navy: #212070;
+  --color-sinai-dark: #00002D;
+  --color-sinai-violet: #7B2D8E;
+
+  /* Extended palette for UI */
+  --color-sinai-blue-50: #e6f7fe;
+  --color-sinai-blue-100: #b3e7fc;
+  --color-sinai-blue-200: #80d7fa;
+  --color-sinai-blue-300: #4dc7f8;
+  --color-sinai-blue-400: #1ab7f6;
+  --color-sinai-blue-500: #06ABEB;
+  --color-sinai-blue-600: #0589be;
+  --color-sinai-blue-700: #046791;
+  --color-sinai-blue-800: #034564;
+  --color-sinai-blue-900: #022337;
+
+  --color-sinai-maroon-50: #fce8f3;
+  --color-sinai-maroon-100: #f7b8dd;
+  --color-sinai-maroon-200: #f288c7;
+  --color-sinai-maroon-300: #ed58b1;
+  --color-sinai-maroon-400: #e8289b;
+  --color-sinai-maroon-500: #DC298D;
+  --color-sinai-maroon-600: #b02171;
+  --color-sinai-maroon-700: #841955;
+  --color-sinai-maroon-800: #581139;
+  --color-sinai-maroon-900: #2c081c;
+
+  /* Font family */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-display: 'Cal Sans', 'Inter', system-ui, sans-serif;
+}
 
 /* Base styles */
 @layer base {
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-family-sans);
   }
 
   /* High contrast focus indicators for accessibility */
   :focus-visible {
-    @apply outline-none ring-2 ring-sinai-blue-600 ring-offset-2;
+    outline: none;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-sinai-blue-600);
   }
 
   /* Skip to main content link for screen readers */
   .skip-to-main {
-    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50;
-    @apply bg-sinai-blue-600 text-white px-4 py-2 rounded-lg font-semibold;
+    position: absolute;
+    left: -9999px;
+    z-index: 999;
+    padding: 1rem 2rem;
+    background-color: var(--color-sinai-blue-600);
+    color: white;
+    font-weight: 600;
+    border-radius: 0.5rem;
+  }
+
+  .skip-to-main:focus {
+    left: 1rem;
+    top: 1rem;
   }
 }
 
@@ -43,13 +90,14 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background-color: #f3f4f6;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded-full;
+  background-color: #9ca3af;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  background-color: #6b7280;
 }

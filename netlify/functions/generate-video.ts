@@ -16,8 +16,9 @@ interface ReplicatePrediction {
 }
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const REPLICATE_API_URL = 'https://api.replicate.com/v1';
-const SORA_MODEL = 'openai/sora-2';
+const SORA_MODEL_VERSION = '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3';
 
 /**
  * Creates a video generation prediction with Replicate Sora 2
@@ -30,13 +31,14 @@ async function createPrediction(prompt: string, width: number, height: number, d
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      version: SORA_MODEL,
+      version: SORA_MODEL_VERSION,
       input: {
         prompt,
         width,
         height,
         num_seconds: duration,
         quality: width >= 1920 ? 'pro' : 'standard', // Pro for 1080p+, standard for 720p
+        openai_api_key: OPENAI_API_KEY,
       },
     }),
   });
@@ -110,6 +112,17 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     };
   }
 
+  if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your_openai_api_key_here') {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: 'OpenAI API key not configured. Sora 2 requires an OpenAI API key.',
+        setup: 'Get your key from https://platform.openai.com/api-keys and add it to your .env file as OPENAI_API_KEY=sk-...'
+      }),
+    };
+  }
+
   try {
     const body: VideoGenerationRequest = JSON.parse(event.body || '{}');
 
@@ -150,66 +163,16 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     const predictionId = await createPrediction(body.prompt, width, height, duration);
     console.log(`Prediction created: ${predictionId}`);
 
-    // Poll for completion (with timeout)
-    const maxAttempts = 120; // 10 minutes max (5 second intervals)
-    let attempts = 0;
-
-    while (attempts < maxAttempts) {
-      const prediction = await checkPredictionStatus(predictionId);
-
-      if (prediction.status === 'succeeded') {
-        console.log(`Video generation succeeded: ${predictionId}`);
-
-        // Extract video URL from output
-        let videoUrl: string;
-        if (Array.isArray(prediction.output)) {
-          videoUrl = prediction.output[0];
-        } else {
-          videoUrl = prediction.output as string;
-        }
-
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            jobId: predictionId,
-            videoUrl,
-            logs: prediction.logs,
-          }),
-        };
-      }
-
-      if (prediction.status === 'failed' || prediction.status === 'canceled') {
-        console.error(`Video generation ${prediction.status}: ${prediction.error}`);
-        return {
-          statusCode: 500,
-          headers,
-          body: JSON.stringify({
-            success: false,
-            error: prediction.error || `Video generation ${prediction.status}`,
-            logs: prediction.logs,
-          }),
-        };
-      }
-
-      // Still processing
-      console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status = ${prediction.status}`);
-
-      // Wait 5 seconds before checking again
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      attempts++;
-    }
-
-    // Timeout
-    console.error(`Video generation timed out after ${maxAttempts * 5} seconds`);
+    // Return immediately with the job ID
+    // Frontend will poll /api/check-video-status?id={predictionId} to get the result
     return {
-      statusCode: 408,
+      statusCode: 202, // 202 Accepted - request accepted for processing
       headers,
       body: JSON.stringify({
-        success: false,
-        error: 'Video generation timed out. The video may still be processing. Check Replicate dashboard.',
+        success: true,
         jobId: predictionId,
+        status: 'processing',
+        message: 'Video generation started. Use the jobId to check status.',
       }),
     };
 

@@ -91,6 +91,7 @@ export function VideoGenerator() {
         duration: preset?.duration || 10,
       };
 
+      // Step 1: Start the video generation job
       const response = await fetch('/api/generate-video', {
         method: 'POST',
         headers: {
@@ -102,29 +103,71 @@ export function VideoGenerator() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate video');
+        throw new Error(data.error || 'Failed to start video generation');
       }
 
-      if (data.success && data.videoUrl) {
-        const newVideo: GeneratedVideo = {
-          id: data.jobId,
-          prompt: promptToUse,
-          videoUrl: data.videoUrl,
-          timestamp: new Date(),
-        };
-
-        setGeneratedVideos(prev => [newVideo, ...prev]);
-        setGenerationStatus('success');
-        setCustomPrompt('');
-        setSelectedPreset(null);
-      } else {
-        throw new Error('Video generation failed');
+      if (!data.success || !data.jobId) {
+        throw new Error('Invalid response from server');
       }
+
+      const jobId = data.jobId;
+      console.log('Video generation started, job ID:', jobId);
+
+      // Step 2: Poll for completion
+      const maxAttempts = 120; // 10 minutes max (5 second intervals)
+      let attempts = 0;
+
+      while (attempts < maxAttempts) {
+        // Wait 5 seconds before checking
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        attempts++;
+
+        try {
+          const statusResponse = await fetch(`/api/check-video-status?id=${jobId}`);
+          const statusData = await statusResponse.json();
+
+          if (!statusResponse.ok) {
+            console.error('Status check failed:', statusData.error);
+            continue; // Try again
+          }
+
+          console.log(`Attempt ${attempts}/${maxAttempts}: Status = ${statusData.status}`);
+
+          if (statusData.status === 'succeeded' && statusData.videoUrl) {
+            // Success!
+            const newVideo: GeneratedVideo = {
+              id: jobId,
+              prompt: promptToUse,
+              videoUrl: statusData.videoUrl,
+              timestamp: new Date(),
+            };
+
+            setGeneratedVideos(prev => [newVideo, ...prev]);
+            setGenerationStatus('success');
+            setCustomPrompt('');
+            setSelectedPreset(null);
+            setIsGenerating(false);
+            return;
+          }
+
+          if (statusData.status === 'failed' || statusData.status === 'canceled') {
+            throw new Error(statusData.error || `Video generation ${statusData.status}`);
+          }
+
+          // Still processing, continue polling
+        } catch (pollError) {
+          console.error('Polling error:', pollError);
+          // Continue trying unless we've exceeded max attempts
+        }
+      }
+
+      // Timeout
+      throw new Error('Video generation timed out after 10 minutes. The video may still be processing on Replicate.');
+
     } catch (error) {
       console.error('Video generation error:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Unknown error occurred');
       setGenerationStatus('error');
-    } finally {
       setIsGenerating(false);
     }
   };
