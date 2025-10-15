@@ -26,7 +26,11 @@ export function Navigation() {
             className="flex items-center space-x-3"
             aria-label="Mount Sinai Agentic Laboratory home"
           >
-            <MountSinaiLogo variant="icon" className="h-10 w-10" />
+            <img
+              src="/mount-sinai-logo-production.png"
+              alt="Mount Sinai Health System"
+              className="h-10 w-auto"
+            />
             <div>
               <div className="text-sm font-bold text-sinai-navy">Agentic Laboratory</div>
               <div className="text-xs text-gray-600">Mount Sinai West</div>

@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { MountSinaiLogo } from '../MountSinaiLogo';
 import { Sparkles, Code2, Stethoscope, Zap, Shield, TrendingUp } from 'lucide-react';
 
 export function Overview() {
@@ -47,7 +46,11 @@ export function Overview() {
           className="text-center mb-16"
         >
           <div className="flex justify-center mb-8">
-            <MountSinaiLogo className="h-16" />
+            <img
+              src="/mount-sinai-logo-production.png"
+              alt="Mount Sinai Health System"
+              className="h-20 w-auto"
+            />
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-sinai-navy mb-4">
             The Agentic Laboratory

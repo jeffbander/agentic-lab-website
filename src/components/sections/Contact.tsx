@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { MountSinaiLogo } from '../MountSinaiLogo';
 import { trackContactFormSubmit } from '../../utils/analytics';
 
 export function Contact() {
@@ -255,7 +254,11 @@ export function Contact() {
           >
             {/* Logo */}
             <div className="bg-white rounded-2xl shadow-xl p-8">
-              <MountSinaiLogo className="h-16 mb-6" />
+              <img
+                src="/mount-sinai-logo-production.png"
+                alt="Mount Sinai Health System"
+                className="h-16 w-auto mb-6"
+              />
               <h3 className="text-xl font-bold text-sinai-navy mb-3">Agentic Laboratory</h3>
               <p className="text-gray-600 mb-4">
                 A Mount Sinai West initiative pioneering AI-assisted healthcare software development.
