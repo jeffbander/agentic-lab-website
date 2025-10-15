@@ -14,23 +14,25 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.div
+          <motion.a
+            href="#overview"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-3"
+            aria-label="Agentic Laboratory home"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-sinai-blue-600 to-sinai-maroon-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">AL</span>
+              <span className="text-white font-bold text-xl" aria-hidden="true">AL</span>
             </div>
             <div>
               <div className="text-sm font-bold text-gray-900">Agentic Laboratory</div>
               <div className="text-xs text-gray-600">Mount Sinai West</div>
             </div>
-          </motion.div>
+          </motion.a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -65,6 +67,9 @@ export function Navigation() {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 text-gray-700 hover:text-sinai-blue-600 transition-colors"
+              aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -76,10 +81,13 @@ export function Navigation() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-white border-t border-gray-200"
+            role="menu"
+            aria-label="Mobile navigation menu"
           >
             <div className="px-4 py-4 space-y-3">
               {navLinks.map((link) => (

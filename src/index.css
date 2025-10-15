@@ -7,11 +7,34 @@
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  /* High contrast focus indicators for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-sinai-blue-600 ring-offset-2;
+  }
+
+  /* Skip to main content link for screen readers */
+  .skip-to-main {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50;
+    @apply bg-sinai-blue-600 text-white px-4 py-2 rounded-lg font-semibold;
+  }
 }
 
 /* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Custom scrollbar */
