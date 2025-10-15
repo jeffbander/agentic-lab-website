@@ -7,30 +7,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Mount Sinai brand colors
+        // Official Mount Sinai Health System brand colors
+        'sinai-cyan': '#06ABEB',      // Vivid Cerulean - primary brand color
+        'sinai-magenta': '#DC298D',    // Barbie Pink - secondary brand color
+        'sinai-navy': '#212070',       // St. Patrick's Blue - text/headers
+        'sinai-dark': '#00002D',       // Cetacean Blue - dark backgrounds
+        'sinai-violet': '#7B2D8E',     // Brand violet (cyan + magenta overlap)
+
+        // Extended palette for UI (keeping original for compatibility)
         'sinai-blue': {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50: '#e6f7fe',
+          100: '#b3e7fc',
+          200: '#80d7fa',
+          300: '#4dc7f8',
+          400: '#1ab7f6',
+          500: '#06ABEB',  // Official brand cyan
+          600: '#0589be',
+          700: '#046791',
+          800: '#034564',
+          900: '#022337',
         },
         'sinai-maroon': {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
-          400: '#f87171',
-          500: '#dc2626',
-          600: '#991b1b',
-          700: '#7f1d1d',
-          800: '#5c1111',
-          900: '#3f0909',
+          50: '#fce8f3',
+          100: '#f7b8dd',
+          200: '#f288c7',
+          300: '#ed58b1',
+          400: '#e8289b',
+          500: '#DC298D',  // Official brand magenta
+          600: '#b02171',
+          700: '#841955',
+          800: '#581139',
+          900: '#2c081c',
         }
       },
       fontFamily: {
