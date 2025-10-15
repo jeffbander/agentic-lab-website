@@ -7,115 +7,105 @@ interface VideoGenerationRequest {
   duration?: number;
 }
 
-interface VideoGenerationJob {
+interface ReplicatePrediction {
   id: string;
-  status: 'pending' | 'processing' | 'succeeded' | 'failed';
-  videoUrl?: string;
+  status: 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
+  output?: string | string[];
   error?: string;
+  logs?: string;
 }
 
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
-const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY;
-const API_VERSION = process.env.AZURE_OPENAI_API_VERSION || 'preview';
-const MODEL = process.env.AZURE_OPENAI_MODEL || 'sora';
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const REPLICATE_API_URL = 'https://api.replicate.com/v1';
+const SORA_MODEL = 'openai/sora-2';
 
 /**
- * Creates a video generation job with Azure OpenAI Sora
+ * Creates a video generation prediction with Replicate Sora 2
  */
-async function createVideoJob(prompt: string, width: number, height: number, duration: number): Promise<string> {
-  const url = `${AZURE_ENDPOINT}/openai/v1/video/generations/jobs?api-version=${API_VERSION}`;
-
-  const response = await fetch(url, {
+async function createPrediction(prompt: string, width: number, height: number, duration: number): Promise<string> {
+  const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
     method: 'POST',
     headers: {
-      'api-key': AZURE_API_KEY!,
+      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      prompt,
-      width,
-      height,
-      n_seconds: duration,
-      model: MODEL,
+      version: SORA_MODEL,
+      input: {
+        prompt,
+        width,
+        height,
+        num_seconds: duration,
+        quality: width >= 1920 ? 'pro' : 'standard', // Pro for 1080p+, standard for 720p
+      },
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create video job: ${response.status} ${error}`);
+    throw new Error(`Failed to create prediction: ${response.status} ${error}`);
   }
 
-  const data = await response.json();
+  const data: ReplicatePrediction = await response.json();
   return data.id;
 }
 
 /**
- * Checks the status of a video generation job
+ * Checks the status of a video generation prediction
  */
-async function checkJobStatus(jobId: string): Promise<VideoGenerationJob> {
-  const url = `${AZURE_ENDPOINT}/openai/v1/video/generations/jobs/${jobId}?api-version=${API_VERSION}`;
-
-  const response = await fetch(url, {
+async function checkPredictionStatus(predictionId: string): Promise<ReplicatePrediction> {
+  const response = await fetch(`${REPLICATE_API_URL}/predictions/${predictionId}`, {
     headers: {
-      'api-key': AZURE_API_KEY!,
+      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+      'Content-Type': 'application/json',
     },
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to check job status: ${response.status} ${error}`);
+    throw new Error(`Failed to check prediction status: ${response.status} ${error}`);
   }
 
-  const data = await response.json();
-
-  return {
-    id: jobId,
-    status: data.status,
-    videoUrl: data.status === 'succeeded' ? data.video_url : undefined,
-    error: data.error?.message,
-  };
-}
-
-/**
- * Downloads the generated video
- */
-async function getVideo(generationId: string): Promise<string> {
-  const url = `${AZURE_ENDPOINT}/openai/v1/video/generations/${generationId}/content/video?api-version=${API_VERSION}`;
-
-  const response = await fetch(url, {
-    headers: {
-      'api-key': AZURE_API_KEY!,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to retrieve video: ${response.status} ${error}`);
-  }
-
-  // Return the blob URL
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
+  return await response.json();
 }
 
 /**
  * Netlify Function Handler
  */
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  // Enable CORS
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers,
+      body: '',
+    };
+  }
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   // Validate environment variables
-  if (!AZURE_ENDPOINT || !AZURE_API_KEY) {
+  if (!REPLICATE_API_TOKEN) {
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
-        error: 'Azure OpenAI credentials not configured. Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY environment variables.'
+        error: 'Replicate API token not configured. Please set REPLICATE_API_TOKEN environment variable.',
+        setup: 'Run: node scripts/setup-video-generator.js'
       }),
     };
   }
@@ -127,64 +117,84 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     if (!body.prompt) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ error: 'Prompt is required' }),
       };
     }
 
     // Set defaults
-    const width = body.width || 480;
-    const height = body.height || 480;
+    const width = body.width || 1280; // 720p default
+    const height = body.height || 720;
     const duration = body.duration || 5;
 
     // Validate dimensions
     if (width < 128 || width > 1920 || height < 128 || height > 1920) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ error: 'Invalid dimensions. Width and height must be between 128 and 1920 pixels.' }),
       };
     }
 
     // Validate duration
-    if (duration < 1 || duration > 60) {
+    if (duration < 1 || duration > 20) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid duration. Must be between 1 and 60 seconds.' }),
+        headers,
+        body: JSON.stringify({ error: 'Invalid duration. Must be between 1 and 20 seconds for Replicate.' }),
       };
     }
 
-    // Create the video generation job
-    console.log(`Creating video job with prompt: "${body.prompt}"`);
-    const jobId = await createVideoJob(body.prompt, width, height, duration);
+    // Create the video generation prediction
+    console.log(`Creating prediction with prompt: "${body.prompt.substring(0, 50)}..."`);
+    const predictionId = await createPrediction(body.prompt, width, height, duration);
+    console.log(`Prediction created: ${predictionId}`);
 
     // Poll for completion (with timeout)
-    const maxAttempts = 60; // 5 minutes max (5 second intervals)
+    const maxAttempts = 120; // 10 minutes max (5 second intervals)
     let attempts = 0;
 
     while (attempts < maxAttempts) {
-      const status = await checkJobStatus(jobId);
+      const prediction = await checkPredictionStatus(predictionId);
 
-      if (status.status === 'succeeded') {
-        console.log(`Video generation succeeded: ${jobId}`);
+      if (prediction.status === 'succeeded') {
+        console.log(`Video generation succeeded: ${predictionId}`);
+
+        // Extract video URL from output
+        let videoUrl: string;
+        if (Array.isArray(prediction.output)) {
+          videoUrl = prediction.output[0];
+        } else {
+          videoUrl = prediction.output as string;
+        }
+
         return {
           statusCode: 200,
+          headers,
           body: JSON.stringify({
             success: true,
-            jobId,
-            videoUrl: status.videoUrl,
+            jobId: predictionId,
+            videoUrl,
+            logs: prediction.logs,
           }),
         };
       }
 
-      if (status.status === 'failed') {
-        console.error(`Video generation failed: ${status.error}`);
+      if (prediction.status === 'failed' || prediction.status === 'canceled') {
+        console.error(`Video generation ${prediction.status}: ${prediction.error}`);
         return {
           statusCode: 500,
+          headers,
           body: JSON.stringify({
             success: false,
-            error: status.error || 'Video generation failed',
+            error: prediction.error || `Video generation ${prediction.status}`,
+            logs: prediction.logs,
           }),
         };
       }
+
+      // Still processing
+      console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status = ${prediction.status}`);
 
       // Wait 5 seconds before checking again
       await new Promise(resolve => setTimeout(resolve, 5000));
@@ -192,12 +202,14 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     }
 
     // Timeout
+    console.error(`Video generation timed out after ${maxAttempts * 5} seconds`);
     return {
       statusCode: 408,
+      headers,
       body: JSON.stringify({
         success: false,
-        error: 'Video generation timed out. Please try again.',
-        jobId,
+        error: 'Video generation timed out. The video may still be processing. Check Replicate dashboard.',
+        jobId: predictionId,
       }),
     };
 
@@ -205,8 +217,10 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     console.error('Error generating video:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: error instanceof Error ? error.stack : undefined
       }),
     };
   }
