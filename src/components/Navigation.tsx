@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Github } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { MountSinaiLogo } from './MountSinaiLogo';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
   const navLinks = [
-    { name: 'Overview', href: '#overview' },
-    { name: 'Projects', href: '#projects' },
-    { name: 'Approach', href: '#approach' },
-    { name: 'Impact', href: '#impact' },
-    { name: 'Video Generator', href: '#video-generator' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Overview', href: '#overview', isHash: true },
+    { name: 'Projects', href: '#projects', isHash: true },
+    { name: 'Approach', href: '#approach', isHash: true },
+    { name: 'Impact', href: '#impact', isHash: true },
+    { name: 'Video Generator', href: '#video-generator', isHash: true },
+    { name: 'Patient Education', href: '/patient-education', isHash: false },
+    { name: 'Contact', href: '#contact', isHash: true },
   ];
 
   return (
@@ -20,39 +23,58 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.a
-            href="#overview"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-3"
-            aria-label="Mount Sinai Agentic Laboratory home"
-          >
-            <img
-              src="/mount-sinai-logo-production.png"
-              alt="Mount Sinai Health System"
-              className="h-10 w-auto"
-            />
-            <div>
-              <div className="text-sm font-bold text-sinai-navy">Agentic Laboratory</div>
-              <div className="text-xs text-gray-600">Mount Sinai West</div>
-            </div>
-          </motion.a>
+          <Link to="/">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-3"
+              aria-label="Mount Sinai Agentic Laboratory home"
+            >
+              <img
+                src="/mount-sinai-logo-production.png"
+                alt="Mount Sinai Health System"
+                className="h-10 w-auto"
+              />
+              <div>
+                <div className="text-sm font-bold text-sinai-navy">Agentic Laboratory</div>
+                <div className="text-xs text-gray-600">Mount Sinai West</div>
+              </div>
+            </motion.div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link, index) => (
-              <motion.a
-                key={link.name}
-                href={link.href}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors relative group"
-              >
-                {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-sinai-blue-600 group-hover:w-full transition-all duration-300" />
-              </motion.a>
-            ))}
+            {navLinks.map((link, index) => {
+              if (link.isHash) {
+                return (
+                  <motion.a
+                    key={link.name}
+                    href={link.href}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors relative group"
+                  >
+                    {link.name}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-sinai-blue-600 group-hover:w-full transition-all duration-300" />
+                  </motion.a>
+                );
+              } else {
+                return (
+                  <Link key={link.name} to={link.href}>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors relative group"
+                    >
+                      {link.name}
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-sinai-blue-600 group-hover:w-full transition-all duration-300" />
+                    </motion.div>
+                  </Link>
+                );
+              }
+            })}
             <motion.a
               href="https://github.com/jeffbander"
               target="_blank"
@@ -94,16 +116,31 @@ export function Navigation() {
             aria-label="Mobile navigation menu"
           >
             <div className="px-4 py-4 space-y-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="block py-2 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors"
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                if (link.isHash) {
+                  return (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="block py-2 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  );
+                } else {
+                  return (
+                    <Link
+                      key={link.name}
+                      to={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="block py-2 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  );
+                }
+              })}
               <a
                 href="https://github.com/jeffbander"
                 target="_blank"
