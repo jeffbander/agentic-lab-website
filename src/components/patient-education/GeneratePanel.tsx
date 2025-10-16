@@ -24,7 +24,7 @@ interface StatusResponse {
 const STATUS_MESSAGES: Record<JobStatus, string> = {
   queued: 'Job queued, waiting to start...',
   starting: 'Initializing Sora video generation...',
-  processing: 'Generating 20-second patient education video...',
+  processing: 'Generating 12-second patient education video...',
   succeeded: 'Video generated successfully!',
   failed: 'Video generation failed',
   canceled: 'Video generation canceled',
@@ -53,7 +53,7 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
             prompt,
             width: 1920,
             height: 1080,
-            n_seconds: 20,
+            n_seconds: 12,
           }),
         });
 
@@ -147,7 +147,7 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Generate Patient Education Video</h2>
         <p className="text-gray-600 mt-1">
-          Creating 20-second video with 4-beat storyboard
+          Creating 12-second video with 4-beat storyboard
         </p>
       </div>
 
@@ -251,10 +251,10 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
         <h3 className="font-semibold text-sinai-cyan-900 mb-4">Script Preview (4 Beats)</h3>
         <div className="space-y-3">
           {[
-            { title: 'Beat 1 (0-5s): Greeting + Condition', text: ost.beat1 },
-            { title: 'Beat 2 (5-10s): Key Takeaway', text: ost.beat2 },
-            { title: 'Beat 3 (10-15s): How Treatment Helps', text: ost.beat3 },
-            { title: 'Beat 4 (15-20s): Next Step + Safety', text: ost.beat4 },
+            { title: 'Beat 1 (0-3s): Greeting + Condition', text: ost.beat1 },
+            { title: 'Beat 2 (3-6s): Key Takeaway', text: ost.beat2 },
+            { title: 'Beat 3 (6-9s): How Treatment Helps', text: ost.beat3 },
+            { title: 'Beat 4 (9-12s): Next Step + Safety', text: ost.beat4 },
           ].map((beat, index) => (
             <div key={index} className="bg-white rounded-lg p-3 border border-sinai-cyan-100">
               <div className="text-xs text-gray-600 mb-1">{beat.title}</div>

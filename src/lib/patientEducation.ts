@@ -1,5 +1,5 @@
 /**
- * Patient Education Micro-Videos (20s) Transformation Library
+ * Patient Education Micro-Videos (12s) Transformation Library
  * Converts clinician provider notes into HIPAA-compliant, readable Sora prompts
  */
 
@@ -340,27 +340,27 @@ export function noteToSoraPrompt(noteText: string): SoraPromptResult {
   }
 
   // Build the Sora prompt
-  const prompt = `Create a calm, friendly 20-second patient-education explainer video.
+  const prompt = `Create a calm, friendly 12-second patient-education explainer video.
 Language: ${note.language}. Tone: ${note.tone}.
 Visual style: simple medical animation with clean 3D icons (heart, kidneys, blood vessels, pill bottle), high-contrast captions, hospital-bright soft lighting.
 Camera: gentle dolly-in, cross-dissolves between four scenes; steady exposure; 24 fps; 1920x1080.
 
-Beat 1 (0–5s) — Greeting + condition
+Beat 1 (0–3s) — Greeting + condition
 On-screen text: "${ost.beat1}"
 Visual: patient silhouette in clinic hallway with floating ${conditionIcons}.
 ${personalizationAllowed ? `Show first name "${patientName}" on badge.` : 'Generic; no name.'}
 
-Beat 2 (5–10s) — Key takeaway
+Beat 2 (3–6s) — Key takeaway
 On-screen text: "${ost.beat2}"
 Visual: focused icon narrative (e.g., glucose meter trending to target; kidney/heart icons linked).
 Small caption chips: ${chip2}.
 
-Beat 3 (10–15s) — How treatment helps
+Beat 3 (6–9s) — How treatment helps
 On-screen text: "${ost.beat3}"
 Visual: simplified pathway or action; no brand logos.
 Small caption chips: ${chip3}.
 
-Beat 4 (15–20s) — Next step + safety
+Beat 4 (9–12s) — Next step + safety
 On-screen text: "${ost.beat4}"
 Footer banner (small text): "Possible risks: ${risksShort}. Not medical advice."
 End card: "Talk with your clinician."
@@ -375,7 +375,7 @@ Pacing: calm and clear. Respect privacy; no identifiable faces.`;
       model: 'sora-2',
       width: 1920,
       height: 1080,
-      n_seconds: 20,
+      n_seconds: 12,
     },
     audit: {
       promptHash: hashString(prompt),
@@ -400,8 +400,8 @@ export function validatePromptResult(result: SoraPromptResult): { valid: boolean
   });
 
   // Check duration
-  if (result.params.n_seconds !== 20) {
-    errors.push(`Duration must be 20 seconds, got ${result.params.n_seconds}`);
+  if (result.params.n_seconds !== 12) {
+    errors.push(`Duration must be 12 seconds, got ${result.params.n_seconds}`);
   }
 
   return {

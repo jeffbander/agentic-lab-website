@@ -37,7 +37,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 async function generateScriptWithGPT(rawClinicalNote: string): Promise<ScriptOutput> {
   const systemPrompt = `You are a medical education specialist who creates patient-friendly video scripts from clinical notes.
 
-Your job: Read the clinical note, identify the TOP 3 most important conditions/topics from the Assessment & Plan section, and create a clear, empathetic 20-second patient education video script.
+Your job: Read the clinical note, identify the TOP 3 most important conditions/topics from the Assessment & Plan section, and create a clear, empathetic 12-second patient education video script.
 
 CRITICAL RULES:
 1. Character limits: ≤48 characters per line, max 2 lines per beat
@@ -75,7 +75,7 @@ OUTPUT FORMAT (JSON):
 
   const userPrompt = `Read this clinical note and create a patient education script focusing on the Assessment & Plan section.
 
-Extract the TOP 3 most important conditions and create a 20-second video script (4 beats × 5 seconds).
+Extract the TOP 3 most important conditions and create a 12-second video script (4 beats × 3 seconds).
 
 CLINICAL NOTE:
 ${rawClinicalNote}
@@ -129,7 +129,7 @@ Generate the JSON output following the format. Ensure all beat text ≤48 chars 
 function buildSoraPrompt(script: any): string {
   const firstName = script.firstName || '';
 
-  return `Create a calm, friendly 20-second patient-education explainer video in English.
+  return `Create a calm, friendly 12-second patient-education explainer video in English.
 ${firstName ? `Personalize with the first name "${firstName}" on a badge only; do not show birth dates, MRNs, or other identifiers.` : 'Generic; no patient name shown.'}
 
 Visual style: clean medical animation with simple 3D icons (heart, kidneys, blood vessels, BP cuff, pill bottle), high-contrast captions, hospital-bright soft lighting.
@@ -137,21 +137,21 @@ Camera: gentle dolly-in; cross-dissolves between four scenes; steady exposure; 2
 Audio: soft neutral music; friendly voiceover that speaks the same lines as the on-screen text.
 No brand logos. Respect privacy; no identifiable faces.
 
-Beat 1 (0–5s) — Greeting + condition
+Beat 1 (0–3s) — Greeting + condition
 On-screen text: "${script.beat1Text}"
 Visual: clinic hallway; ${firstName ? `badge showing first name only; ` : ''}floating icons for ${script.conditionIcons}.
 
-Beat 2 (5–10s) — What matters now
+Beat 2 (3–6s) — What matters now
 On-screen text: "${script.beat2Text}"
 Visual: focused icon narrative (e.g., BP cuff easing to target; glucose meter trending to goal).
 Small caption chips: ${script.chip2}
 
-Beat 3 (10–15s) — How the treatment helps
+Beat 3 (6–9s) — How the treatment helps
 On-screen text: "${script.beat3Text}"
 Visual: simple pathway/action animation; keep it educational and non-promotional.
 Small caption chips: ${script.chip3}
 
-Beat 4 (15–20s) — Next step + safety
+Beat 4 (9–12s) — Next step + safety
 On-screen text: "${script.beat4Text}"
 Footer banner, small text: "Possible risks: ${script.twoCommonRisks}. Not medical advice."
 End card button: "Talk with your clinician"

@@ -176,10 +176,10 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
   };
 
   const beats = [
-    { key: 'beat1' as const, title: 'Greeting + Condition', timeRange: '0-5s' },
-    { key: 'beat2' as const, title: 'Key Takeaway', timeRange: '5-10s' },
-    { key: 'beat3' as const, title: 'How Treatment Helps', timeRange: '10-15s' },
-    { key: 'beat4' as const, title: 'Next Step + Safety', timeRange: '15-20s' },
+    { key: 'beat1' as const, title: 'Greeting + Condition', timeRange: '0-3s' },
+    { key: 'beat2' as const, title: 'Key Takeaway', timeRange: '3-6s' },
+    { key: 'beat3' as const, title: 'How Treatment Helps', timeRange: '6-9s' },
+    { key: 'beat4' as const, title: 'Next Step + Safety', timeRange: '9-12s' },
   ];
 
   return (
@@ -189,9 +189,9 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
       className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8"
     >
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Preview 20s Script</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Preview 12s Script</h2>
         <p className="text-gray-600 mt-1">
-          Review and edit the on-screen text for each 5-second beat
+          Review and edit the on-screen text for each 3-second beat
         </p>
       </div>
 
@@ -259,7 +259,7 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
           className="flex-1 py-3 px-6 bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 text-white font-semibold rounded-lg hover:from-sinai-cyan-700 hover:to-sinai-magenta-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
         >
           <Play className="w-5 h-5" />
-          Generate 20s Video
+          Generate 12s Video
         </button>
       </div>
     </motion.div>

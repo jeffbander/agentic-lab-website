@@ -21,6 +21,29 @@ async function createSoraVideo(
   height: number,
   n_seconds: number
 ): Promise<string> {
+  // Replicate Sora-2 API only supports:
+  // - aspect_ratio: "portrait" (720x1280) or "landscape" (1280x720)
+  // - seconds: 4, 8, or 12 (max 12 seconds!)
+
+  const aspect_ratio = width > height ? 'landscape' : 'portrait';
+
+  // Clamp to maximum supported duration (12 seconds)
+  const seconds = Math.min(Math.max(4, Math.round(n_seconds / 4) * 4), 12);
+  if (seconds === 4 || seconds % 4 !== 0) {
+    // Round to nearest valid value: 4, 8, or 12
+    const validSeconds = seconds <= 6 ? 4 : seconds <= 10 ? 8 : 12;
+    console.log(`[Sora Create] Adjusted duration from ${n_seconds}s to ${validSeconds}s (Replicate limit)`);
+  }
+  const finalSeconds = seconds <= 6 ? 4 : seconds <= 10 ? 8 : 12;
+
+  console.log(`[Sora Create] Request params:`, {
+    prompt: prompt.substring(0, 100) + '...',
+    aspect_ratio,
+    seconds: finalSeconds,
+    requested: { width, height, n_seconds },
+    actual: { width: aspect_ratio === 'landscape' ? 1280 : 720, height: aspect_ratio === 'landscape' ? 720 : 1280 }
+  });
+
   const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
     method: 'POST',
     headers: {
@@ -31,10 +54,8 @@ async function createSoraVideo(
       version: SORA_MODEL_VERSION,
       input: {
         prompt,
-        width,
-        height,
-        num_seconds: n_seconds,
-        quality: width >= 1920 ? 'pro' : 'standard',
+        aspect_ratio,
+        seconds: finalSeconds,
         openai_api_key: OPENAI_API_KEY,
       },
     }),
@@ -112,20 +133,26 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
 
-    // Set defaults for patient education videos (20s, 1080p)
+    // Set defaults for patient education videos
+    // NOTE: Replicate Sora-2 API limits: max 12 seconds, only 720p or 1280x720
     const width = body.width || 1920;
     const height = body.height || 1080;
-    const n_seconds = body.n_seconds || 20;
+    const n_seconds = body.n_seconds || 12; // Changed default from 20 to 12
 
     // Validate constraints
-    if (n_seconds < 1 || n_seconds > 20) {
+    if (n_seconds < 1) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
-          error: 'Duration must be between 1 and 20 seconds for Sora patient education videos.',
+          error: 'Duration must be at least 1 second.',
         }),
       };
+    }
+
+    // Warn if requesting more than 12 seconds (will be clamped)
+    if (n_seconds > 12) {
+      console.log(`[Sora] WARNING: Requested ${n_seconds}s but Replicate Sora-2 max is 12s. Will clamp to 12s.`);
     }
 
     // Create the video generation job

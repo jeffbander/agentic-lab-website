@@ -73,12 +73,12 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
           model: 'sora-2',
           width: 1920,
           height: 1080,
-          n_seconds: 20,
+          n_seconds: 12,
         },
         audit: {
           promptHash: Math.abs(scriptData.fullSoraPrompt.split('').reduce((a: number, b: string) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16),
-          brandPresent: !!(parsedNote.treatment),
-          language: parsedNote.language || 'English',
+          brandPresent: !!(scriptData.primaryCondition),
+          language: 'English',
           timestamp: new Date().toISOString(),
         },
       };
@@ -101,7 +101,7 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Paste Provider Note</h2>
           <p className="text-gray-600 mt-1">
-            Enter clinician notes to generate a 20-second patient education video
+            Enter clinician notes to generate a 12-second patient education video
           </p>
         </div>
 
@@ -211,7 +211,7 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
               Generating Script with GPT-4...
             </>
           ) : (
-            'Preview 20s Script →'
+            'Preview 12s Script →'
           )}
         </button>
       </div>

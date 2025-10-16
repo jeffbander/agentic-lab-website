@@ -2,10 +2,13 @@ import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
 interface ReplicatePrediction {
   id: string;
-  status: 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
+  status: 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled' | 'queued';
   output?: string | string[];
   error?: string;
   logs?: string;
+  metrics?: {
+    predict_time?: number;
+  };
 }
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
@@ -84,7 +87,9 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     }
 
     // Check the prediction status
+    console.log(`[Sora Status] Checking status for job: ${jobId}`);
     const prediction = await checkSoraStatus(jobId);
+    console.log(`[Sora Status] Replicate response:`, JSON.stringify(prediction, null, 2));
 
     // Return status based on prediction state
     if (prediction.status === 'succeeded') {

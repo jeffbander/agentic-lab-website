@@ -46,7 +46,7 @@ export default function PatientEducation() {
   const currentStepIndex = steps.findIndex(s => s.key === currentStep);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sinai-cyan-50 via-white to-sinai-magenta-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div
@@ -63,7 +63,7 @@ export default function PatientEducation() {
                 Patient Education Micro-Videos
               </h1>
               <p className="text-gray-600">
-                Transform provider notes into 20-second educational videos
+                Transform provider notes into 12-second educational videos
               </p>
             </div>
           </div>
