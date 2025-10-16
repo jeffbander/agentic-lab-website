@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ClipboardCopy, Info } from 'lucide-react';
-import { parseProviderNote, noteToSoraPrompt, type ProviderNote } from '../../lib/patientEducation';
+import type { SoraPromptResult } from '../../lib/patientEducation';
 
 interface ProviderNoteFormProps {
-  onPreview: (result: ReturnType<typeof noteToSoraPrompt>) => void;
+  onPreview: (result: SoraPromptResult) => void;
 }
 
 const TEMPLATE = `Patient: [Name] (OK to show name: yes/no)
@@ -41,16 +41,13 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
     }
 
     try {
-      // Parse the note
-      const parsedNote = parseProviderNote(noteText);
-
-      // Call GPT-4 to generate robust script
+      // Send raw note text directly to GPT-4 (no parsing!)
       const response = await fetch('/api/generate-patient-script', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(parsedNote),
+        body: JSON.stringify({ noteText }),
       });
 
       if (!response.ok) {

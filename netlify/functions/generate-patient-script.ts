@@ -34,50 +34,53 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 /**
  * Use OpenAI GPT-4 to transform clinical note into structured patient education script
  */
-async function generateScriptWithGPT(note: ClinicalNote): Promise<ScriptOutput> {
-  const systemPrompt = `You are a medical education specialist who creates patient-friendly video scripts.
-Your job is to transform clinical provider notes into clear, empathetic 20-second patient education videos.
+async function generateScriptWithGPT(rawClinicalNote: string): Promise<ScriptOutput> {
+  const systemPrompt = `You are a medical education specialist who creates patient-friendly video scripts from clinical notes.
+
+Your job: Read the clinical note, identify the TOP 3 most important conditions/topics from the Assessment & Plan section, and create a clear, empathetic 20-second patient education video script.
 
 CRITICAL RULES:
 1. Character limits: ≤48 characters per line, max 2 lines per beat
 2. Language: 7th-8th grade reading level
-3. Tone: ${note.tone || 'reassuring'}, never alarming
-4. Privacy: Use first name ONLY if explicitly approved
+3. Tone: reassuring, never alarming
+4. Privacy: NEVER use patient names unless explicitly stated "OK to show name: yes"
 5. No medical promises: Use "helps" or "may help", never "cures" or "guarantees"
-6. Safety-first: Always mention risks in Beat 4
+6. Safety-first: Always mention risks/side effects in Beat 4
+7. Focus on Assessment & Plan: Extract the 1-3 most important conditions the patient should know about
+8. Be specific: Use actual condition names, medication names (generic preferred), and concrete actions
+
+ANALYSIS STRATEGY:
+- Look for "Assessment and Plan" or "conditions:" sections
+- Identify the top 1-3 conditions that are most important for the patient
+- Extract key medications and their purposes
+- Find actionable advice (lifestyle, medication adherence, monitoring)
+- Identify relevant risks or side effects to mention
 
 OUTPUT FORMAT (JSON):
 {
-  "firstName": "Maria" or "" if not approved,
-  "primaryCondition": "Type 2 diabetes & heart failure",
-  "conditionIcons": "glucose meter, heart, kidneys",
-  "keyTakeaway": "Protect your heart & kidneys",
-  "chip2": "A1C ↓ · kidney support",
-  "chip3": "HF hospitalization risk ↓",
-  "treatmentMechanism": "Your SGLT2 med helps lower blood sugar",
-  "actionLine": "Take daily; hydrate; monitor BP",
-  "twoCommonRisks": "dehydration, low blood pressure",
-  "beat1Text": "Hi Maria — you're managing Type 2 diabetes & heart failure",
-  "beat2Text": "Focus: Protect your heart & kidneys",
-  "beat3Text": "Your SGLT2 med helps lower blood sugar",
-  "beat4Text": "Take daily; hydrate; monitor BP"
+  "firstName": "" (empty unless note says "OK to show name: yes"),
+  "primaryCondition": "Atrial fibrillation, Hypertension, Hyperlipidemia" (top 1-3 conditions),
+  "conditionIcons": "heart rhythm, blood pressure cuff, cholesterol" (relevant medical icons),
+  "keyTakeaway": "Control heart rhythm & blood pressure" (main goal),
+  "chip2": "HR controlled · BP monitored" (benefits/metrics),
+  "chip3": "Stroke risk ↓" (key outcome),
+  "treatmentMechanism": "Metoprolol helps control your heart rate" (how treatment works),
+  "actionLine": "Take meds daily; monitor BP at home" (specific actions),
+  "twoCommonRisks": "dizziness, fatigue" (top 2 side effects),
+  "beat1Text": "You're managing AFib, high BP, and cholesterol",
+  "beat2Text": "Focus: Control heart rhythm & blood pressure",
+  "beat3Text": "Metoprolol helps control your heart rate",
+  "beat4Text": "Take meds daily; monitor BP at home"
 }`;
 
-  const userPrompt = `Transform this clinical note into a patient education script:
+  const userPrompt = `Read this clinical note and create a patient education script focusing on the Assessment & Plan section.
+
+Extract the TOP 3 most important conditions and create a 20-second video script (4 beats × 5 seconds).
 
 CLINICAL NOTE:
-Patient: ${note.patient || 'N/A'}
-OK to show name: ${note.okToShowName ? 'yes' : 'no'}
-Language: ${note.language || 'English'}
-Condition(s): ${note.conditions || 'N/A'}
-Focus: ${note.focus || 'N/A'}
-Treatment: ${note.treatment || 'N/A'}
-Top 3 Points:
-${note.topPoints?.map((p, i) => `${i + 1}. ${p}`).join('\n') || 'N/A'}
-Risks: ${note.risks || 'N/A'}
-Tone: ${note.tone || 'reassuring'}
+${rawClinicalNote}
 
-Generate a structured script following the output format. Ensure all text fields respect the 48 character per line limit.`;
+Generate the JSON output following the format. Ensure all beat text ≤48 chars per line, max 2 lines.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -103,10 +106,16 @@ Generate a structured script following the output format. Ensure all text fields
   }
 
   const data = await response.json();
-  const scriptData = JSON.parse(data.choices[0].message.content);
+  console.log('[GPT-4] Raw API response:', JSON.stringify(data, null, 2));
+
+  const rawContent = data.choices[0].message.content;
+  console.log('[GPT-4] Raw content string:', rawContent);
+
+  const scriptData = JSON.parse(rawContent);
+  console.log('[GPT-4] Parsed script data:', JSON.stringify(scriptData, null, 2));
 
   // Build full Sora prompt with template
-  const fullSoraPrompt = buildSoraPrompt(note, scriptData);
+  const fullSoraPrompt = buildSoraPrompt(scriptData);
 
   return {
     ...scriptData,
@@ -117,11 +126,10 @@ Generate a structured script following the output format. Ensure all text fields
 /**
  * Build complete Sora prompt using template
  */
-function buildSoraPrompt(note: ClinicalNote, script: any): string {
-  const language = note.language || 'English';
+function buildSoraPrompt(script: any): string {
   const firstName = script.firstName || '';
 
-  return `Create a calm, friendly 20-second patient-education explainer video in ${language}.
+  return `Create a calm, friendly 20-second patient-education explainer video in English.
 ${firstName ? `Personalize with the first name "${firstName}" on a badge only; do not show birth dates, MRNs, or other identifiers.` : 'Generic; no patient name shown.'}
 
 Visual style: clean medical animation with simple 3D icons (heart, kidneys, blood vessels, BP cuff, pill bottle), high-contrast captions, hospital-bright soft lighting.
@@ -194,24 +202,29 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   }
 
   try {
-    const note: ClinicalNote = JSON.parse(event.body || '{}');
+    const body = JSON.parse(event.body || '{}');
+    const rawNote = body.noteText || body.rawNote || '';
 
-    // Validate required fields
-    if (!note.conditions || note.conditions.trim().length === 0) {
-      console.log('[Script Generator] Validation failed - missing conditions:', note);
+    // Validate that we have some content
+    if (!rawNote || rawNote.trim().length === 0) {
+      console.log('[Script Generator] Validation failed - empty note');
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
-          error: 'Condition(s) field is required. Please ensure your note includes a line starting with "Condition:" or "Conditions:"',
-          example: 'Condition(s): Type 2 diabetes, heart failure'
+          error: 'Clinical note is required. Please paste a provider note with patient information.'
         }),
       };
     }
 
     console.log('[Script Generator] Generating script with GPT-4...');
-    const script = await generateScriptWithGPT(note);
+    console.log('[Script Generator] Raw note length:', rawNote.length, 'characters');
+    console.log('[Script Generator] Note preview:', rawNote.substring(0, 200) + '...');
+
+    const script = await generateScriptWithGPT(rawNote);
+
     console.log('[Script Generator] Script generated successfully');
+    console.log('[Script Generator] Final output:', JSON.stringify(script, null, 2));
 
     return {
       statusCode: 200,

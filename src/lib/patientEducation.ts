@@ -66,6 +66,7 @@ function validateOST(text: string): boolean {
 
 /**
  * Parse provider note from free text or structured format
+ * Handles both simple templates AND complex clinical notes
  */
 export function parseProviderNote(noteText: string): ProviderNote {
   const note: ProviderNote = {
@@ -78,13 +79,15 @@ export function parseProviderNote(noteText: string): ProviderNote {
   // Parse line by line
   const lines = noteText.split('\n');
   let inTopPoints = false;
+  let inConditions = false;
+  const conditionsList: string[] = [];
 
-  for (const line of lines) {
-    const trimmed = line.trim();
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
 
     // Patient name and consent
-    if (trimmed.toLowerCase().startsWith('patient:')) {
-      const match = trimmed.match(/Patient:\s*(.+?)(?:\s*\(OK to show name:\s*(yes|no)\))?$/i);
+    if (trimmed.toLowerCase().startsWith('patient name:') || trimmed.toLowerCase().startsWith('patient:')) {
+      const match = trimmed.match(/Patient(?:\s+Name)?:\s*(.+?)(?:\s*\(OK to show name:\s*(yes|no)\))?$/i);
       if (match) {
         note.patient = match[1].trim();
         note.okToShowName = match[2]?.toLowerCase() === 'yes';
@@ -97,9 +100,27 @@ export function parseProviderNote(noteText: string): ProviderNote {
       note.language = lang.toLowerCase() === 'spanish' ? 'Spanish' : 'English';
     }
 
-    // Conditions
+    // Conditions - handle both single-line and multi-line formats
     else if (trimmed.toLowerCase().startsWith('condition')) {
-      note.conditions = trimmed.replace(/condition\(s\)?:\s*/i, '').trim();
+      const inline = trimmed.replace(/condition\(s\)?:\s*/i, '').trim();
+      if (inline && !inline.match(/^\d+\./)) {
+        // Single-line format: "Condition(s): Type 2 diabetes, heart failure"
+        note.conditions = inline;
+      } else {
+        // Multi-line format - start collecting conditions
+        inConditions = true;
+      }
+    }
+    // Collect numbered conditions
+    else if (inConditions && trimmed.match(/^\d+\.\s+(.+?):/)) {
+      const conditionMatch = trimmed.match(/^\d+\.\s+(.+?):/);
+      if (conditionMatch) {
+        conditionsList.push(conditionMatch[1].trim());
+      }
+    }
+    // Stop collecting conditions when we hit a non-condition line
+    else if (inConditions && !trimmed.match(/^\d+\./) && !trimmed.startsWith('•') && trimmed.length > 0) {
+      inConditions = false;
     }
 
     // Focus
@@ -107,9 +128,16 @@ export function parseProviderNote(noteText: string): ProviderNote {
       note.focus = trimmed.replace(/focus.*?:\s*/i, '').trim();
     }
 
-    // Treatment
+    // Treatment - extract from multiple possible formats
     else if (trimmed.toLowerCase().startsWith('treatment:')) {
       note.treatment = trimmed.replace(/treatment:\s*/i, '').trim();
+    }
+    // Also look for medication lists
+    else if (trimmed.match(/^-\s+\w+\s+\d+\s*mg/i)) {
+      const medMatch = trimmed.match(/^-\s+(\w+)/i);
+      if (medMatch && !note.treatment) {
+        note.treatment = medMatch[1];
+      }
     }
 
     // Top 3 points
@@ -133,6 +161,11 @@ export function parseProviderNote(noteText: string): ProviderNote {
         note.tone = tone as 'practical' | 'motivational';
       }
     }
+  }
+
+  // Combine collected conditions
+  if (conditionsList.length > 0 && !note.conditions) {
+    note.conditions = conditionsList.slice(0, 3).join(', '); // Limit to top 3 conditions
   }
 
   return note;
