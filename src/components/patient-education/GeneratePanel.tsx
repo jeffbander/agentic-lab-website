@@ -44,7 +44,7 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
   useEffect(() => {
     const createJob = async () => {
       try {
-        const response = await fetch('/api/sora/create', {
+        const response = await fetch('/api/sora-create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
 
     const pollStatus = async () => {
       try {
-        const response = await fetch(`/api/sora/status?id=${jobId}`);
+        const response = await fetch(`/api/sora-status?id=${jobId}`);
 
         if (!response.ok) {
           throw new Error('Failed to check status');
@@ -117,7 +117,7 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
     if (!videoUrl) return;
 
     try {
-      const response = await fetch(`/api/sora/download?url=${encodeURIComponent(videoUrl)}`);
+      const response = await fetch(`/api/sora-download?url=${encodeURIComponent(videoUrl)}`);
       if (response.redirected) {
         window.open(response.url, '_blank');
       }

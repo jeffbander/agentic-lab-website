@@ -92,7 +92,7 @@ export default function PatientEducation() {
                       <span
                         className={`
                           font-medium transition-colors
-                          ${isActive ? 'text-sinai-cyan-700' : ''}
+                          ${isActive ? 'text-gray-900' : ''}
                           ${isCompleted ? 'text-green-600' : ''}
                           ${!isActive && !isCompleted ? 'text-gray-400' : ''}
                         `}
