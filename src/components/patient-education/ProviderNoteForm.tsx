@@ -55,7 +55,10 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate script');
+        const errorMessage = errorData.example
+          ? `${errorData.error}\n\nExample: ${errorData.example}`
+          : (errorData.error || 'Failed to generate script');
+        throw new Error(errorMessage);
       }
 
       const scriptData = await response.json();

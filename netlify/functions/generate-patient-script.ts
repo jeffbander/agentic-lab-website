@@ -197,11 +197,15 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     const note: ClinicalNote = JSON.parse(event.body || '{}');
 
     // Validate required fields
-    if (!note.conditions) {
+    if (!note.conditions || note.conditions.trim().length === 0) {
+      console.log('[Script Generator] Validation failed - missing conditions:', note);
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Condition(s) field is required' }),
+        body: JSON.stringify({
+          error: 'Condition(s) field is required. Please ensure your note includes a line starting with "Condition:" or "Conditions:"',
+          example: 'Condition(s): Type 2 diabetes, heart failure'
+        }),
       };
     }
 
