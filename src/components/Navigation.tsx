@@ -46,10 +46,19 @@ export function Navigation() {
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link, index) => {
               if (link.isHash) {
+                const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                  // If we're not on the home page, navigate there first
+                  if (location.pathname !== '/') {
+                    e.preventDefault();
+                    window.location.href = '/' + link.href;
+                  }
+                };
+
                 return (
                   <motion.a
                     key={link.name}
                     href={link.href}
+                    onClick={handleHashClick}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -118,11 +127,20 @@ export function Navigation() {
             <div className="px-4 py-4 space-y-3">
               {navLinks.map((link) => {
                 if (link.isHash) {
+                  const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    setIsOpen(false);
+                    // If we're not on the home page, navigate there first
+                    if (location.pathname !== '/') {
+                      e.preventDefault();
+                      window.location.href = '/' + link.href;
+                    }
+                  };
+
                   return (
                     <a
                       key={link.name}
                       href={link.href}
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleHashClick}
                       className="block py-2 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors"
                     >
                       {link.name}

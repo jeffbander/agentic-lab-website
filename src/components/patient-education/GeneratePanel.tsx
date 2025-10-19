@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import type { OnScreenText } from '../../lib/patientEducation';
@@ -39,11 +39,20 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const hasCreatedJob = useRef(false);
 
   // Create video generation job
   useEffect(() => {
+    // Prevent duplicate job creation
+    if (hasCreatedJob.current) {
+      return;
+    }
+
     const createJob = async () => {
       try {
+        // Mark that we're creating a job
+        hasCreatedJob.current = true;
+
         const response = await fetch('/api/sora-create', {
           method: 'POST',
           headers: {
@@ -209,9 +218,10 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
               <button
                 onClick={handleDownload}
                 className="w-full py-3 px-6 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors flex items-center justify-center gap-2"
+                style={{ color: '#ffffff' }}
               >
-                <Download className="w-5 h-5" />
-                Download Video
+                <Download className="w-5 h-5" style={{ color: '#ffffff' }} />
+                <span style={{ color: '#ffffff' }}>Download Video</span>
               </button>
             </motion.div>
           )}
@@ -237,9 +247,10 @@ export default function GeneratePanel({ prompt, ost, onBack, onReset }: Generate
               <button
                 onClick={handleRetry}
                 className="py-2 px-6 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors flex items-center gap-2"
+                style={{ color: '#ffffff' }}
               >
-                <RefreshCw className="w-4 h-4" />
-                Retry Generation
+                <RefreshCw className="w-4 h-4" style={{ color: '#ffffff' }} />
+                <span style={{ color: '#ffffff' }}>Retry Generation</span>
               </button>
             </motion.div>
           )}
