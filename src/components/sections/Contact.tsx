@@ -57,7 +57,7 @@ export function Contact() {
     {
       icon: Mail,
       title: 'Email',
-      details: ['agenticlab@mountsinai.org', 'For inquiries and consultations']
+      details: ['tzipporah.bergman@mountsinai.org', 'For inquiries and consultations']
     },
     {
       icon: Phone,

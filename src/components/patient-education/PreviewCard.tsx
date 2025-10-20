@@ -256,11 +256,11 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
         </button>
         <button
           onClick={handleGenerate}
-          className="flex-1 py-3 px-6 bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 text-white font-semibold rounded-lg hover:from-sinai-cyan-700 hover:to-sinai-magenta-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-          style={{ color: '#ffffff' }}
+          className="flex-1 py-3 px-6 bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 text-black font-semibold rounded-lg hover:from-sinai-cyan-700 hover:to-sinai-magenta-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          style={{ color: '#000000' }}
         >
-          <Play className="w-5 h-5" style={{ color: '#ffffff' }} />
-          <span style={{ color: '#ffffff' }}>Generate 12s Video</span>
+          <Play className="w-5 h-5" style={{ color: '#000000' }} />
+          <span style={{ color: '#000000' }}>Generate 12s Video</span>
         </button>
       </div>
     </motion.div>
