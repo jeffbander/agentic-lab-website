@@ -5,7 +5,8 @@ import type { SoraPromptResult, OnScreenText } from '../../lib/patientEducation'
 
 interface PreviewCardProps {
   result: SoraPromptResult;
-  onGenerate: (prompt: string, ost: OnScreenText) => void;
+  promptPart2?: string; // New: Part 2 prompt if 24-second video
+  onGenerate: (prompt: string, ost: OnScreenText, promptPart2?: string) => void;
   onBack: () => void;
 }
 
@@ -161,7 +162,7 @@ function BeatCard({ beatNumber, title, text, timeRange, onEdit }: BeatCardProps)
   );
 }
 
-export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardProps) {
+export default function PreviewCard({ result, promptPart2, onGenerate, onBack }: PreviewCardProps) {
   const [ost, setOst] = useState<OnScreenText>(result.ost);
 
   const handleBeatEdit = (beat: keyof OnScreenText, newText: string) => {
@@ -172,14 +173,24 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
   };
 
   const handleGenerate = () => {
-    onGenerate(result.prompt, ost);
+    onGenerate(result.prompt, ost, promptPart2);
   };
 
-  const beats = [
-    { key: 'beat1' as const, title: 'Greeting + Condition', timeRange: '0-3s' },
-    { key: 'beat2' as const, title: 'Key Takeaway', timeRange: '3-6s' },
-    { key: 'beat3' as const, title: 'How Treatment Helps', timeRange: '6-9s' },
-    { key: 'beat4' as const, title: 'Next Step + Safety', timeRange: '9-12s' },
+  // Check if we have an extended 24-second video (8 beats)
+  const hasExtendedBeats = !!ost.beat5;
+
+  const beatsPart1 = [
+    { key: 'beat1' as const, title: 'Mount Sinai Logo', timeRange: '0-3s' },
+    { key: 'beat2' as const, title: 'Greeting + Conditions', timeRange: '3-6s' },
+    { key: 'beat3' as const, title: 'Condition Overview', timeRange: '6-9s' },
+    { key: 'beat4' as const, title: 'Recent Test Results', timeRange: '9-12s' },
+  ];
+
+  const beatsPart2 = [
+    { key: 'beat5' as const, title: 'Current Medications', timeRange: '12-15s' },
+    { key: 'beat6' as const, title: 'Treatment Options', timeRange: '15-18s' },
+    { key: 'beat7' as const, title: 'Next Steps', timeRange: '18-21s' },
+    { key: 'beat8' as const, title: 'Safety + Call to Action', timeRange: '21-24s' },
   ];
 
   return (
@@ -189,7 +200,9 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
       className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8"
     >
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Preview 12s Script</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Preview {hasExtendedBeats ? '24s' : '12s'} Mount Sinai Script
+        </h2>
         <p className="text-gray-600 mt-1">
           Review and edit the on-screen text for each 3-second beat
         </p>
@@ -204,7 +217,9 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
           </div>
           <div>
             <span className="text-gray-600">Duration:</span>
-            <span className="ml-2 font-semibold text-gray-900">{result.params.n_seconds}s</span>
+            <span className="ml-2 font-semibold text-gray-900">
+              {hasExtendedBeats ? '24s (Part 1 + Part 2)' : '12s'}
+            </span>
           </div>
           <div>
             <span className="text-gray-600">Resolution:</span>
@@ -213,27 +228,54 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
             </span>
           </div>
           <div>
-            <span className="text-gray-600">Brand Detected:</span>
-            <span className="ml-2 font-semibold text-gray-900">
-              {result.audit.brandPresent ? 'Yes' : 'No'}
-            </span>
+            <span className="text-gray-600">Hospital:</span>
+            <span className="ml-2 font-semibold text-sinai-cyan-700">Mount Sinai NYC</span>
           </div>
         </div>
       </div>
 
-      {/* 4-Beat Storyboard */}
-      <div className="grid gap-4 mb-6">
-        {beats.map((beat, index) => (
-          <BeatCard
-            key={beat.key}
-            beatNumber={index + 1}
-            title={beat.title}
-            text={ost[beat.key]}
-            timeRange={beat.timeRange}
-            onEdit={(newText) => handleBeatEdit(beat.key, newText)}
-          />
-        ))}
+      {/* Part 1 Storyboard */}
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-sinai-cyan-700 mb-3">
+          Part 1: Mount Sinai Branding + Patient Introduction
+        </h3>
+        <div className="grid gap-4">
+          {beatsPart1.map((beat, index) => (
+            <BeatCard
+              key={beat.key}
+              beatNumber={index + 1}
+              title={beat.title}
+              text={ost[beat.key]}
+              timeRange={beat.timeRange}
+              onEdit={(newText) => handleBeatEdit(beat.key, newText)}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Part 2 Storyboard (if exists) */}
+      {hasExtendedBeats && (
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-sinai-cyan-700 mb-3">
+            Part 2: Medications + Treatment Plan
+          </h3>
+          <div className="grid gap-4">
+            {beatsPart2.map((beat, index) => {
+              const text = ost[beat.key];
+              return text ? (
+                <BeatCard
+                  key={beat.key}
+                  beatNumber={index + 5}
+                  title={beat.title}
+                  text={text}
+                  timeRange={beat.timeRange}
+                  onEdit={(newText) => handleBeatEdit(beat.key, newText)}
+                />
+              ) : null;
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Disclaimer */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
@@ -260,7 +302,9 @@ export default function PreviewCard({ result, onGenerate, onBack }: PreviewCardP
           style={{ color: '#000000' }}
         >
           <Play className="w-5 h-5" style={{ color: '#000000' }} />
-          <span style={{ color: '#000000' }}>Generate 12s Video</span>
+          <span style={{ color: '#000000' }}>
+            Generate {hasExtendedBeats ? '24s Mount Sinai Video' : '12s Video'}
+          </span>
         </button>
       </div>
     </motion.div>

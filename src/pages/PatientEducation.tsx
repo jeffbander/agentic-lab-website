@@ -11,15 +11,19 @@ type Step = 'form' | 'preview' | 'generate';
 export default function PatientEducation() {
   const [currentStep, setCurrentStep] = useState<Step>('form');
   const [promptResult, setPromptResult] = useState<SoraPromptResult | null>(null);
+  const [promptPart2, setPromptPart2] = useState<string | undefined>(undefined);
   const [finalOst, setFinalOst] = useState<OnScreenText | null>(null);
+  const [finalPromptPart2, setFinalPromptPart2] = useState<string | undefined>(undefined);
 
-  const handlePreview = (result: SoraPromptResult) => {
+  const handlePreview = (result: SoraPromptResult, part2?: string) => {
     setPromptResult(result);
+    setPromptPart2(part2);
     setCurrentStep('preview');
   };
 
-  const handleGenerate = (prompt: string, ost: OnScreenText) => {
+  const handleGenerate = (prompt: string, ost: OnScreenText, part2?: string) => {
     setFinalOst(ost);
+    setFinalPromptPart2(part2);
     setCurrentStep('generate');
   };
 
@@ -60,10 +64,10 @@ export default function PatientEducation() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Patient Education Micro-Videos
+                Mount Sinai Patient Education Videos
               </h1>
               <p className="text-gray-600">
-                Transform provider notes into 12-second educational videos
+                Transform provider notes into Mount Sinai-branded educational videos (12s or 24s)
               </p>
             </div>
           </div>
@@ -138,6 +142,7 @@ export default function PatientEducation() {
             >
               <PreviewCard
                 result={promptResult}
+                promptPart2={promptPart2}
                 onGenerate={handleGenerate}
                 onBack={handleBackToForm}
               />
@@ -153,6 +158,7 @@ export default function PatientEducation() {
             >
               <GeneratePanel
                 prompt={promptResult.prompt}
+                promptPart2={finalPromptPart2}
                 ost={finalOst}
                 onBack={handleBackToPreview}
                 onReset={handleReset}

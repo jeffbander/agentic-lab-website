@@ -16,10 +16,23 @@ export interface ProviderNote {
 }
 
 export interface OnScreenText {
-  beat1: string; // Greeting + condition
-  beat2: string; // Key takeaway
-  beat3: string; // How treatment helps
-  beat4: string; // Next step + safety
+  // Part 1 (0-12s): Mount Sinai branding + patient intro
+  beat1: string; // Mount Sinai logo
+  beat2: string; // Greeting + condition
+  beat3: string; // Condition overview
+  beat4: string; // Recent test results
+  // Part 2 (12-24s): Medications + treatment plan
+  beat5?: string; // Current medications
+  beat6?: string; // Treatment options discussed
+  beat7?: string; // Next steps and monitoring
+  beat8?: string; // Risks/side effects + call to action
+}
+
+export interface ExtendedOnScreenText extends OnScreenText {
+  beat5: string;
+  beat6: string;
+  beat7: string;
+  beat8: string;
 }
 
 export interface SoraPromptResult {

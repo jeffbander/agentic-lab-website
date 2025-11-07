@@ -4,7 +4,7 @@ import { ClipboardCopy, Info } from 'lucide-react';
 import type { SoraPromptResult } from '../../lib/patientEducation';
 
 interface ProviderNoteFormProps {
-  onPreview: (result: SoraPromptResult) => void;
+  onPreview: (result: SoraPromptResult, promptPart2?: string) => void;
 }
 
 const TEMPLATE = `Patient: [Name] (OK to show name: yes/no)
@@ -60,30 +60,43 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
 
       const scriptData = await response.json();
 
+      // Check if we have extended 24-second video (8 beats)
+      const hasExtendedBeats = !!(scriptData.beat5Text);
+
       // Build result in expected format
-      const result = {
-        prompt: scriptData.fullSoraPrompt,
+      // Use fullSoraPromptPart1 if it exists, otherwise fallback to fullSoraPrompt
+      const mainPrompt = scriptData.fullSoraPromptPart1 || scriptData.fullSoraPrompt;
+      const promptPart2 = scriptData.fullSoraPromptPart2;
+
+      const result: SoraPromptResult = {
+        prompt: mainPrompt,
         ost: {
           beat1: scriptData.beat1Text,
           beat2: scriptData.beat2Text,
           beat3: scriptData.beat3Text,
           beat4: scriptData.beat4Text,
+          ...(hasExtendedBeats && {
+            beat5: scriptData.beat5Text,
+            beat6: scriptData.beat6Text,
+            beat7: scriptData.beat7Text,
+            beat8: scriptData.beat8Text,
+          }),
         },
         params: {
           model: 'sora-2',
           width: 1920,
           height: 1080,
-          n_seconds: 12,
+          n_seconds: hasExtendedBeats ? 24 : 12,
         },
         audit: {
-          promptHash: Math.abs(scriptData.fullSoraPrompt.split('').reduce((a: number, b: string) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16),
-          brandPresent: !!(scriptData.primaryCondition),
+          promptHash: Math.abs(mainPrompt.split('').reduce((a: number, b: string) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16),
+          brandPresent: true, // Mount Sinai branding is always present now
           language: 'English',
           timestamp: new Date().toISOString(),
         },
       };
 
-      onPreview(result);
+      onPreview(result, promptPart2);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate script');
     } finally {
