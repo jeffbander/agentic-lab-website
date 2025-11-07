@@ -5,6 +5,7 @@ import { Loading } from '../components/Loading';
 
 // Lazy load heavy components for better initial load performance
 const Overview = lazy(() => import('../components/sections/Overview').then(m => ({ default: m.Overview })));
+const LeqvioSection = lazy(() => import('../components/sections/LeqvioSection'));
 const ProjectsSection = lazy(() => import('../components/projects/ProjectsSection').then(m => ({ default: m.ProjectsSection })));
 const Approach = lazy(() => import('../components/sections/Approach').then(m => ({ default: m.Approach })));
 const WorkflowDiagram = lazy(() => import('../components/diagrams/WorkflowDiagram').then(m => ({ default: m.WorkflowDiagram })));
@@ -36,6 +37,11 @@ export default function LandingPage() {
       <Suspense fallback={<Loading message="Loading overview..." />}>
         <ErrorBoundary fallback={<SectionErrorFallback section="Overview" />}>
           <Overview />
+        </ErrorBoundary>
+      </Suspense>
+      <Suspense fallback={<Loading message="Loading LEQVIO AI..." />}>
+        <ErrorBoundary fallback={<SectionErrorFallback section="LEQVIO AI" />}>
+          <LeqvioSection />
         </ErrorBoundary>
       </Suspense>
       <Suspense fallback={<Loading message="Loading projects..." />}>

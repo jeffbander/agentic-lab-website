@@ -10,6 +10,7 @@ export function Navigation() {
 
   const navLinks = [
     { name: 'Overview', href: '#overview', isHash: true },
+    { name: 'LEQVIO AI', href: '#leqvio', isHash: true },
     { name: 'Projects', href: '#projects', isHash: true },
     { name: 'Approach', href: '#approach', isHash: true },
     { name: 'Impact', href: '#impact', isHash: true },
