@@ -12,6 +12,8 @@
     "setup:video": "node scripts/setup-video-generator.js"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@netlify/functions": "^5.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

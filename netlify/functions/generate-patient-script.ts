@@ -165,7 +165,7 @@ ${mountSinaiBranding}
 
 Visual style: clean medical animation with simple 3D icons (heart, kidneys, blood vessels, BP cuff, pill bottle), high-contrast captions, hospital-bright soft lighting with Mount Sinai brand colors (cyan #06ABEB, magenta #DC298D).
 Camera: gentle dolly-in; cross-dissolves between four scenes; steady exposure; 24 fps; 1920×1080.
-Audio: soft neutral music; friendly voiceover that speaks the same lines as the on-screen text.
+Audio: soft neutral music; friendly voiceover that speaks the same lines as the on-screen text. IMPORTANT: In Beat 4 (9-12s), the voiceover should complete the sentence naturally but trail off/fade out smoothly around 10-11 seconds, ending 1-2 seconds before the video ends at 12s. This creates a natural pause for the transition to Part 2.
 Respect privacy; no identifiable faces.
 
 Beat 1 (0–3s) — Mount Sinai Health System Logo
@@ -194,7 +194,7 @@ ${firstName ? `Continue personalizing with the first name "${firstName}".` : 'Co
 
 Visual style: clean medical animation with simple 3D icons (pills, treatment pathways, calendar, checklist), high-contrast captions, hospital-bright soft lighting with Mount Sinai brand colors (cyan #06ABEB, magenta #DC298D).
 Camera: gentle dolly-in; cross-dissolves between four scenes; steady exposure; 24 fps; 1920×1080.
-Audio: soft neutral music; friendly voiceover that speaks the same lines as the on-screen text.
+Audio: soft neutral music continues; friendly voiceover that speaks the same lines as the on-screen text. IMPORTANT: The voiceover should begin at the very start (0s) with a new sentence or phrase that flows naturally as if continuing a conversation. The audio in Beat 1 should start immediately, picking up seamlessly from Part 1. In Beat 4 (9-12s), the voiceover should complete naturally and end 1-2 seconds before the video ends at 12s to avoid an abrupt cutoff.
 Respect privacy; no identifiable faces.
 
 Beat 1 (0–3s) — Current Medications

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Copy, Info } from 'lucide-react';
 import type { OnScreenText } from '../../lib/patientEducation';
-import { concatenateVideos, type VideoStitcherProgress } from '../../lib/videoStitcher';
+import { concatenateVideos, type VideoStitcherProgress } from '../../lib/ffmpegVideoStitcher';
 
 interface GeneratePanelProps {
   prompt: string; // This will be promptPart1
