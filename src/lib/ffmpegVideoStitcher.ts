@@ -14,51 +14,95 @@ export interface VideoStitcherProgress {
 
 let ffmpegInstance: FFmpeg | null = null;
 let ffmpegLoaded = false;
+let ffmpegLoadingPromise: Promise<FFmpeg> | null = null;
 
 /**
- * Initialize FFmpeg.wasm (lazy loading)
+ * Preload FFmpeg.wasm in the background (call early to reduce wait time)
+ * Returns a promise that resolves when FFmpeg is ready
  */
-async function initFFmpeg(onProgress?: (progress: VideoStitcherProgress) => void): Promise<FFmpeg> {
-  if (ffmpegInstance && ffmpegLoaded) {
-    return ffmpegInstance;
-  }
-
-  onProgress?.({ stage: 'loading', progress: 5, message: 'Loading FFmpeg...' });
-
-  ffmpegInstance = new FFmpeg();
-
-  // Set up logging
-  ffmpegInstance.on('log', ({ message }) => {
-    console.log('[FFmpeg]', message);
-  });
-
-  // Set up progress tracking
-  ffmpegInstance.on('progress', ({ progress, time }) => {
-    const progressPercent = Math.min(progress * 100, 99);
-    onProgress?.({
-      stage: 'processing',
-      progress: 40 + progressPercent * 0.5,
-      message: `Processing video... ${Math.round(progressPercent)}%`,
-    });
-  });
+export async function preloadFFmpeg(): Promise<void> {
+  if (ffmpegLoaded) return;
 
   try {
-    // Load FFmpeg core
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    await initFFmpeg();
+    console.log('[FFmpeg] Preloaded successfully');
+  } catch (error) {
+    console.warn('[FFmpeg] Preload failed, will retry on demand:', error);
+  }
+}
 
-    await ffmpegInstance.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+/**
+ * Initialize FFmpeg.wasm (lazy loading with singleton pattern)
+ * Uses a shared promise to prevent multiple simultaneous loads
+ */
+async function initFFmpeg(onProgress?: (progress: VideoStitcherProgress) => void): Promise<FFmpeg> {
+  // Already loaded - return immediately
+  if (ffmpegInstance && ffmpegLoaded) {
+    onProgress?.({ stage: 'loading', progress: 10, message: 'FFmpeg ready (cached)' });
+    return ffmpegInstance;
+  }
+
+  // Loading in progress - wait for it
+  if (ffmpegLoadingPromise) {
+    onProgress?.({ stage: 'loading', progress: 5, message: 'Waiting for FFmpeg to load...' });
+    return ffmpegLoadingPromise;
+  }
+
+  // Start loading
+  onProgress?.({ stage: 'loading', progress: 5, message: 'Loading FFmpeg...' });
+
+  ffmpegLoadingPromise = (async () => {
+    ffmpegInstance = new FFmpeg();
+
+    // Set up logging
+    ffmpegInstance.on('log', ({ message }) => {
+      console.log('[FFmpeg]', message);
     });
 
-    ffmpegLoaded = true;
-    onProgress?.({ stage: 'loading', progress: 10, message: 'FFmpeg loaded successfully' });
+    // Set up progress tracking
+    ffmpegInstance.on('progress', ({ progress }) => {
+      const progressPercent = Math.min(progress * 100, 99);
+      onProgress?.({
+        stage: 'processing',
+        progress: 40 + progressPercent * 0.5,
+        message: `Processing video... ${Math.round(progressPercent)}%`,
+      });
+    });
 
-    return ffmpegInstance;
-  } catch (error) {
-    console.error('Failed to load FFmpeg:', error);
-    throw new Error('Failed to initialize FFmpeg. Please refresh and try again.');
-  }
+    try {
+      // Load FFmpeg core with fallback CDNs
+      const cdnUrls = [
+        'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm',
+        'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
+      ];
+
+      let lastError: Error | null = null;
+
+      for (const baseURL of cdnUrls) {
+        try {
+          await ffmpegInstance.load({
+            coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+            wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          });
+
+          ffmpegLoaded = true;
+          onProgress?.({ stage: 'loading', progress: 10, message: 'FFmpeg loaded successfully' });
+          return ffmpegInstance;
+        } catch (error) {
+          console.warn(`[FFmpeg] Failed to load from ${baseURL}:`, error);
+          lastError = error instanceof Error ? error : new Error(String(error));
+        }
+      }
+
+      throw lastError || new Error('All CDN sources failed');
+    } catch (error) {
+      ffmpegLoadingPromise = null; // Allow retry on failure
+      console.error('Failed to load FFmpeg:', error);
+      throw new Error('Failed to initialize FFmpeg. Please refresh and try again.');
+    }
+  })();
+
+  return ffmpegLoadingPromise;
 }
 
 /**
@@ -121,8 +165,12 @@ export async function concatenateVideosWithFFmpeg(
 
     onProgress?.({ stage: 'complete', progress: 100, message: 'Videos merged successfully!' });
 
-    // Convert to Blob
-    const blob = new Blob([data], { type: 'video/mp4' });
+    // Convert to Blob - handle FFmpeg FileData type (Uint8Array or string)
+    // Use slice() to create a new ArrayBuffer owned by the Uint8Array
+    const blobData = typeof data === 'string'
+      ? new TextEncoder().encode(data)
+      : data.slice();
+    const blob = new Blob([blobData as BlobPart], { type: 'video/mp4' });
     return blob;
 
   } catch (error) {
@@ -195,7 +243,12 @@ export async function concatenateVideosWithReencode(
 
     onProgress?.({ stage: 'complete', progress: 100, message: 'Videos merged successfully!' });
 
-    const blob = new Blob([data], { type: 'video/mp4' });
+    // Convert to Blob - handle FFmpeg FileData type (Uint8Array or string)
+    // Use slice() to create a new ArrayBuffer owned by the Uint8Array
+    const blobData = typeof data === 'string'
+      ? new TextEncoder().encode(data)
+      : data.slice();
+    const blob = new Blob([blobData as BlobPart], { type: 'video/mp4' });
     return blob;
 
   } catch (error) {
