@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Copy, Info } from 'lucide-react';
+import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Copy, Info, Zap } from 'lucide-react';
 import type { OnScreenText } from '../../lib/patientEducation';
-import { concatenateVideos, type VideoStitcherProgress } from '../../lib/ffmpegVideoStitcher';
+import { concatenateVideos, preloadFFmpeg, type VideoStitcherProgress } from '../../lib/ffmpegVideoStitcher';
 
 interface GeneratePanelProps {
   prompt: string; // This will be promptPart1
@@ -13,7 +13,7 @@ interface GeneratePanelProps {
 }
 
 type JobStatus = 'queued' | 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
-type GenerationPhase = 'part1' | 'part2' | 'completed';
+type GenerationPhase = 'parallel' | 'single' | 'stitching' | 'completed';
 
 interface StatusResponse {
   id: string;
@@ -28,6 +28,7 @@ interface JobState {
   id: string;
   status: JobStatus;
   videoUrl?: string;
+  error?: string;
 }
 
 const STATUS_MESSAGES: Record<JobStatus, string> = {
@@ -40,8 +41,9 @@ const STATUS_MESSAGES: Record<JobStatus, string> = {
 };
 
 const PHASE_MESSAGES: Record<GenerationPhase, string> = {
-  part1: 'Generating Part 1: Mount Sinai branding + Patient intro (0-12s)',
-  part2: 'Generating Part 2: Medications + Treatment plan (12-24s)',
+  parallel: 'Generating both parts in parallel for faster results!',
+  single: 'Generating 12-second patient education video',
+  stitching: 'Merging videos into seamless 24-second video...',
   completed: '24-second patient education video ready!',
 };
 
@@ -106,34 +108,168 @@ function updateDocumentTitle(message: string) {
 }
 
 export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onReset }: GeneratePanelProps) {
-  // Two-part video generation state
-  const [currentPhase, setCurrentPhase] = useState<GenerationPhase>('part1');
+  // Parallel video generation state
+  const [currentPhase, setCurrentPhase] = useState<GenerationPhase>(promptPart2 ? 'parallel' : 'single');
   const [part1Job, setPart1Job] = useState<JobState | null>(null);
   const [part2Job, setPart2Job] = useState<JobState | null>(null);
 
-  // Legacy state for compatibility
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<JobStatus>('queued');
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  // General state
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
-  const hasCreatedJob = useRef(false);
+  const hasCreatedJobs = useRef(false);
 
   // UX improvements
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [canLeave, setCanLeave] = useState(false);
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
 
   // Video stitching state
   const [isStitching, setIsStitching] = useState(false);
   const [stitchProgress, setStitchProgress] = useState<VideoStitcherProgress | null>(null);
   const [stitchedVideoUrl, setStitchedVideoUrl] = useState<string | null>(null);
 
+  // FFmpeg preload started flag
+  const ffmpegPreloadStarted = useRef(false);
+
   // Request notification permission on mount
   useEffect(() => {
     requestNotificationPermission().then(setNotificationPermission);
   }, []);
+
+  // Preload FFmpeg early for 24s videos (while generation is in progress)
+  useEffect(() => {
+    if (promptPart2 && !ffmpegPreloadStarted.current) {
+      ffmpegPreloadStarted.current = true;
+      console.log('[GeneratePanel] Preloading FFmpeg for faster stitching...');
+      preloadFFmpeg();
+    }
+  }, [promptPart2]);
+
+  // Create video job helper function
+  const createVideoJob = useCallback(async (
+    jobPrompt: string,
+    phase: 'part1' | 'part2'
+  ): Promise<JobState> => {
+    const response = await fetch('/api/sora-create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: jobPrompt,
+        width: 1920,
+        height: 1080,
+        n_seconds: 12,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Failed to create ${phase} video job`);
+    }
+
+    const data = await response.json();
+    const job: JobState = { id: data.id, status: data.status || 'queued' };
+    saveJobToStorage(phase, data.id, data.status || 'queued');
+    return job;
+  }, []);
+
+  // Poll job status helper function
+  const pollJobStatus = useCallback(async (jobId: string): Promise<StatusResponse> => {
+    const response = await fetch(`/api/sora-status?id=${jobId}`);
+    if (!response.ok) {
+      throw new Error('Failed to check status');
+    }
+    return response.json();
+  }, []);
+
+  // Create jobs on mount - PARALLEL for 24s videos
+  useEffect(() => {
+    if (hasCreatedJobs.current) return;
+    hasCreatedJobs.current = true;
+
+    const createJobs = async () => {
+      try {
+        setCanLeave(true);
+
+        if (promptPart2) {
+          // PARALLEL: Create both jobs simultaneously
+          console.log('[GeneratePanel] Creating Part 1 and Part 2 jobs in PARALLEL');
+          const [job1, job2] = await Promise.all([
+            createVideoJob(prompt, 'part1'),
+            createVideoJob(promptPart2, 'part2'),
+          ]);
+
+          setPart1Job(job1);
+          setPart2Job(job2);
+          setCurrentPhase('parallel');
+        } else {
+          // Single video - just create Part 1
+          const job1 = await createVideoJob(prompt, 'part1');
+          setPart1Job(job1);
+          setCurrentPhase('single');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to create video jobs');
+      }
+    };
+
+    // Try to restore from localStorage first
+    const savedPart1 = loadJobFromStorage('part1');
+    const savedPart2 = loadJobFromStorage('part2');
+
+    if (savedPart1 || savedPart2) {
+      if (savedPart1) setPart1Job(savedPart1);
+      if (savedPart2) setPart2Job(savedPart2);
+      setCanLeave(true);
+      setCurrentPhase(promptPart2 ? 'parallel' : 'single');
+    } else {
+      createJobs();
+    }
+  }, [prompt, promptPart2, createVideoJob]);
+
+  // Poll for status updates - handles both jobs in parallel
+  useEffect(() => {
+    const jobsToPolling: { job: JobState; phase: 'part1' | 'part2'; setJob: React.Dispatch<React.SetStateAction<JobState | null>> }[] = [];
+
+    if (part1Job && part1Job.status !== 'succeeded' && part1Job.status !== 'failed' && part1Job.status !== 'canceled') {
+      jobsToPolling.push({ job: part1Job, phase: 'part1', setJob: setPart1Job });
+    }
+    if (part2Job && part2Job.status !== 'succeeded' && part2Job.status !== 'failed' && part2Job.status !== 'canceled') {
+      jobsToPolling.push({ job: part2Job, phase: 'part2', setJob: setPart2Job });
+    }
+
+    if (jobsToPolling.length === 0) return;
+
+    const pollAllJobs = async () => {
+      await Promise.all(
+        jobsToPolling.map(async ({ job, phase, setJob }) => {
+          try {
+            const data = await pollJobStatus(job.id);
+
+            // Update job state
+            const videoUrl = data.generations?.[0]?.url || data.videoUrl;
+            const updatedJob: JobState = {
+              id: job.id,
+              status: data.status,
+              videoUrl: data.status === 'succeeded' ? videoUrl : undefined,
+              error: data.error,
+            };
+
+            setJob(updatedJob);
+            saveJobToStorage(phase, job.id, data.status, videoUrl);
+
+            if (data.logs) setLogs(data.logs);
+          } catch (err) {
+            console.error(`Failed to poll ${phase}:`, err);
+            // Don't stop polling on transient errors - just log and continue
+          }
+        })
+      );
+    };
+
+    const intervalId = setInterval(pollAllJobs, POLL_INTERVAL);
+    pollAllJobs(); // Initial poll
+
+    return () => clearInterval(intervalId);
+  }, [part1Job, part2Job, pollJobStatus]);
 
   // Auto-stitch videos when both parts are ready
   useEffect(() => {
@@ -148,7 +284,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
 
     if (shouldStitch) {
       setIsStitching(true);
-      setCurrentPhase('completed');
+      setCurrentPhase('stitching');
 
       concatenateVideos(
         part1Job!.videoUrl!,
@@ -158,8 +294,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
         .then((blob) => {
           const url = URL.createObjectURL(blob);
           setStitchedVideoUrl(url);
-          setVideoUrl(url);
-          setStatus('succeeded');
+          setCurrentPhase('completed');
           setIsStitching(false);
 
           // Show notification
@@ -170,212 +305,53 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
           clearJobFromStorage('part1');
           clearJobFromStorage('part2');
         })
-        .catch((error) => {
-          console.error('Video stitching failed:', error);
+        .catch((stitchError) => {
+          console.error('Video stitching failed:', stitchError);
           setError('Failed to stitch videos together. You can still download them separately.');
+          setCurrentPhase('completed'); // Still show videos
           setIsStitching(false);
         });
     }
   }, [part1Job, part2Job, promptPart2, isStitching, stitchedVideoUrl]);
 
-  // Try to restore jobs from localStorage on mount
+  // Handle single video completion
   useEffect(() => {
-    const savedPart1 = loadJobFromStorage('part1');
-    const savedPart2 = loadJobFromStorage('part2');
-
-    if (savedPart1 && savedPart1.status !== 'succeeded') {
-      setPart1Job(savedPart1);
-      setJobId(savedPart1.id);
-      setStatus(savedPart1.status);
-      setCurrentPhase('part1');
-      setIsPolling(true);
-      setCanLeave(true);
-    } else if (savedPart2 && savedPart2.status !== 'succeeded') {
-      setPart2Job(savedPart2);
-      setJobId(savedPart2.id);
-      setStatus(savedPart2.status);
-      setCurrentPhase('part2');
-      setIsPolling(true);
-      setCanLeave(true);
+    if (!promptPart2 && part1Job?.status === 'succeeded' && part1Job?.videoUrl) {
+      setCurrentPhase('completed');
+      showBrowserNotification('Video Ready!', 'Your patient education video is ready to view');
+      updateDocumentTitle('✓ Video Ready - Patient Education');
+      clearJobFromStorage('part1');
     }
-  }, []);
+  }, [part1Job, promptPart2]);
 
-  // Create video generation job (Part 1 only for now, or both if promptPart2 exists)
+  // Check for failures
   useEffect(() => {
-    // Prevent duplicate job creation
-    if (hasCreatedJob.current) {
-      return;
+    if (part1Job?.status === 'failed') {
+      setError(part1Job.error || 'Part 1 video generation failed');
     }
-
-    const createPart1Job = async () => {
-      try {
-        // Mark that we're creating a job
-        hasCreatedJob.current = true;
-        setCanLeave(true); // User can leave once job is created
-
-        const response = await fetch('/api/sora-create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt,
-            width: 1920,
-            height: 1080,
-            n_seconds: 12,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create video generation job');
-        }
-
-        const data = await response.json();
-        const newJob: JobState = { id: data.id, status: data.status || 'queued' };
-
-        setPart1Job(newJob);
-        setJobId(data.id);
-        setStatus(data.status || 'queued');
-        setIsPolling(true);
-        setCurrentPhase('part1');
-
-        // Save to localStorage
-        saveJobToStorage('part1', data.id, data.status || 'queued');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-        setStatus('failed');
-      }
-    };
-
-    createPart1Job();
-  }, [prompt]);
-
-  // Poll for status updates
-  useEffect(() => {
-    if (!jobId || !isPolling) return;
-
-    const pollStatus = async () => {
-      try {
-        const response = await fetch(`/api/sora-status?id=${jobId}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to check status');
-        }
-
-        const data: StatusResponse = await response.json();
-        setStatus(data.status);
-        setLogs(data.logs || null);
-
-        // Update localStorage
-        const storagePhase = currentPhase === 'part1' ? 'part1' : 'part2';
-        saveJobToStorage(storagePhase, jobId, data.status, data.generations?.[0]?.url || data.videoUrl);
-
-        if (data.status === 'succeeded') {
-          const url = data.generations?.[0]?.url || data.videoUrl;
-
-          if (currentPhase === 'part1') {
-            // Part 1 complete - save and start Part 2 if it exists
-            setPart1Job({ id: jobId, status: 'succeeded', videoUrl: url });
-
-            if (promptPart2) {
-              // Start Part 2
-              setCurrentPhase('part2');
-              setStatus('queued');
-              setJobId(null);
-              setIsPolling(false);
-              hasCreatedJob.current = false; // Allow creating Part 2
-
-              // Create Part 2 job
-              setTimeout(() => createPart2Job(url || ''), 100);
-            } else {
-              // No Part 2 - we're done!
-              setVideoUrl(url);
-              setIsPolling(false);
-              setCurrentPhase('completed');
-
-              // Show notification
-              showBrowserNotification('Video Ready!', 'Your patient education video is ready to view');
-              updateDocumentTitle('✓ Video Ready - Patient Education');
-            }
-          } else if (currentPhase === 'part2') {
-            // Part 2 complete - both videos ready!
-            setPart2Job({ id: jobId, status: 'succeeded', videoUrl: url });
-            setVideoUrl(url); // For now, just show Part 2 (we'll improve this later)
-            setIsPolling(false);
-            setCurrentPhase('completed');
-
-            // Show notification
-            showBrowserNotification('24-Second Video Ready!', 'Your complete patient education video is ready');
-            updateDocumentTitle('✓ Video Ready - Patient Education');
-
-            // Clear storage after success
-            clearJobFromStorage('part1');
-            clearJobFromStorage('part2');
-          }
-        } else if (data.status === 'failed' || data.status === 'canceled') {
-          setError(data.error || `Video generation ${data.status}`);
-          setIsPolling(false);
-
-          // Show notification
-          showBrowserNotification('Video Generation Failed', data.error || 'Please try again');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to check status');
-        setIsPolling(false);
-      }
-    };
-
-    const intervalId = setInterval(pollStatus, POLL_INTERVAL);
-    pollStatus(); // Initial poll
-
-    return () => clearInterval(intervalId);
-  }, [jobId, isPolling, currentPhase, promptPart2]);
-
-  // Function to create Part 2 job
-  const createPart2Job = async (part1Url: string) => {
-    if (!promptPart2) return;
-
-    try {
-      const response = await fetch('/api/sora-create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: promptPart2,
-          width: 1920,
-          height: 1080,
-          n_seconds: 12,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create Part 2 video');
-      }
-
-      const data = await response.json();
-      const newJob: JobState = { id: data.id, status: data.status || 'queued' };
-
-      setPart2Job(newJob);
-      setJobId(data.id);
-      setStatus(data.status || 'queued');
-      setIsPolling(true);
-
-      // Save to localStorage
-      saveJobToStorage('part2', data.id, data.status || 'queued');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create Part 2 video');
-      setStatus('failed');
+    if (part2Job?.status === 'failed' && part1Job?.status === 'succeeded') {
+      setError('Part 2 failed, but Part 1 is available for download');
+    } else if (part2Job?.status === 'failed') {
+      setError(part2Job.error || 'Part 2 video generation failed');
     }
+  }, [part1Job, part2Job]);
+
+  // Compute overall status for display
+  const overallStatus = (): JobStatus => {
+    if (part1Job?.status === 'failed' || part2Job?.status === 'failed') return 'failed';
+    if (part1Job?.status === 'succeeded' && (!promptPart2 || part2Job?.status === 'succeeded')) return 'succeeded';
+    if (part1Job?.status === 'processing' || part2Job?.status === 'processing') return 'processing';
+    if (part1Job?.status === 'starting' || part2Job?.status === 'starting') return 'starting';
+    return 'queued';
   };
 
-  const handleDownload = async () => {
-    if (!videoUrl) return;
+  const status = overallStatus();
+
+  const handleDownload = async (url: string) => {
+    if (!url) return;
 
     try {
-      const response = await fetch(`/api/sora-download?url=${encodeURIComponent(videoUrl)}`);
+      const response = await fetch(`/api/sora-download?url=${encodeURIComponent(url)}`);
       if (response.redirected) {
         window.open(response.url, '_blank');
       }
@@ -385,16 +361,24 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
   };
 
   const handleRetry = () => {
-    setJobId(null);
-    setStatus('queued');
-    setVideoUrl(null);
+    // Clear all state and storage
+    clearJobFromStorage('part1');
+    clearJobFromStorage('part2');
+    setPart1Job(null);
+    setPart2Job(null);
     setError(null);
     setLogs(null);
-    setIsPolling(false);
+    setStitchedVideoUrl(null);
+    setIsStitching(false);
+    hasCreatedJobs.current = false;
+    ffmpegPreloadStarted.current = false;
 
-    // Trigger recreation by changing a state value
+    // Reload to restart fresh
     window.location.reload();
   };
+
+  // Get the current job ID for display
+  const currentJobId = part1Job?.id || part2Job?.id;
 
   return (
     <motion.div
@@ -407,7 +391,13 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
         <p className="text-gray-600 mt-1">
           {promptPart2 ? 'Creating 24-second video (Part 1 + Part 2)' : 'Creating 12-second video with 4-beat storyboard'}
         </p>
-        {currentPhase !== 'completed' && (
+        {currentPhase === 'parallel' && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded-full w-fit">
+            <Zap className="w-4 h-4" />
+            <span className="font-medium">Parallel Generation - 2x Faster!</span>
+          </div>
+        )}
+        {currentPhase !== 'completed' && currentPhase !== 'parallel' && (
           <div className="mt-2 flex items-center gap-2 text-sm text-sinai-cyan-700">
             <Info className="w-4 h-4" />
             <span>Current: {PHASE_MESSAGES[currentPhase]}</span>
@@ -427,15 +417,17 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
             <div className="flex-1">
               <h4 className="font-semibold text-blue-900 mb-1">You can safely leave this page</h4>
               <p className="text-sm text-blue-700 mb-2">
-                Your video is generating in the background. You can close this tab and return later.
+                {promptPart2
+                  ? 'Both video parts are generating in parallel. You can close this tab and return later.'
+                  : 'Your video is generating in the background. You can close this tab and return later.'}
               </p>
-              {jobId && (
+              {currentJobId && (
                 <div className="flex items-center gap-2">
                   <code className="text-xs bg-white px-2 py-1 rounded border border-blue-200 font-mono">
-                    {jobId}
+                    {part1Job?.id && part2Job?.id ? `Part 1: ${part1Job.id.slice(0,8)}... Part 2: ${part2Job.id.slice(0,8)}...` : currentJobId}
                   </code>
                   <button
-                    onClick={() => navigator.clipboard.writeText(jobId)}
+                    onClick={() => navigator.clipboard.writeText(currentJobId)}
                     className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                   >
                     <Copy className="w-3 h-3" />
@@ -508,23 +500,60 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
                 {PHASE_MESSAGES[currentPhase]}
               </h3>
               <p className="text-sm text-gray-600 text-center max-w-md mb-4">
-                {STATUS_MESSAGES[status]}
+                {promptPart2 && currentPhase === 'parallel'
+                  ? 'Both video parts are being generated simultaneously'
+                  : STATUS_MESSAGES[status]}
               </p>
 
-              {/* Progress Bar */}
+              {/* Parallel Progress Bars - Show both parts side by side */}
               {promptPart2 && (
-                <div className="w-full max-w-md mb-4">
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-sinai-cyan-600"
-                      initial={{ width: '0%' }}
-                      animate={{ width: currentPhase === 'part1' ? '50%' : '100%' }}
-                      transition={{ duration: 0.5 }}
-                    />
+                <div className="w-full max-w-md mb-4 space-y-3">
+                  {/* Part 1 Progress */}
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span className="font-medium">Part 1: Branding + Intro</span>
+                      <span className={part1Job?.status === 'succeeded' ? 'text-green-600' : ''}>
+                        {part1Job?.status === 'succeeded' ? '✓ Complete' :
+                         part1Job?.status === 'processing' ? 'Processing...' :
+                         part1Job?.status === 'starting' ? 'Starting...' : 'Queued'}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${part1Job?.status === 'succeeded' ? 'bg-green-500' : 'bg-sinai-cyan-600'}`}
+                        initial={{ width: '0%' }}
+                        animate={{
+                          width: part1Job?.status === 'succeeded' ? '100%' :
+                                 part1Job?.status === 'processing' ? '66%' :
+                                 part1Job?.status === 'starting' ? '33%' : '10%'
+                        }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Part 1 {part1Job?.status === 'succeeded' ? '✓' : '...'}</span>
-                    <span>Part 2 {part2Job?.status === 'succeeded' ? '✓' : '...'}</span>
+
+                  {/* Part 2 Progress */}
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span className="font-medium">Part 2: Medications + Plan</span>
+                      <span className={part2Job?.status === 'succeeded' ? 'text-green-600' : ''}>
+                        {part2Job?.status === 'succeeded' ? '✓ Complete' :
+                         part2Job?.status === 'processing' ? 'Processing...' :
+                         part2Job?.status === 'starting' ? 'Starting...' : 'Queued'}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${part2Job?.status === 'succeeded' ? 'bg-green-500' : 'bg-sinai-magenta-600'}`}
+                        initial={{ width: '0%' }}
+                        animate={{
+                          width: part2Job?.status === 'succeeded' ? '100%' :
+                                 part2Job?.status === 'processing' ? '66%' :
+                                 part2Job?.status === 'starting' ? '33%' : '10%'
+                        }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -532,31 +561,31 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
               {/* Educational Tips */}
               <div className="mt-4 bg-sinai-cyan-50 rounded-lg p-4 max-w-md">
                 <p className="text-sm text-sinai-cyan-900 font-medium mb-1">
-                  {currentPhase === 'part1' ? '💡 Did you know?' : '✨ Almost there!'}
+                  {promptPart2 ? '⚡ Parallel Processing' : '💡 Did you know?'}
                 </p>
                 <p className="text-sm text-sinai-cyan-700">
-                  {currentPhase === 'part1'
-                    ? 'Videos improve patient comprehension by 73% compared to text-only instructions.'
-                    : 'Mount Sinai-branded videos help patients feel connected to their care team.'}
+                  {promptPart2
+                    ? 'Both video parts generate at the same time, cutting wait time in half!'
+                    : 'Videos improve patient comprehension by 73% compared to text-only instructions.'}
                 </p>
               </div>
 
               <p className="text-xs text-gray-500 mt-4 text-center max-w-md">
-                Estimated time: {promptPart2 ? '3-4 minutes for both parts' : '1.5-2 minutes'}
+                Estimated time: {promptPart2 ? '1.5-2 minutes (parallel)' : '1.5-2 minutes'}
                 <br />
                 The page will auto-update when ready.
               </p>
 
-              {jobId && (
+              {currentJobId && (
                 <p className="text-xs text-gray-500 mt-2 font-mono">
-                  Job ID: {jobId}
+                  Job IDs: {part1Job?.id?.slice(0,8)}... {part2Job?.id ? `/ ${part2Job.id.slice(0,8)}...` : ''}
                 </p>
               )}
             </motion.div>
           )}
 
           {/* Success State */}
-          {!isStitching && status === 'succeeded' && (stitchedVideoUrl || part1Job?.videoUrl || part2Job?.videoUrl || videoUrl) && (
+          {!isStitching && status === 'succeeded' && (stitchedVideoUrl || part1Job?.videoUrl || part2Job?.videoUrl) && (
             <motion.div
               key="success"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -702,7 +731,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
                 <div className="mb-4">
                   <div className="bg-black rounded-lg overflow-hidden mb-4">
                     <video
-                      src={part1Job?.videoUrl || videoUrl || ''}
+                      src={part1Job?.videoUrl || ''}
                       controls
                       className="w-full aspect-video"
                       preload="metadata"
@@ -713,7 +742,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
 
                   {/* Download Button */}
                   <button
-                    onClick={handleDownload}
+                    onClick={() => part1Job?.videoUrl && handleDownload(part1Job.videoUrl)}
                     className="w-full py-3 px-6 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors flex items-center justify-center gap-2"
                     style={{ color: '#ffffff' }}
                   >
@@ -743,6 +772,38 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
                   {error}
                 </p>
               )}
+
+              {/* Partial success - show Part 1 if available */}
+              {part1Job?.status === 'succeeded' && part1Job?.videoUrl && part2Job?.status === 'failed' && (
+                <div className="mb-4 w-full max-w-md">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-yellow-900 font-medium mb-2">
+                      Part 1 is ready!
+                    </p>
+                    <p className="text-xs text-yellow-700">
+                      Part 2 failed, but you can still download the 12-second Part 1 video.
+                    </p>
+                  </div>
+                  <div className="bg-black rounded-lg overflow-hidden mb-3">
+                    <video
+                      src={part1Job.videoUrl}
+                      controls
+                      className="w-full aspect-video"
+                      preload="metadata"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <button
+                    onClick={() => handleDownload(part1Job.videoUrl!)}
+                    className="w-full py-2 px-4 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Part 1 (12s)
+                  </button>
+                </div>
+              )}
+
               <button
                 onClick={handleRetry}
                 className="py-2 px-6 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors flex items-center gap-2"

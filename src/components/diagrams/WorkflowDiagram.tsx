@@ -154,8 +154,9 @@ function PhaseCard({ phase, index, isExpanded, isSelected, onToggle, onSelect }:
         }`}
         style={{
           backgroundColor: 'white',
-          ringColor: isSelected ? phase.color : 'transparent'
-        }}
+          // Use CSS custom property for ring color with Tailwind
+          '--tw-ring-color': isSelected ? phase.color : 'transparent'
+        } as React.CSSProperties}
         onClick={onSelect}
       >
         {/* Header */}
