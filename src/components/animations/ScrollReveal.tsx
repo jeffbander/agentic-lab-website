@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 import { ReactNode } from 'react';
 
@@ -17,7 +17,7 @@ export function ScrollReveal({
 }: ScrollRevealProps) {
   const { ref, inView } = useScrollAnimation();
 
-  const variants = {
+  const variants: Variants = {
     hidden: {
       opacity: 0,
       ...(direction === 'up' && { y: 50 }),
@@ -32,7 +32,7 @@ export function ScrollReveal({
       transition: {
         duration: 0.6,
         delay,
-        ease: 'easeOut',
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
   };

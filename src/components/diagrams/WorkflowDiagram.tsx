@@ -154,7 +154,6 @@ function PhaseCard({ phase, index, isExpanded, isSelected, onToggle, onSelect }:
         }`}
         style={{
           backgroundColor: 'white',
-          ringColor: isSelected ? phase.color : 'transparent'
         }}
         onClick={onSelect}
       >
