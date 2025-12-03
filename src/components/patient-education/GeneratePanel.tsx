@@ -157,26 +157,55 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
     jobPrompt: string,
     phase: 'part1' | 'part2'
   ): Promise<JobState> => {
-    const response = await fetch('/api/sora-create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: jobPrompt,
-        width: 1920,
-        height: 1080,
-        n_seconds: 12,
-      }),
-    });
+    console.log(`[GeneratePanel] Creating ${phase} job...`);
+    console.log(`[GeneratePanel] Prompt length: ${jobPrompt.length}`);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Failed to create ${phase} video job`);
+    const requestBody = {
+      prompt: jobPrompt,
+      width: 1920,
+      height: 1080,
+      n_seconds: 12,
+    };
+    console.log(`[GeneratePanel] Request body:`, requestBody);
+
+    try {
+      console.log(`[GeneratePanel] Fetching /api/sora-create...`);
+      const response = await fetch('/api/sora-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log(`[GeneratePanel] Response status: ${response.status}`);
+      console.log(`[GeneratePanel] Response ok: ${response.ok}`);
+
+      const responseText = await response.text();
+      console.log(`[GeneratePanel] Response body: ${responseText.substring(0, 500)}`);
+
+      if (!response.ok) {
+        let errorMessage = `Failed to create ${phase} video job (${response.status})`;
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+          if (errorData.debug) {
+            console.log(`[GeneratePanel] Debug info:`, errorData.debug);
+          }
+        } catch (parseErr) {
+          console.error(`[GeneratePanel] Failed to parse error response:`, parseErr);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = JSON.parse(responseText);
+      console.log(`[GeneratePanel] Job created successfully:`, { id: data.id, status: data.status });
+
+      const job: JobState = { id: data.id, status: data.status || 'queued' };
+      saveJobToStorage(phase, data.id, data.status || 'queued');
+      return job;
+    } catch (fetchError) {
+      console.error(`[GeneratePanel] Fetch error for ${phase}:`, fetchError);
+      throw fetchError;
     }
-
-    const data = await response.json();
-    const job: JobState = { id: data.id, status: data.status || 'queued' };
-    saveJobToStorage(phase, data.id, data.status || 'queued');
-    return job;
   }, []);
 
   // Poll job status helper function
@@ -190,10 +219,19 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
 
   // Create jobs on mount - PARALLEL for 24s videos
   useEffect(() => {
-    if (hasCreatedJobs.current) return;
+    console.log('[GeneratePanel] useEffect triggered');
+    console.log('[GeneratePanel] hasCreatedJobs.current:', hasCreatedJobs.current);
+    console.log('[GeneratePanel] prompt length:', prompt?.length);
+    console.log('[GeneratePanel] promptPart2 length:', promptPart2?.length);
+
+    if (hasCreatedJobs.current) {
+      console.log('[GeneratePanel] Jobs already created, skipping');
+      return;
+    }
     hasCreatedJobs.current = true;
 
     const createJobs = async () => {
+      console.log('[GeneratePanel] Starting createJobs()');
       try {
         setCanLeave(true);
 
@@ -205,30 +243,39 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
             createVideoJob(promptPart2, 'part2'),
           ]);
 
+          console.log('[GeneratePanel] Both jobs created:', { job1, job2 });
           setPart1Job(job1);
           setPart2Job(job2);
           setCurrentPhase('parallel');
         } else {
           // Single video - just create Part 1
+          console.log('[GeneratePanel] Creating single Part 1 job');
           const job1 = await createVideoJob(prompt, 'part1');
+          console.log('[GeneratePanel] Job created:', job1);
           setPart1Job(job1);
           setCurrentPhase('single');
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create video jobs');
+        console.error('[GeneratePanel] Error in createJobs:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to create video jobs';
+        console.error('[GeneratePanel] Setting error:', errorMessage);
+        setError(errorMessage);
       }
     };
 
     // Try to restore from localStorage first
     const savedPart1 = loadJobFromStorage('part1');
     const savedPart2 = loadJobFromStorage('part2');
+    console.log('[GeneratePanel] Restored from storage:', { savedPart1, savedPart2 });
 
     if (savedPart1 || savedPart2) {
+      console.log('[GeneratePanel] Using saved jobs from localStorage');
       if (savedPart1) setPart1Job(savedPart1);
       if (savedPart2) setPart2Job(savedPart2);
       setCanLeave(true);
       setCurrentPhase(promptPart2 ? 'parallel' : 'single');
     } else {
+      console.log('[GeneratePanel] No saved jobs, creating new ones');
       createJobs();
     }
   }, [prompt, promptPart2, createVideoJob]);
