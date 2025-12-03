@@ -86,15 +86,23 @@ function clearJobFromStorage(phase: string) {
   }
 }
 
-function requestNotificationPermission(): Promise<NotificationPermission> {
-  if ('Notification' in window && Notification.permission === 'default') {
+function requestNotificationPermission(): Promise<NotificationPermission | 'unsupported'> {
+  // Check if Notification API is supported (not available on iOS Safari)
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return Promise.resolve('unsupported' as const);
+  }
+  if (Notification.permission === 'default') {
     return Notification.requestPermission();
   }
-  return Promise.resolve(Notification.permission || 'denied');
+  return Promise.resolve(Notification.permission);
 }
 
 function showBrowserNotification(title: string, body: string) {
-  if ('Notification' in window && Notification.permission === 'granted') {
+  // Check if Notification API is supported (not available on iOS Safari)
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return;
+  }
+  if (Notification.permission === 'granted') {
     new Notification(title, {
       body,
       icon: '/favicon.ico',
@@ -119,7 +127,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
   const hasCreatedJobs = useRef(false);
 
   // UX improvements
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [canLeave, setCanLeave] = useState(false);
 
   // Video stitching state
