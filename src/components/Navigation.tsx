@@ -15,6 +15,7 @@ export function Navigation() {
     { name: 'Impact', href: '#impact', isHash: true },
     { name: 'Video Generator', href: '#video-generator', isHash: true },
     { name: 'Patient Education', href: '/patient-education', isHash: false },
+    { name: 'Secure Coding', href: '/secure-coding', isHash: false },
     { name: 'Contact', href: '#contact', isHash: true },
   ];
 
