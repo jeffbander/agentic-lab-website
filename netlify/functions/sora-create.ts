@@ -20,7 +20,7 @@ async function createSoraVideo(
   width: number,
   height: number,
   n_seconds: number
-): Promise<string> {
+): Promise<{ id: string; status: string }> {
   // Replicate Sora-2 API only supports:
   // - aspect_ratio: "portrait" (720x1280) or "landscape" (1280x720)
   // - seconds: 4, 8, or 12 (max 12 seconds!)
@@ -36,12 +36,24 @@ async function createSoraVideo(
   }
   const finalSeconds = seconds <= 6 ? 4 : seconds <= 10 ? 8 : 12;
 
+  const requestBody = {
+    version: SORA_MODEL_VERSION,
+    input: {
+      prompt,
+      aspect_ratio,
+      seconds: finalSeconds,
+      openai_api_key: OPENAI_API_KEY,
+    },
+  };
+
+  console.log(`[Sora Create] Making API request to Replicate...`);
   console.log(`[Sora Create] Request params:`, {
     prompt: prompt.substring(0, 100) + '...',
     aspect_ratio,
     seconds: finalSeconds,
-    requested: { width, height, n_seconds },
-    actual: { width: aspect_ratio === 'landscape' ? 1280 : 720, height: aspect_ratio === 'landscape' ? 720 : 1280 }
+    model_version: SORA_MODEL_VERSION.substring(0, 16) + '...',
+    has_replicate_token: !!REPLICATE_API_TOKEN,
+    has_openai_key: !!OPENAI_API_KEY,
   });
 
   const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
@@ -50,24 +62,24 @@ async function createSoraVideo(
       'Authorization': `Token ${REPLICATE_API_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      version: SORA_MODEL_VERSION,
-      input: {
-        prompt,
-        aspect_ratio,
-        seconds: finalSeconds,
-        openai_api_key: OPENAI_API_KEY,
-      },
-    }),
+    body: JSON.stringify(requestBody),
   });
 
+  const responseText = await response.text();
+  console.log(`[Sora Create] Replicate response status: ${response.status}`);
+  console.log(`[Sora Create] Replicate response body: ${responseText.substring(0, 500)}`);
+
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create Sora video: ${response.status} ${error}`);
+    throw new Error(`Replicate API error (${response.status}): ${responseText}`);
   }
 
-  const data = await response.json();
-  return data.id;
+  const data = JSON.parse(responseText);
+  console.log(`[Sora Create] Job created successfully:`, {
+    id: data.id,
+    status: data.status,
+  });
+
+  return { id: data.id, status: data.status };
 }
 
 /**
@@ -100,32 +112,46 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     };
   }
 
+  console.log(`[Sora Create] Handler invoked, method: ${event.httpMethod}`);
+
   // Validate environment variables
   if (!REPLICATE_API_TOKEN) {
+    console.error('[Sora Create] REPLICATE_API_TOKEN is not configured');
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: 'Replicate API token not configured.',
+        error: 'Replicate API token not configured. Please add REPLICATE_API_TOKEN to Netlify environment variables.',
       }),
     };
   }
 
   if (!OPENAI_API_KEY) {
+    console.error('[Sora Create] OPENAI_API_KEY is not configured');
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: 'OpenAI API key not configured.',
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to Netlify environment variables.',
       }),
     };
   }
 
+  console.log(`[Sora Create] Environment variables validated - both tokens present`);
+
   try {
     const body: SoraCreateRequest = JSON.parse(event.body || '{}');
+    console.log(`[Sora Create] Request body parsed:`, {
+      hasPrompt: !!body.prompt,
+      promptLength: body.prompt?.length,
+      width: body.width,
+      height: body.height,
+      n_seconds: body.n_seconds,
+    });
 
     // Validate request
     if (!body.prompt) {
+      console.error('[Sora Create] No prompt provided');
       return {
         statusCode: 400,
         headers,
@@ -152,32 +178,39 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
 
     // Warn if requesting more than 12 seconds (will be clamped)
     if (n_seconds > 12) {
-      console.log(`[Sora] WARNING: Requested ${n_seconds}s but Replicate Sora-2 max is 12s. Will clamp to 12s.`);
+      console.log(`[Sora Create] WARNING: Requested ${n_seconds}s but Replicate Sora-2 max is 12s. Will clamp to 12s.`);
     }
 
     // Create the video generation job
-    console.log(`[Sora] Creating patient education video (${n_seconds}s, ${width}x${height})`);
-    const jobId = await createSoraVideo(body.prompt, width, height, n_seconds);
-    console.log(`[Sora] Job created: ${jobId}`);
+    console.log(`[Sora Create] Creating patient education video (${n_seconds}s, ${width}x${height})`);
+    const result = await createSoraVideo(body.prompt, width, height, n_seconds);
+    console.log(`[Sora Create] Job created successfully: ${result.id}`);
 
     // Return immediately with job ID (async pattern)
     return {
       statusCode: 202, // 202 Accepted
       headers,
       body: JSON.stringify({
-        id: jobId,
-        status: 'queued',
-        message: 'Video generation job created. Poll /api/sora/status for updates.',
+        id: result.id,
+        status: result.status || 'queued',
+        message: 'Video generation job created. Poll /api/sora-status for updates.',
       }),
     };
 
   } catch (error) {
-    console.error('[Sora] Error creating video:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('[Sora Create] Error creating video:', errorMessage);
+    console.error('[Sora Create] Full error:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: errorMessage,
+        debug: {
+          hasReplicateToken: !!REPLICATE_API_TOKEN,
+          hasOpenAIKey: !!OPENAI_API_KEY,
+          modelVersion: SORA_MODEL_VERSION.substring(0, 16) + '...',
+        },
       }),
     };
   }
