@@ -13,13 +13,21 @@ const REPLICATE_API_URL = 'https://api.replicate.com/v1';
 const SORA_MODEL_VERSION = '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3';
 
 /**
- * Creates a Sora video generation prediction
+ * Sleep helper for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Creates a Sora video generation prediction with retry logic for rate limits
  */
 async function createSoraVideo(
   prompt: string,
   width: number,
   height: number,
-  n_seconds: number
+  n_seconds: number,
+  maxRetries: number = 3
 ): Promise<string> {
   // Replicate Sora-2 API only supports:
   // - aspect_ratio: "portrait" (720x1280) or "landscape" (1280x720)
@@ -44,30 +52,63 @@ async function createSoraVideo(
     actual: { width: aspect_ratio === 'landscape' ? 1280 : 720, height: aspect_ratio === 'landscape' ? 720 : 1280 }
   });
 
-  const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      version: SORA_MODEL_VERSION,
-      input: {
-        prompt,
-        aspect_ratio,
-        seconds: finalSeconds,
-        openai_api_key: OPENAI_API_KEY,
-      },
-    }),
-  });
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create Sora video: ${response.status} ${error}`);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: SORA_MODEL_VERSION,
+        input: {
+          prompt,
+          aspect_ratio,
+          seconds: finalSeconds,
+          openai_api_key: OPENAI_API_KEY,
+        },
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.id;
+    }
+
+    const errorText = await response.text();
+
+    // Check for rate limiting (429)
+    if (response.status === 429) {
+      // Parse retry_after from response if available
+      let retryAfter = 10; // default 10 seconds
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.retry_after) {
+          retryAfter = Math.ceil(errorJson.retry_after);
+        }
+      } catch {
+        // Use default retry_after
+      }
+
+      console.log(`[Sora Create] Rate limited (attempt ${attempt}/${maxRetries}). Retrying in ${retryAfter}s...`);
+
+      if (attempt < maxRetries) {
+        await sleep(retryAfter * 1000);
+        continue;
+      }
+    }
+
+    lastError = new Error(`Failed to create Sora video: ${response.status} ${errorText}`);
+
+    // For non-429 errors, don't retry
+    if (response.status !== 429) {
+      throw lastError;
+    }
   }
 
-  const data = await response.json();
-  return data.id;
+  throw lastError || new Error('Failed to create Sora video after retries');
 }
 
 /**

@@ -188,7 +188,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
     return response.json();
   }, []);
 
-  // Create jobs on mount - PARALLEL for 24s videos
+  // Create jobs on mount - PARALLEL for 24s videos (with stagger to avoid rate limits)
   useEffect(() => {
     if (hasCreatedJobs.current) return;
     hasCreatedJobs.current = true;
@@ -198,12 +198,26 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
         setCanLeave(true);
 
         if (promptPart2) {
-          // PARALLEL: Create both jobs simultaneously
-          console.log('[GeneratePanel] Creating Part 1 and Part 2 jobs in PARALLEL');
-          const [job1, job2] = await Promise.all([
-            createVideoJob(prompt, 'part1'),
-            createVideoJob(promptPart2, 'part2'),
-          ]);
+          // PARALLEL with slight stagger: Create both jobs with 2s delay to avoid rate limits
+          // The backend also has retry logic for 429 errors
+          console.log('[GeneratePanel] Creating Part 1 and Part 2 jobs in PARALLEL (staggered)');
+
+          // Start Part 1 immediately
+          const job1Promise = createVideoJob(prompt, 'part1');
+
+          // Start Part 2 after 2 second delay to avoid rate limiting
+          const job2Promise = new Promise<JobState>(async (resolve, reject) => {
+            await new Promise(r => setTimeout(r, 2000)); // 2 second stagger
+            try {
+              const job = await createVideoJob(promptPart2, 'part2');
+              resolve(job);
+            } catch (err) {
+              reject(err);
+            }
+          });
+
+          // Wait for both to complete (they run in parallel after the stagger)
+          const [job1, job2] = await Promise.all([job1Promise, job2Promise]);
 
           setPart1Job(job1);
           setPart2Job(job2);
