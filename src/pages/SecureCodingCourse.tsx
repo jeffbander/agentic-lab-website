@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ScrollReveal } from '../components/animations/ScrollReveal';
+import { getLessonContent, getAvailableLessons } from '../data/lessonContent';
+import ReactMarkdown from 'react-markdown';
 
 // Course module data structure
 const courseModules = [
@@ -97,6 +99,8 @@ const courseModules = [
       { id: '8.2', title: 'Automated Security Scanning for HIPAA', duration: '20 min' },
       { id: '8.3', title: 'Penetration Testing Healthcare Apps', duration: '22 min' },
       { id: '8.4', title: 'Security Monitoring & Incident Response', duration: '25 min' },
+      { id: '8.5', title: 'Penetration Testing Basics', duration: '22 min' },
+      { id: '8.6', title: 'Incident Response Procedures', duration: '25 min' },
     ]
   },
   {
@@ -122,10 +126,97 @@ const courseModules = [
   },
 ];
 
-function ModuleCard({ module, isExpanded, onToggle }: {
+// Check if a lesson has content
+const availableLessons = new Set(getAvailableLessons());
+
+function LessonViewer({ lessonId, onClose }: { lessonId: string; onClose: () => void }) {
+  const content = getLessonContent(lessonId);
+
+  if (!content) {
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-xl font-bold">Lesson {lessonId}</h2>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="p-6 text-center text-gray-500">
+            <p>This lesson content is coming soon.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center shrink-0">
+          <div>
+            <span className="text-sm text-blue-600 font-medium">Lesson {content.id}</span>
+            <h2 className="text-xl font-bold text-gray-900">{content.title}</h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto prose prose-blue max-w-none">
+          <ReactMarkdown
+            components={{
+              h2: ({ children }) => <h2 className="text-2xl font-bold text-gray-900 mt-6 mb-4">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-xl font-semibold text-gray-800 mt-5 mb-3">{children}</h3>,
+              h4: ({ children }) => <h4 className="text-lg font-semibold text-gray-700 mt-4 mb-2">{children}</h4>,
+              p: ({ children }) => <p className="text-gray-700 mb-4 leading-relaxed">{children}</p>,
+              ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
+              li: ({ children }) => <li className="text-gray-700">{children}</li>,
+              code: ({ className, children }) => {
+                const isBlock = className?.includes('language-');
+                if (isBlock) {
+                  return (
+                    <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto mb-4">
+                      <code className="text-sm font-mono">{children}</code>
+                    </pre>
+                  );
+                }
+                return <code className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>;
+              },
+              pre: ({ children }) => <>{children}</>,
+              table: ({ children }) => (
+                <div className="overflow-x-auto mb-4">
+                  <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">{children}</table>
+                </div>
+              ),
+              thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+              tbody: ({ children }) => <tbody className="divide-y divide-gray-200">{children}</tbody>,
+              tr: ({ children }) => <tr>{children}</tr>,
+              th: ({ children }) => <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">{children}</th>,
+              td: ({ children }) => <td className="px-4 py-3 text-sm text-gray-700">{children}</td>,
+              strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+              blockquote: ({ children }) => (
+                <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-600 my-4">{children}</blockquote>
+              ),
+            }}
+          >
+            {content.content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModuleCard({ module, isExpanded, onToggle, onSelectLesson }: {
   module: typeof courseModules[0];
   isExpanded: boolean;
   onToggle: () => void;
+  onSelectLesson: (lessonId: string) => void;
 }) {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
@@ -158,15 +249,41 @@ function ModuleCard({ module, isExpanded, onToggle }: {
       {isExpanded && (
         <div className="px-6 pb-5 border-t border-gray-100">
           <ul className="mt-4 space-y-2">
-            {module.lessons.map((lesson) => (
-              <li key={lesson.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-blue-600">{lesson.id}</span>
-                  <span className="text-gray-700">{lesson.title}</span>
-                </div>
-                <span className="text-sm text-gray-500">{lesson.duration}</span>
-              </li>
-            ))}
+            {module.lessons.map((lesson) => {
+              const hasContent = availableLessons.has(lesson.id);
+              return (
+                <li key={lesson.id}>
+                  <button
+                    onClick={() => onSelectLesson(lesson.id)}
+                    className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-colors text-left ${
+                      hasContent
+                        ? 'hover:bg-blue-50 cursor-pointer'
+                        : 'hover:bg-gray-50 cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`text-sm font-medium ${hasContent ? 'text-blue-600' : 'text-gray-400'}`}>
+                        {lesson.id}
+                      </span>
+                      <span className={hasContent ? 'text-gray-700' : 'text-gray-500'}>
+                        {lesson.title}
+                      </span>
+                      {hasContent && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          Available
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">{lesson.duration}</span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -176,6 +293,7 @@ function ModuleCard({ module, isExpanded, onToggle }: {
 
 export default function SecureCodingCourse() {
   const [expandedModules, setExpandedModules] = useState<number[]>([]);
+  const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
 
   const toggleModule = (moduleId: number) => {
     setExpandedModules(prev =>
@@ -186,9 +304,15 @@ export default function SecureCodingCourse() {
   };
 
   const totalLessons = courseModules.reduce((acc, m) => acc + m.lessons.length, 0);
+  const availableCount = availableLessons.size;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Lesson Viewer Modal */}
+      {selectedLesson && (
+        <LessonViewer lessonId={selectedLesson} onClose={() => setSelectedLesson(null)} />
+      )}
+
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-r from-blue-900 to-blue-700 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -220,7 +344,7 @@ export default function SecureCodingCourse() {
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span>{totalLessons} Lessons</span>
+                  <span>{availableCount} of {totalLessons} Lessons Ready</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -290,7 +414,7 @@ export default function SecureCodingCourse() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Course Curriculum</h2>
               <p className="text-gray-600">
-                Comprehensive training from security fundamentals to production-ready healthcare agents
+                Click any lesson to view the full content. Lessons marked "Available" have complete content ready.
               </p>
             </div>
           </ScrollReveal>
@@ -302,6 +426,7 @@ export default function SecureCodingCourse() {
                   module={module}
                   isExpanded={expandedModules.includes(module.id)}
                   onToggle={() => toggleModule(module.id)}
+                  onSelectLesson={setSelectedLesson}
                 />
               </ScrollReveal>
             ))}
@@ -318,7 +443,7 @@ export default function SecureCodingCourse() {
               Join healthcare developers learning to build HIPAA-compliant agentic systems.
             </p>
             <a
-              href="#contact"
+              href="/#contact"
               className="inline-flex items-center px-8 py-4 bg-white text-blue-900 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
             >
               Get Started
