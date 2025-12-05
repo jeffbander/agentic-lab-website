@@ -8,6 +8,7 @@ import './index.css';
 // Lazy load pages
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PatientEducation = lazy(() => import('./pages/PatientEducation'));
+const SecureCodingCourse = lazy(() => import('./pages/SecureCodingCourse'));
 const Footer = lazy(() => import('./components/Footer').then(m => ({ default: m.Footer })));
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/patient-education" element={<PatientEducation />} />
+                <Route path="/secure-coding" element={<SecureCodingCourse />} />
               </Routes>
             </Suspense>
           </main>
