@@ -9384,10 +9384,1489 @@ const healthcareIRPlaybook: IncidentResponsePlaybook = {
     title: 'DevSecOps for Healthcare',
     description: 'CI/CD security for compliant deployments',
     lessons: [
-      { id: '9.1', title: 'Secure CI/CD Pipelines', duration: '22 min', content: '' },
-      { id: '9.2', title: 'Container Security for Healthcare', duration: '20 min', content: '' },
-      { id: '9.3', title: 'Infrastructure as Code Security', duration: '18 min', content: '' },
-      { id: '9.4', title: 'Compliance-as-Code', duration: '20 min', content: '' },
+      { id: '9.1', title: 'Secure CI/CD Pipelines', duration: '22 min', content: `# Secure CI/CD Pipelines for Healthcare
+
+## Introduction
+
+DevSecOps in healthcare requires embedding security and compliance checks throughout the entire software delivery lifecycle. Every commit, build, and deployment must be validated against HIPAA requirements and security best practices.
+
+## Pipeline Security Architecture
+
+### Secure Pipeline Design
+
+\`\`\`typescript
+interface HealthcareCIPipeline {
+  stages: PipelineStage[];
+  securityGates: SecurityGate[];
+  auditRequirements: AuditConfig;
+  environmentProtection: EnvironmentConfig;
+}
+
+const healthcarePipeline: HealthcareCIPipeline = {
+  stages: [
+    {
+      name: 'code-commit',
+      checks: [
+        'pre-commit-hooks',      // Local security checks
+        'branch-protection',      // Enforce reviews
+        'signed-commits'          // Verify commit authorship
+      ]
+    },
+    {
+      name: 'build',
+      checks: [
+        'dependency-scan',        // Check for vulnerable packages
+        'sast-analysis',          // Static code security
+        'secrets-detection',      // Prevent credential leaks
+        'license-compliance'      // Ensure approved licenses
+      ]
+    },
+    {
+      name: 'test',
+      checks: [
+        'unit-tests',
+        'integration-tests',
+        'security-tests',         // HIPAA-focused test suite
+        'phi-handling-tests'      // Verify PHI protections
+      ]
+    },
+    {
+      name: 'staging-deploy',
+      checks: [
+        'dast-scan',              // Dynamic security testing
+        'penetration-tests',      // Automated pen test suite
+        'compliance-validation'   // HIPAA config checks
+      ]
+    },
+    {
+      name: 'production-deploy',
+      checks: [
+        'manual-approval',        // Human review required
+        'change-window-check',    // Deployment timing
+        'rollback-readiness'      // Verify rollback capability
+      ]
+    }
+  ],
+  securityGates: [
+    {
+      name: 'no-critical-vulnerabilities',
+      blocking: true,
+      threshold: { critical: 0, high: 0 }
+    },
+    {
+      name: 'code-coverage',
+      blocking: true,
+      threshold: { minimum: 80 }
+    },
+    {
+      name: 'phi-protection-verified',
+      blocking: true,
+      requiredTests: ['encryption', 'access-control', 'audit-logging']
+    }
+  ],
+  auditRequirements: {
+    retainBuildLogs: '7-years',  // HIPAA retention
+    signedArtifacts: true,
+    deploymentApprovalTrail: true
+  },
+  environmentProtection: {
+    production: {
+      requiredApprovers: ['security-team', 'compliance-officer'],
+      deploymentWindow: 'maintenance-window-only',
+      automatedRollback: true
+    }
+  }
+};
+\`\`\`
+
+### GitHub Actions Secure Pipeline
+
+\`\`\`yaml
+# .github/workflows/healthcare-ci-cd.yml
+name: Healthcare CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: \${{ github.repository }}
+
+jobs:
+  # Stage 1: Security scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: typescript
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            .semgrep/healthcare-rules.yml
+
+      - name: Dependency Vulnerability Scan
+        run: npm audit --audit-level=high
+
+      - name: Secret Detection
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          fail: true
+
+  # Stage 2: Build with security validation
+  build:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    outputs:
+      image-digest: \${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: \${{ env.REGISTRY }}
+          username: \${{ github.actor }}
+          password: \${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: \${{ env.REGISTRY }}/\${{ env.IMAGE_NAME }}:\${{ github.sha }}
+          sbom: true      # Generate SBOM
+          provenance: true # Signed provenance
+
+  # Stage 3: Security testing
+  security-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Container Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: \${{ env.REGISTRY }}/\${{ env.IMAGE_NAME }}:\${{ github.sha }}
+          severity: 'CRITICAL,HIGH'
+          exit-code: 1
+
+      - name: HIPAA Compliance Check
+        run: |
+          ./scripts/validate-hipaa-config.sh
+          ./scripts/verify-encryption-settings.sh
+          ./scripts/check-audit-logging.sh
+
+  # Stage 4: Production deployment (protected)
+  deploy-production:
+    needs: [build, security-test]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://healthcare-app.example.com
+    steps:
+      - name: Verify Deployment Window
+        run: |
+          HOUR=\$(date +%H)
+          if [ \$HOUR -lt 2 ] || [ \$HOUR -gt 5 ]; then
+            echo "Deployment outside maintenance window requires override"
+            exit 1
+          fi
+
+      - name: Deploy to Production
+        run: |
+          # Deployment with audit logging
+          echo "Deploying \${{ github.sha }} at \$(date -u)" >> deployment-log.txt
+          # Actual deployment commands here
+\`\`\`
+
+## Secrets Management
+
+### Secure Secrets Handling
+
+\`\`\`typescript
+// Never store secrets in code - use secret managers
+interface SecretsManagement {
+  provider: 'aws-secrets-manager' | 'hashicorp-vault' | 'azure-keyvault';
+  rotation: SecretRotationPolicy;
+  accessControl: SecretAccessPolicy;
+}
+
+const secretsConfig: SecretsManagement = {
+  provider: 'aws-secrets-manager',
+  rotation: {
+    databaseCredentials: '30-days',
+    apiKeys: '90-days',
+    encryptionKeys: '365-days',
+    automaticRotation: true
+  },
+  accessControl: {
+    principle: 'least-privilege',
+    auditAllAccess: true,
+    alertOnUnusualAccess: true
+  }
+};
+
+// GitHub Actions secrets usage
+// .github/workflows/deploy.yml
+/*
+jobs:
+  deploy:
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: \${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Get secrets from AWS Secrets Manager
+        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        with:
+          secret-ids: |
+            ,healthcare-app/production/db-credentials
+            ,healthcare-app/production/encryption-key
+          parse-json-secrets: true
+*/
+\`\`\`
+
+## Build Artifact Security
+
+### Signed Artifacts and SBOM
+
+\`\`\`typescript
+// Artifact signing configuration
+interface ArtifactSecurity {
+  signing: {
+    enabled: boolean;
+    keyManagement: 'kms' | 'sigstore' | 'gpg';
+    verifyOnDeploy: boolean;
+  };
+  sbom: {
+    format: 'spdx' | 'cyclonedx';
+    includeInBuild: boolean;
+    scanForVulnerabilities: boolean;
+  };
+  provenance: {
+    generateSlsa: boolean;
+    attestationStorage: string;
+  };
+}
+
+const artifactSecurityConfig: ArtifactSecurity = {
+  signing: {
+    enabled: true,
+    keyManagement: 'sigstore',  // Keyless signing
+    verifyOnDeploy: true        // Reject unsigned artifacts
+  },
+  sbom: {
+    format: 'cyclonedx',
+    includeInBuild: true,
+    scanForVulnerabilities: true
+  },
+  provenance: {
+    generateSlsa: true,  // SLSA Level 3 provenance
+    attestationStorage: 'rekor'  // Transparency log
+  }
+};
+\`\`\`
+
+## Deployment Protection
+
+### Environment Protection Rules
+
+\`\`\`typescript
+// Environment protection for healthcare
+const environmentProtection = {
+  development: {
+    restrictions: 'none',
+    secrets: 'development-only',
+    dataAccess: 'synthetic-only'
+  },
+  staging: {
+    restrictions: 'branch-policy',
+    secrets: 'staging-secrets',
+    dataAccess: 'synthetic-only',
+    requiredChecks: ['security-scan', 'tests-pass']
+  },
+  production: {
+    restrictions: 'protected-environment',
+    secrets: 'production-secrets',
+    dataAccess: 'phi-enabled',
+    requiredChecks: [
+      'security-scan',
+      'tests-pass',
+      'vulnerability-scan',
+      'hipaa-compliance-check'
+    ],
+    requiredReviewers: ['security-team', 'compliance-officer'],
+    deploymentBranchPolicy: 'main-only',
+    waitTimer: 15  // 15 minute delay for final review
+  }
+};
+\`\`\`
+
+## Key Takeaways
+
+1. **Security at every stage**: Embed security checks in commit, build, test, and deploy phases
+2. **Automated gates**: Block deployments that fail security or compliance checks
+3. **Signed artifacts**: Use SBOM and artifact signing for supply chain security
+4. **Secrets management**: Never store secrets in code; use dedicated secret managers
+5. **Protected environments**: Require approvals and restrict production deployments
+` },
+      { id: '9.2', title: 'Container Security for Healthcare', duration: '20 min', content: `# Container Security for Healthcare
+
+## Introduction
+
+Containers provide consistency and isolation for healthcare applications, but they also introduce new security considerations. Securing container images, runtime environments, and orchestration platforms is critical for HIPAA compliance.
+
+## Secure Container Images
+
+### Hardened Base Images
+
+\`\`\`dockerfile
+# Use minimal, hardened base images
+FROM cgr.dev/chainguard/node:20-slim AS base
+
+# Don't run as root
+USER node
+
+# Set secure defaults
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--enable-source-maps --max-old-space-size=2048"
+
+# Copy only production dependencies
+COPY --chown=node:node package*.json ./
+RUN npm ci --only=production --ignore-scripts
+
+# Copy application code
+COPY --chown=node:node dist/ ./dist/
+
+# Health check for orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\
+  CMD node healthcheck.js
+
+# Don't expose unnecessary ports
+EXPOSE 8080
+
+# Read-only filesystem where possible
+RUN chmod -R 555 /app/dist
+
+CMD ["node", "dist/server.js"]
+\`\`\`
+
+### Multi-Stage Secure Build
+
+\`\`\`dockerfile
+# Stage 1: Build with full toolchain
+FROM node:20-alpine AS builder
+
+WORKDIR /build
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
+# Run tests in build stage
+RUN npm run test:unit
+
+# Stage 2: Security scanning
+FROM aquasec/trivy:latest AS scanner
+COPY --from=builder /build/package-lock.json /scan/
+RUN trivy fs --exit-code 1 --severity HIGH,CRITICAL /scan/
+
+# Stage 3: Production image (minimal)
+FROM gcr.io/distroless/nodejs20-debian12 AS production
+
+WORKDIR /app
+
+# Copy only built artifacts
+COPY --from=builder /build/dist ./dist
+COPY --from=builder /build/node_modules ./node_modules
+COPY --from=builder /build/package.json ./
+
+# Non-root user (distroless default)
+USER nonroot:nonroot
+
+# No shell, reduced attack surface
+CMD ["dist/server.js"]
+\`\`\`
+
+## Container Image Scanning
+
+### Vulnerability Scanning Pipeline
+
+\`\`\`typescript
+interface ContainerSecurityPolicy {
+  imageSources: ImageSourcePolicy;
+  vulnerabilityPolicy: VulnerabilityPolicy;
+  scanningConfig: ScanningConfig;
+}
+
+const containerPolicy: ContainerSecurityPolicy = {
+  imageSources: {
+    allowedRegistries: [
+      'gcr.io/distroless',
+      'cgr.dev/chainguard',
+      'ghcr.io/our-org'
+    ],
+    requireSignedImages: true,
+    blockUnknownRegistries: true
+  },
+  vulnerabilityPolicy: {
+    blockOnCritical: true,
+    blockOnHigh: true,
+    maxMedium: 5,
+    maxLow: 20,
+    ignoreUnfixed: false,  // Still report unfixed vulns
+    gracePeriodsForPatching: {
+      critical: '24-hours',
+      high: '7-days',
+      medium: '30-days'
+    }
+  },
+  scanningConfig: {
+    scanOnPush: true,
+    scanOnDeploy: true,
+    periodicRescan: '24-hours',  // Catch newly discovered vulns
+    scanLayers: true,
+    scanSecrets: true,
+    scanMisconfigurations: true
+  }
+};
+\`\`\`
+
+### GitHub Actions Container Scanning
+
+\`\`\`yaml
+jobs:
+  container-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Container Image
+        run: docker build -t healthcare-app:$GITHUB_SHA .
+
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: healthcare-app:$GITHUB_SHA
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          vuln-type: 'os,library'
+          scanners: 'vuln,secret,config'
+
+      - name: Upload Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Fail on Critical Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: healthcare-app:$GITHUB_SHA
+          exit-code: 1
+          severity: 'CRITICAL'
+\`\`\`
+
+## Kubernetes Security for Healthcare
+
+### Pod Security Standards
+
+\`\`\`yaml
+# Restricted pod security for healthcare workloads
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: healthcare-app
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: patient-portal
+  namespace: healthcare-app
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  containers:
+    - name: app
+      image: ghcr.io/our-org/patient-portal:v1.2.3
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true
+
+      resources:
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+        requests:
+          memory: "256Mi"
+          cpu: "250m"
+
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.cache
+
+  volumes:
+    - name: tmp
+      emptyDir: {}
+    - name: cache
+      emptyDir: {}
+
+  # Don't auto-mount service account token unless needed
+  automountServiceAccountToken: false
+\`\`\`
+
+### Network Policies
+
+\`\`\`yaml
+# Restrict network access for healthcare workloads
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: patient-portal-network-policy
+  namespace: healthcare-app
+spec:
+  podSelector:
+    matchLabels:
+      app: patient-portal
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Only allow traffic from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow database access (specific namespace/service)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: healthcare-db
+          podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow external FHIR API (specific IPs)
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8  # Internal EHR systems only
+      ports:
+        - protocol: TCP
+          port: 443
+\`\`\`
+
+## Runtime Security
+
+### Container Runtime Protection
+
+\`\`\`typescript
+// Runtime security monitoring configuration
+interface RuntimeSecurityConfig {
+  detection: {
+    processMonitoring: boolean;
+    fileIntegrityMonitoring: boolean;
+    networkMonitoring: boolean;
+    syscallFiltering: boolean;
+  };
+  response: {
+    alertOnAnomaly: boolean;
+    blockMaliciousActivity: boolean;
+    quarantineCompromisedPods: boolean;
+  };
+}
+
+const runtimeConfig: RuntimeSecurityConfig = {
+  detection: {
+    processMonitoring: true,      // Detect unexpected processes
+    fileIntegrityMonitoring: true, // Detect file changes
+    networkMonitoring: true,       // Detect unusual connections
+    syscallFiltering: true         // Block dangerous syscalls
+  },
+  response: {
+    alertOnAnomaly: true,
+    blockMaliciousActivity: true,
+    quarantineCompromisedPods: true
+  }
+};
+
+// Falco rules for healthcare containers
+/*
+- rule: PHI Database Access from Non-App Container
+  desc: Detect database access from unexpected containers
+  condition: >
+    container.name != "patient-portal" and
+    fd.net and
+    fd.rport = 5432
+  output: >
+    Suspicious database access (user=%user.name container=%container.name
+    connection=%fd.name)
+  priority: CRITICAL
+
+- rule: Shell Spawned in Healthcare Container
+  desc: Detect shell execution in production containers
+  condition: >
+    container.name startswith "healthcare-" and
+    spawned_process and
+    proc.name in (sh, bash, zsh, dash)
+  output: >
+    Shell spawned in healthcare container (user=%user.name
+    container=%container.name shell=%proc.name)
+  priority: WARNING
+*/
+\`\`\`
+
+## Key Takeaways
+
+1. **Minimal base images**: Use distroless or hardened images to reduce attack surface
+2. **Multi-stage builds**: Separate build and runtime to minimize production image size
+3. **Continuous scanning**: Scan images on build, push, and periodically for new vulnerabilities
+4. **Kubernetes security**: Apply pod security standards and network policies
+5. **Runtime protection**: Monitor container behavior and respond to anomalies
+` },
+      { id: '9.3', title: 'Infrastructure as Code Security', duration: '18 min', content: `# Infrastructure as Code Security
+
+## Introduction
+
+Infrastructure as Code (IaC) enables consistent, auditable infrastructure deployments. For healthcare applications, IaC must be secured to prevent misconfigurations that could expose PHI or violate HIPAA requirements.
+
+## Secure Terraform Practices
+
+### Healthcare Infrastructure Module
+
+\`\`\`hcl
+# modules/healthcare-vpc/main.tf
+# Secure VPC configuration for healthcare workloads
+
+variable "environment" {
+  type        = string
+  description = "Environment name (dev, staging, prod)"
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
+  }
+}
+
+variable "enable_phi_access" {
+  type        = bool
+  description = "Enable PHI data access (production only)"
+  default     = false
+}
+
+# Prevent PHI access in non-production
+locals {
+  phi_enabled = var.environment == "prod" ? var.enable_phi_access : false
+}
+
+resource "aws_vpc" "healthcare" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name        = "healthcare-\${var.environment}"
+    Environment = var.environment
+    Compliance  = "HIPAA"
+    PHI_Access  = local.phi_enabled ? "enabled" : "disabled"
+  }
+}
+
+# VPC Flow Logs - Required for HIPAA audit trail
+resource "aws_flow_log" "healthcare" {
+  vpc_id          = aws_vpc.healthcare.id
+  traffic_type    = "ALL"
+  iam_role_arn    = aws_iam_role.flow_log.arn
+  log_destination = aws_cloudwatch_log_group.flow_log.arn
+
+  tags = {
+    Name       = "healthcare-flow-log-\${var.environment}"
+    Compliance = "HIPAA-audit"
+  }
+}
+
+# CloudWatch log group with encryption and retention
+resource "aws_cloudwatch_log_group" "flow_log" {
+  name              = "/aws/vpc/healthcare-\${var.environment}"
+  retention_in_days = 2555  # 7 years for HIPAA
+  kms_key_id        = aws_kms_key.logs.arn
+
+  tags = {
+    Compliance = "HIPAA-retention"
+  }
+}
+\`\`\`
+
+### Secure Database Configuration
+
+\`\`\`hcl
+# modules/healthcare-rds/main.tf
+# HIPAA-compliant RDS configuration
+
+resource "aws_db_instance" "healthcare" {
+  identifier = "healthcare-\${var.environment}"
+
+  # Encryption at rest - REQUIRED for HIPAA
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.database.arn
+
+  # Network isolation
+  publicly_accessible = false
+  db_subnet_group_name = aws_db_subnet_group.private.name
+  vpc_security_group_ids = [aws_security_group.database.id]
+
+  # Backup and recovery
+  backup_retention_period = 35  # 35 days minimum
+  backup_window          = "03:00-04:00"
+  maintenance_window     = "Mon:04:00-Mon:05:00"
+
+  # Enhanced monitoring for HIPAA
+  monitoring_interval = 60
+  monitoring_role_arn = aws_iam_role.rds_monitoring.arn
+
+  # Enable audit logging
+  enabled_cloudwatch_logs_exports = ["audit", "error", "general", "slowquery"]
+
+  # Prevent accidental deletion
+  deletion_protection = var.environment == "prod" ? true : false
+
+  # Auto minor version upgrades for security patches
+  auto_minor_version_upgrade = true
+
+  tags = {
+    Environment = var.environment
+    Compliance  = "HIPAA"
+    DataClass   = "PHI"
+  }
+
+  # Lifecycle policy to prevent destroy without approval
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Security group - restrict to application tier only
+resource "aws_security_group" "database" {
+  name        = "healthcare-db-\${var.environment}"
+  description = "Security group for healthcare database"
+  vpc_id      = var.vpc_id
+
+  # Only allow access from application security group
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [var.app_security_group_id]
+    description     = "PostgreSQL access from app tier only"
+  }
+
+  # No direct egress
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = []
+    description = "No egress allowed"
+  }
+
+  tags = {
+    Name       = "healthcare-db-sg-\${var.environment}"
+    Compliance = "HIPAA"
+  }
+}
+\`\`\`
+
+## IaC Security Scanning
+
+### Terraform Security Checks
+
+\`\`\`yaml
+# .github/workflows/terraform-security.yml
+name: Terraform Security Scan
+
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/**'
+
+jobs:
+  terraform-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: tfsec - Security Scanner
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: infrastructure/
+          soft_fail: false
+
+      - name: Checkov - Policy Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infrastructure/
+          framework: terraform
+          check: >-
+            CKV_AWS_19,  # Ensure S3 bucket encryption
+            CKV_AWS_23,  # Ensure security groups have descriptions
+            CKV_AWS_24,  # Ensure no ingress from 0.0.0.0/0 to port 22
+            CKV_AWS_145, # Ensure RDS instance is encrypted
+            CKV_AWS_118  # Ensure RDS is not public
+
+      - name: HIPAA Compliance Check
+        run: |
+          # Custom HIPAA compliance checks
+          ./scripts/check-encryption-required.sh
+          ./scripts/check-logging-enabled.sh
+          ./scripts/check-network-isolation.sh
+\`\`\`
+
+### Custom Policy Checks
+
+\`\`\`typescript
+// Custom Checkov policies for healthcare
+// policies/hipaa-encryption.py
+
+/*
+from checkov.terraform.checks.resource.base_resource_check import BaseResourceCheck
+from checkov.common.models.enums import CheckResult, CheckCategories
+
+class HIPAAEncryptionCheck(BaseResourceCheck):
+    def __init__(self):
+        name = "Ensure all data stores have encryption enabled"
+        id = "CKV_HIPAA_001"
+        supported_resources = [
+            'aws_db_instance',
+            'aws_s3_bucket',
+            'aws_ebs_volume',
+            'aws_rds_cluster'
+        ]
+        categories = [CheckCategories.ENCRYPTION]
+        super().__init__(name=name, id=id, categories=categories,
+                        supported_resources=supported_resources)
+
+    def scan_resource_conf(self, conf):
+        # Check for encryption configuration
+        if 'storage_encrypted' in conf:
+            if conf['storage_encrypted'][0] == True:
+                return CheckResult.PASSED
+        if 'encrypted' in conf:
+            if conf['encrypted'][0] == True:
+                return CheckResult.PASSED
+        if 'server_side_encryption_configuration' in conf:
+            return CheckResult.PASSED
+
+        return CheckResult.FAILED
+
+check = HIPAAEncryptionCheck()
+*/
+\`\`\`
+
+## State File Security
+
+### Secure State Management
+
+\`\`\`hcl
+# backend.tf - Secure state storage
+terraform {
+  backend "s3" {
+    bucket         = "healthcare-terraform-state"
+    key            = "prod/terraform.tfstate"
+    region         = "us-east-1"
+
+    # Encryption at rest
+    encrypt        = true
+    kms_key_id     = "alias/terraform-state-key"
+
+    # State locking
+    dynamodb_table = "terraform-state-lock"
+
+    # Access logging
+    # (configured on the S3 bucket itself)
+  }
+}
+
+# State bucket configuration
+resource "aws_s3_bucket" "terraform_state" {
+  bucket = "healthcare-terraform-state"
+
+  # Prevent accidental deletion
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  tags = {
+    Name       = "Terraform State"
+    Compliance = "HIPAA"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "terraform_state" {
+  bucket = aws_s3_bucket.terraform_state.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
+  bucket = aws_s3_bucket.terraform_state.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.terraform_state.arn
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "terraform_state" {
+  bucket = aws_s3_bucket.terraform_state.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Access logging for audit trail
+resource "aws_s3_bucket_logging" "terraform_state" {
+  bucket = aws_s3_bucket.terraform_state.id
+
+  target_bucket = aws_s3_bucket.access_logs.id
+  target_prefix = "terraform-state-access/"
+}
+\`\`\`
+
+## Drift Detection
+
+### Automated Drift Detection
+
+\`\`\`typescript
+// Drift detection for healthcare infrastructure
+interface DriftDetectionConfig {
+  schedule: string;
+  alertChannels: string[];
+  autoRemediation: boolean;
+  criticalResources: string[];
+}
+
+const driftConfig: DriftDetectionConfig = {
+  schedule: '0 * * * *',  // Hourly
+  alertChannels: ['security-team', 'compliance-officer'],
+  autoRemediation: false,  // Require manual approval for healthcare
+  criticalResources: [
+    'aws_security_group.database',
+    'aws_db_instance.healthcare',
+    'aws_kms_key.database',
+    'aws_iam_policy.phi_access'
+  ]
+};
+
+// GitHub Action for drift detection
+/*
+name: Infrastructure Drift Detection
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+
+jobs:
+  drift-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure/
+
+      - name: Detect Drift
+        id: drift
+        run: |
+          terraform plan -detailed-exitcode -out=plan.out 2>&1 | tee plan.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+        working-directory: infrastructure/
+        continue-on-error: true
+
+      - name: Alert on Drift
+        if: steps.drift.outputs.exit_code == 2
+        run: |
+          echo "Infrastructure drift detected!"
+          # Send alert to security team
+          ./scripts/send-drift-alert.sh
+*/
+\`\`\`
+
+## Key Takeaways
+
+1. **Security-first modules**: Build reusable IaC modules with security defaults
+2. **Automated scanning**: Scan IaC for misconfigurations before deployment
+3. **Encrypted state**: Always encrypt Terraform state and enable versioning
+4. **Drift detection**: Monitor for unauthorized infrastructure changes
+5. **HIPAA policies**: Create custom policies for healthcare-specific requirements
+` },
+      { id: '9.4', title: 'Compliance-as-Code', duration: '20 min', content: `# Compliance-as-Code
+
+## Introduction
+
+Compliance-as-Code transforms HIPAA and other regulatory requirements into automated, testable policies. This approach ensures consistent compliance enforcement across all environments and provides auditable evidence of control implementation.
+
+## Policy as Code Framework
+
+### HIPAA Policy Definitions
+
+\`\`\`typescript
+// Define HIPAA requirements as code
+interface HIPAAControl {
+  id: string;
+  requirement: string;
+  safeguard: 'administrative' | 'physical' | 'technical';
+  implementation: PolicyCheck[];
+  evidence: EvidenceRequirement[];
+}
+
+const hipaaControls: HIPAAControl[] = [
+  {
+    id: '164.312(a)(1)',
+    requirement: 'Access Control - Unique User Identification',
+    safeguard: 'technical',
+    implementation: [
+      {
+        name: 'unique-user-ids',
+        check: 'All users have unique identifiers',
+        resource: 'iam_users',
+        policy: 'no-shared-accounts'
+      },
+      {
+        name: 'no-root-access',
+        check: 'Root account not used for routine access',
+        resource: 'cloudtrail_events',
+        policy: 'root-account-usage-alert'
+      }
+    ],
+    evidence: [
+      { type: 'config-audit', frequency: 'daily' },
+      { type: 'access-log', retention: '7-years' }
+    ]
+  },
+  {
+    id: '164.312(a)(2)(iv)',
+    requirement: 'Access Control - Encryption and Decryption',
+    safeguard: 'technical',
+    implementation: [
+      {
+        name: 'data-at-rest-encryption',
+        check: 'All PHI storage encrypted',
+        resources: ['rds', 's3', 'ebs', 'dynamodb'],
+        policy: 'encryption-required'
+      },
+      {
+        name: 'data-in-transit-encryption',
+        check: 'All PHI transmission encrypted',
+        resources: ['alb', 'api-gateway', 'cloudfront'],
+        policy: 'tls-1.2-minimum'
+      }
+    ],
+    evidence: [
+      { type: 'encryption-config', frequency: 'continuous' },
+      { type: 'tls-certificate-audit', frequency: 'weekly' }
+    ]
+  },
+  {
+    id: '164.312(b)',
+    requirement: 'Audit Controls',
+    safeguard: 'technical',
+    implementation: [
+      {
+        name: 'audit-logging-enabled',
+        check: 'All PHI access logged',
+        resources: ['cloudtrail', 'rds-audit', 'application-logs'],
+        policy: 'comprehensive-logging'
+      },
+      {
+        name: 'log-integrity',
+        check: 'Audit logs protected from tampering',
+        resources: ['cloudtrail', 's3-log-bucket'],
+        policy: 'immutable-logs'
+      },
+      {
+        name: 'log-retention',
+        check: 'Logs retained per policy',
+        resources: ['cloudwatch-logs', 's3-logs'],
+        policy: 'seven-year-retention'
+      }
+    ],
+    evidence: [
+      { type: 'log-completeness-report', frequency: 'daily' },
+      { type: 'retention-verification', frequency: 'monthly' }
+    ]
+  }
+];
+\`\`\`
+
+### Open Policy Agent (OPA) Policies
+
+\`\`\`rego
+# hipaa-encryption.rego
+# Enforce encryption for all healthcare resources
+
+package hipaa.encryption
+
+default allow = false
+
+# Allow if all data stores are encrypted
+allow {
+    all_encrypted
+}
+
+all_encrypted {
+    rds_encrypted
+    s3_encrypted
+    ebs_encrypted
+}
+
+rds_encrypted {
+    every db in input.rds_instances {
+        db.storage_encrypted == true
+        db.kms_key_id != null
+    }
+}
+
+s3_encrypted {
+    every bucket in input.s3_buckets {
+        bucket.server_side_encryption.enabled == true
+        bucket.server_side_encryption.algorithm == "aws:kms"
+    }
+}
+
+ebs_encrypted {
+    every volume in input.ebs_volumes {
+        volume.encrypted == true
+    }
+}
+
+# Generate violation messages
+violations[msg] {
+    some db in input.rds_instances
+    not db.storage_encrypted
+    msg := sprintf("RDS instance %v is not encrypted", [db.identifier])
+}
+
+violations[msg] {
+    some bucket in input.s3_buckets
+    not bucket.server_side_encryption.enabled
+    msg := sprintf("S3 bucket %v is not encrypted", [bucket.name])
+}
+\`\`\`
+
+### Network Security Policies
+
+\`\`\`rego
+# hipaa-network.rego
+# Enforce network isolation for PHI systems
+
+package hipaa.network
+
+default allow = false
+
+# Allow if network is properly isolated
+allow {
+    no_public_databases
+    proper_segmentation
+    vpn_required_for_admin
+}
+
+no_public_databases {
+    every db in input.rds_instances {
+        db.publicly_accessible == false
+    }
+}
+
+proper_segmentation {
+    every sg in input.security_groups {
+        sg.name startswith "healthcare-"
+        no_unrestricted_ingress(sg)
+    }
+}
+
+no_unrestricted_ingress(sg) {
+    every rule in sg.ingress {
+        rule.cidr_blocks != ["0.0.0.0/0"]
+    }
+}
+
+vpn_required_for_admin {
+    every rule in input.admin_access_rules {
+        rule.source == "vpn"
+    }
+}
+
+# Violation reporting
+violations[msg] {
+    some db in input.rds_instances
+    db.publicly_accessible == true
+    msg := sprintf("Database %v is publicly accessible", [db.identifier])
+}
+
+violations[msg] {
+    some sg in input.security_groups
+    some rule in sg.ingress
+    rule.cidr_blocks[_] == "0.0.0.0/0"
+    msg := sprintf("Security group %v has unrestricted ingress", [sg.name])
+}
+\`\`\`
+
+## Continuous Compliance Monitoring
+
+### Compliance Dashboard Pipeline
+
+\`\`\`yaml
+# .github/workflows/compliance-monitoring.yml
+name: HIPAA Compliance Monitoring
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  workflow_dispatch:
+
+jobs:
+  compliance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+
+      - name: Collect AWS Configuration
+        env:
+          AWS_ACCESS_KEY_ID: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          ./scripts/collect-aws-config.sh > aws-config.json
+
+      - name: Evaluate Encryption Policies
+        run: |
+          opa eval --data policies/hipaa-encryption.rego \\
+                   --input aws-config.json \\
+                   'data.hipaa.encryption.violations'
+
+      - name: Evaluate Network Policies
+        run: |
+          opa eval --data policies/hipaa-network.rego \\
+                   --input aws-config.json \\
+                   'data.hipaa.network.violations'
+
+      - name: Generate Compliance Report
+        run: |
+          ./scripts/generate-compliance-report.sh > compliance-report.json
+
+      - name: Upload Compliance Evidence
+        run: |
+          aws s3 cp compliance-report.json \\
+            s3://compliance-evidence/\$(date +%Y/%m/%d)/report-\$(date +%H%M).json
+
+      - name: Alert on Violations
+        if: failure()
+        run: |
+          ./scripts/send-compliance-alert.sh
+\`\`\`
+
+## Automated Evidence Collection
+
+### Evidence Collection Framework
+
+\`\`\`typescript
+// Automated compliance evidence collection
+interface ComplianceEvidence {
+  controlId: string;
+  timestamp: Date;
+  source: string;
+  evidenceType: 'config' | 'log' | 'screenshot' | 'report';
+  data: any;
+  hash: string;  // Integrity verification
+}
+
+async function collectComplianceEvidence(): Promise<ComplianceEvidence[]> {
+  const evidence: ComplianceEvidence[] = [];
+
+  // §164.312(a)(2)(iv) - Encryption evidence
+  evidence.push({
+    controlId: '164.312(a)(2)(iv)',
+    timestamp: new Date(),
+    source: 'aws-config',
+    evidenceType: 'config',
+    data: await collectEncryptionConfig(),
+    hash: calculateHash(await collectEncryptionConfig())
+  });
+
+  // §164.312(b) - Audit log evidence
+  evidence.push({
+    controlId: '164.312(b)',
+    timestamp: new Date(),
+    source: 'cloudtrail',
+    evidenceType: 'log',
+    data: await collectAuditLogSample(),
+    hash: calculateHash(await collectAuditLogSample())
+  });
+
+  // §164.312(d) - Authentication evidence
+  evidence.push({
+    controlId: '164.312(d)',
+    timestamp: new Date(),
+    source: 'iam-config',
+    evidenceType: 'config',
+    data: await collectAuthenticationConfig(),
+    hash: calculateHash(await collectAuthenticationConfig())
+  });
+
+  return evidence;
+}
+
+async function storeEvidenceImmutably(evidence: ComplianceEvidence[]): Promise<void> {
+  // Store in write-once storage (S3 Object Lock)
+  const bucket = 'hipaa-compliance-evidence';
+  const key = \`evidence/\${new Date().toISOString()}/controls.json\`;
+
+  await s3.putObject({
+    Bucket: bucket,
+    Key: key,
+    Body: JSON.stringify(evidence),
+    ObjectLockMode: 'GOVERNANCE',
+    ObjectLockRetainUntilDate: addYears(new Date(), 7),  // 7-year retention
+    ServerSideEncryption: 'aws:kms',
+    SSEKMSKeyId: process.env.COMPLIANCE_KMS_KEY
+  });
+}
+\`\`\`
+
+## Audit-Ready Reports
+
+### Compliance Report Generation
+
+\`\`\`typescript
+interface HIPAAComplianceReport {
+  generatedAt: Date;
+  reportingPeriod: { start: Date; end: Date };
+  overallStatus: 'compliant' | 'non-compliant' | 'partial';
+  controls: ControlStatus[];
+  findings: Finding[];
+  remediationPlan: Remediation[];
+  signOff: SignOff;
+}
+
+async function generateHIPAAReport(): Promise<HIPAAComplianceReport> {
+  const controls = await evaluateAllControls();
+
+  const findings = controls
+    .filter(c => c.status !== 'compliant')
+    .map(c => ({
+      controlId: c.id,
+      description: c.requirement,
+      gap: c.gaps,
+      risk: assessRisk(c),
+      recommendation: getRemediation(c)
+    }));
+
+  const report: HIPAAComplianceReport = {
+    generatedAt: new Date(),
+    reportingPeriod: {
+      start: startOfMonth(new Date()),
+      end: endOfMonth(new Date())
+    },
+    overallStatus: determineOverallStatus(controls),
+    controls: controls,
+    findings: findings,
+    remediationPlan: findings.map(f => ({
+      findingId: f.controlId,
+      action: f.recommendation,
+      owner: getControlOwner(f.controlId),
+      dueDate: calculateDueDate(f.risk),
+      status: 'open'
+    })),
+    signOff: {
+      preparedBy: 'Automated Compliance System',
+      reviewedBy: null,  // Requires manual review
+      approvedBy: null
+    }
+  };
+
+  return report;
+}
+\`\`\`
+
+## Key Takeaways
+
+1. **Codify requirements**: Transform HIPAA controls into testable policies
+2. **Policy as Code**: Use OPA or similar tools for automated policy evaluation
+3. **Continuous monitoring**: Check compliance continuously, not just during audits
+4. **Automated evidence**: Collect and store compliance evidence automatically
+5. **Audit readiness**: Generate audit-ready reports on demand
+` }
     ]
   },
   {
