@@ -5880,10 +5880,1139 @@ class RateLimitMonitor {
     title: 'Database & PHI Storage Security',
     description: 'Protecting healthcare data at rest',
     lessons: [
-      { id: '6.1', title: 'Healthcare Database Security Principles', duration: '20 min', content: '' },
-      { id: '6.2', title: 'PHI Encryption at Rest', duration: '22 min', content: '' },
-      { id: '6.3', title: 'SQL Injection Prevention in Clinical Apps', duration: '18 min', content: '' },
-      { id: '6.4', title: 'HIPAA Audit Logging Requirements', duration: '20 min', content: '' },
+      {
+        id: '6.1',
+        title: 'Healthcare Database Security Principles',
+        duration: '20 min',
+        content: `# Healthcare Database Security Principles
+
+## Introduction
+
+Database security in healthcare is about protecting the most sensitive data: patient health information. A single breach can expose thousands of records and result in millions in fines.
+
+## Defense in Depth
+
+### Layered Security Model
+\`\`\`typescript
+interface DatabaseSecurityLayers {
+  // Network layer
+  network: {
+    vpcIsolation: true;
+    privateSubnets: true;
+    noPublicAccess: true;
+    firewallRules: 'DENY_ALL_EXCEPT_ALLOWLIST';
+  };
+
+  // Authentication layer
+  authentication: {
+    method: 'IAM' | 'CERTIFICATE' | 'PASSWORD';
+    mfaRequired: boolean;
+    serviceAccountsOnly: boolean; // No direct user access
+  };
+
+  // Authorization layer
+  authorization: {
+    roleBasedAccess: true;
+    rowLevelSecurity: true;
+    columnLevelEncryption: true;
+  };
+
+  // Data layer
+  data: {
+    encryptionAtRest: true;
+    encryptionInTransit: true;
+    fieldLevelEncryption: true; // For PHI
+  };
+
+  // Audit layer
+  audit: {
+    allAccessLogged: true;
+    writeLogged: true;
+    schemaChangesLogged: true;
+    retentionYears: 7;
+  };
+}
+\`\`\`
+
+## Network Isolation
+
+### Database Network Architecture
+\`\`\`typescript
+const databaseNetworkConfig = {
+  // VPC configuration
+  vpc: {
+    cidrBlock: '10.0.0.0/16',
+
+    // Database in isolated subnet
+    dataSubnets: [
+      { cidr: '10.0.10.0/24', az: 'us-east-1a', type: 'PRIVATE_ISOLATED' },
+      { cidr: '10.0.11.0/24', az: 'us-east-1b', type: 'PRIVATE_ISOLATED' },
+    ],
+
+    // No internet gateway for data subnets
+    internetGateway: false,
+
+    // VPC endpoints for AWS services
+    endpoints: ['s3', 'kms', 'secretsmanager', 'logs']
+  },
+
+  // Security groups
+  securityGroups: {
+    database: {
+      inboundRules: [
+        {
+          // Only from application tier
+          source: 'sg-app-tier',
+          port: 5432,
+          protocol: 'tcp'
+        }
+      ],
+      outboundRules: [
+        // No outbound internet access
+      ]
+    }
+  }
+};
+\`\`\`
+
+## Access Control
+
+### Role-Based Database Access
+\`\`\`sql
+-- Create roles for different access levels
+CREATE ROLE clinical_readonly;
+CREATE ROLE clinical_write;
+CREATE ROLE admin_role;
+CREATE ROLE audit_role;
+
+-- Clinical readonly - can view patient data
+GRANT SELECT ON patients, encounters, observations TO clinical_readonly;
+GRANT SELECT ON medications WHERE status = 'active' TO clinical_readonly;
+
+-- Clinical write - can create/update clinical data
+GRANT clinical_readonly TO clinical_write;
+GRANT INSERT, UPDATE ON encounters, observations, notes TO clinical_write;
+
+-- Admin role - schema management, no PHI access
+GRANT CREATE, ALTER, DROP ON SCHEMA clinical TO admin_role;
+REVOKE SELECT ON patients FROM admin_role; -- No PHI access
+
+-- Audit role - read-only access to audit logs
+GRANT SELECT ON audit_log TO audit_role;
+\`\`\`
+
+### Row-Level Security
+\`\`\`sql
+-- Enable row-level security
+ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only see patients they're authorized for
+CREATE POLICY patient_access_policy ON patients
+  USING (
+    patient_id IN (
+      SELECT patient_id FROM care_team_assignments
+      WHERE user_id = current_setting('app.current_user_id')::uuid
+      AND effective_date <= CURRENT_DATE
+      AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+    )
+  );
+
+-- Policy: Service accounts can access based on department
+CREATE POLICY service_access_policy ON patients
+  USING (
+    department_id IN (
+      SELECT department_id FROM service_authorizations
+      WHERE service_id = current_setting('app.service_id')::uuid
+    )
+  );
+\`\`\`
+
+## Sensitive Data Handling
+
+### Column-Level Encryption
+\`\`\`typescript
+class SensitiveDataStorage {
+  private kmsClient: KMSClient;
+
+  // Encrypt sensitive fields before storage
+  async storePatient(patient: Patient): Promise<void> {
+    const encryptedPatient = {
+      ...patient,
+      // Encrypt PII fields
+      ssn: await this.encryptField(patient.ssn, 'SSN_KEY'),
+      dob: await this.encryptField(patient.dob, 'DOB_KEY'),
+      address: await this.encryptField(patient.address, 'ADDRESS_KEY'),
+
+      // Medical identifiers with separate key
+      mrn: await this.encryptField(patient.mrn, 'MRN_KEY'),
+    };
+
+    await this.db.insert('patients', encryptedPatient);
+  }
+
+  private async encryptField(
+    value: string,
+    keyAlias: string
+  ): Promise<string> {
+    const response = await this.kmsClient.encrypt({
+      KeyId: \`alias/\${keyAlias}\`,
+      Plaintext: Buffer.from(value),
+      EncryptionContext: {
+        purpose: 'phi_storage',
+        field: keyAlias
+      }
+    });
+
+    return response.CiphertextBlob.toString('base64');
+  }
+}
+\`\`\`
+
+## Backup Security
+
+### Encrypted Backup Configuration
+\`\`\`typescript
+const backupConfig = {
+  // Encryption
+  encryption: {
+    enabled: true,
+    kmsKeyId: 'arn:aws:kms:us-east-1:123456789:key/backup-key',
+    algorithm: 'AES-256'
+  },
+
+  // Retention
+  retention: {
+    dailyBackups: 30,
+    weeklyBackups: 52,
+    monthlyBackups: 84, // 7 years for HIPAA
+    yearlyBackups: 7
+  },
+
+  // Access control
+  access: {
+    // Backups in separate account
+    crossAccountStorage: true,
+    // Separate encryption key
+    separateKmsKey: true,
+    // Dual-person restore requirement
+    dualPersonRestore: true
+  },
+
+  // Integrity
+  integrity: {
+    checksums: true,
+    regularRestoreTests: 'MONTHLY',
+    integrityVerification: 'WEEKLY'
+  }
+};
+\`\`\`
+
+## Key Takeaways
+
+1. Implement defense in depth with network, auth, authz, data, and audit layers
+2. Isolate databases in private subnets with no internet access
+3. Use row-level security to enforce access controls at the database level
+4. Encrypt sensitive PHI fields with column-level encryption
+5. Maintain encrypted backups with 7-year retention for HIPAA
+6. Never allow direct user access—applications connect through service accounts`
+      },
+      {
+        id: '6.2',
+        title: 'PHI Encryption at Rest',
+        duration: '22 min',
+        content: `# PHI Encryption at Rest
+
+## Why Encryption Matters
+
+HIPAA requires encryption as an "addressable" specification—meaning you must implement it or document why an equivalent measure is in place. In practice, encryption at rest is essential for PHI protection.
+
+## Encryption Strategies
+
+### Full Disk Encryption
+\`\`\`typescript
+// AWS RDS encryption configuration
+const rdsEncryptionConfig = {
+  // Enable storage encryption
+  storageEncrypted: true,
+
+  // Use customer-managed KMS key
+  kmsKeyId: 'arn:aws:kms:us-east-1:123456789:key/healthcare-db',
+
+  // Key policy
+  keyPolicy: {
+    // Allow key administration
+    adminRoles: ['arn:aws:iam::123456789:role/db-admin'],
+
+    // Allow encryption/decryption
+    userRoles: ['arn:aws:iam::123456789:role/app-server'],
+
+    // Deny direct access from other accounts
+    denyExternalAccess: true
+  }
+};
+\`\`\`
+
+### Transparent Data Encryption (TDE)
+\`\`\`sql
+-- PostgreSQL TDE with pgcrypto
+-- Create encryption key table
+CREATE TABLE encryption_keys (
+  key_id UUID PRIMARY KEY,
+  key_name VARCHAR(50) UNIQUE NOT NULL,
+  encrypted_key BYTEA NOT NULL, -- Key encrypted with master key
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  rotated_at TIMESTAMP,
+  status VARCHAR(20) DEFAULT 'ACTIVE'
+);
+
+-- Function to encrypt PHI
+CREATE OR REPLACE FUNCTION encrypt_phi(
+  data TEXT,
+  key_name TEXT
+) RETURNS BYTEA AS $$
+DECLARE
+  encryption_key BYTEA;
+BEGIN
+  -- Get decrypted key from key table
+  SELECT pgp_sym_decrypt(encrypted_key, current_setting('app.master_key'))
+  INTO encryption_key
+  FROM encryption_keys
+  WHERE key_name = $2 AND status = 'ACTIVE';
+
+  -- Encrypt data
+  RETURN pgp_sym_encrypt($1, encode(encryption_key, 'base64'));
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+\`\`\`
+
+### Application-Level Encryption
+\`\`\`typescript
+class ApplicationEncryption {
+  private kms: KMSClient;
+  private dataKeyCache: Map<string, CachedKey> = new Map();
+
+  async encryptPHI(
+    data: string,
+    context: EncryptionContext
+  ): Promise<EncryptedData> {
+    // Get data key (envelope encryption)
+    const dataKey = await this.getDataKey(context);
+
+    // Generate random IV
+    const iv = crypto.randomBytes(12);
+
+    // Encrypt with AES-256-GCM
+    const cipher = crypto.createCipheriv(
+      'aes-256-gcm',
+      dataKey.plaintext,
+      iv
+    );
+
+    const encrypted = Buffer.concat([
+      cipher.update(data, 'utf8'),
+      cipher.final()
+    ]);
+
+    const authTag = cipher.getAuthTag();
+
+    return {
+      ciphertext: encrypted.toString('base64'),
+      iv: iv.toString('base64'),
+      authTag: authTag.toString('base64'),
+      encryptedDataKey: dataKey.encryptedKey,
+      keyId: dataKey.keyId,
+      context
+    };
+  }
+
+  private async getDataKey(
+    context: EncryptionContext
+  ): Promise<DataKey> {
+    // Check cache first
+    const cacheKey = this.getCacheKey(context);
+    const cached = this.dataKeyCache.get(cacheKey);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.key;
+    }
+
+    // Generate new data key from KMS
+    const response = await this.kms.generateDataKey({
+      KeyId: context.masterKeyId,
+      KeySpec: 'AES_256',
+      EncryptionContext: {
+        purpose: 'phi_encryption',
+        resourceType: context.resourceType,
+        resourceId: context.resourceId
+      }
+    });
+
+    const dataKey: DataKey = {
+      plaintext: response.Plaintext,
+      encryptedKey: response.CiphertextBlob.toString('base64'),
+      keyId: context.masterKeyId
+    };
+
+    // Cache for 5 minutes
+    this.dataKeyCache.set(cacheKey, {
+      key: dataKey,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    });
+
+    return dataKey;
+  }
+}
+\`\`\`
+
+## Key Management
+
+### Key Hierarchy
+\`\`\`typescript
+interface KeyHierarchy {
+  // Master keys - managed by KMS, never leave KMS
+  masterKeys: {
+    production: 'arn:aws:kms:us-east-1:xxx:key/master-prod';
+    staging: 'arn:aws:kms:us-east-1:xxx:key/master-staging';
+  };
+
+  // Data encryption keys - encrypted by master keys
+  dataKeys: {
+    // Per-table keys
+    patients: 'DEK for patient table';
+    medications: 'DEK for medications';
+    notes: 'DEK for clinical notes';
+  };
+
+  // Field encryption keys - for column-level encryption
+  fieldKeys: {
+    ssn: 'FEK for SSN field';
+    dob: 'FEK for DOB field';
+    diagnosis: 'FEK for diagnosis codes';
+  };
+}
+\`\`\`
+
+### Key Rotation
+\`\`\`typescript
+class KeyRotationService {
+  async rotateDataKey(keyName: string): Promise<void> {
+    // Generate new key version
+    const newKey = await this.kms.generateDataKey({
+      KeyId: this.masterKeyId,
+      KeySpec: 'AES_256'
+    });
+
+    // Store new key version
+    await this.keyStore.createKeyVersion({
+      keyName,
+      version: Date.now(),
+      encryptedKey: newKey.CiphertextBlob,
+      status: 'ACTIVE'
+    });
+
+    // Mark old version as deprecated (not deleted)
+    await this.keyStore.deprecateOldVersions(keyName);
+
+    // Schedule re-encryption of data
+    await this.scheduleReEncryption(keyName);
+
+    // Audit log
+    await this.auditLog({
+      event: 'KEY_ROTATED',
+      keyName,
+      newVersion: Date.now()
+    });
+  }
+
+  private async scheduleReEncryption(keyName: string): Promise<void> {
+    // Queue re-encryption jobs
+    const tables = this.getTablesUsingKey(keyName);
+
+    for (const table of tables) {
+      await this.jobQueue.enqueue({
+        type: 'REENCRYPT_TABLE',
+        table,
+        keyName,
+        batchSize: 1000,
+        priority: 'LOW' // Don't impact production
+      });
+    }
+  }
+}
+\`\`\`
+
+## Encrypted Search
+
+### Searchable Encryption
+\`\`\`typescript
+class SearchableEncryption {
+  // Create blind index for searchable encrypted fields
+  async createBlindIndex(
+    value: string,
+    salt: string
+  ): Promise<string> {
+    // HMAC-based blind index
+    const hmac = crypto.createHmac('sha256', salt);
+    hmac.update(value.toLowerCase().trim());
+
+    // Truncate to prevent dictionary attacks
+    return hmac.digest('base64').slice(0, 32);
+  }
+
+  // Store with blind index
+  async storePatient(patient: Patient): Promise<void> {
+    await this.db.insert('patients', {
+      id: patient.id,
+
+      // Encrypted fields
+      ssn_encrypted: await this.encrypt(patient.ssn),
+      name_encrypted: await this.encrypt(patient.name),
+
+      // Blind indexes for search
+      ssn_index: await this.createBlindIndex(patient.ssn, this.ssnSalt),
+      name_index: await this.createBlindIndex(patient.name, this.nameSalt),
+
+      // Unencrypted metadata
+      created_at: new Date()
+    });
+  }
+
+  // Search by blind index
+  async findBySSN(ssn: string): Promise<Patient | null> {
+    const ssnIndex = await this.createBlindIndex(ssn, this.ssnSalt);
+
+    const row = await this.db.query(
+      'SELECT * FROM patients WHERE ssn_index = $1',
+      [ssnIndex]
+    );
+
+    if (!row) return null;
+
+    // Decrypt fields
+    return {
+      id: row.id,
+      ssn: await this.decrypt(row.ssn_encrypted),
+      name: await this.decrypt(row.name_encrypted),
+      createdAt: row.created_at
+    };
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Use envelope encryption—master keys protect data keys
+2. Implement both storage-level and application-level encryption
+3. Never store encryption keys alongside encrypted data
+4. Rotate keys regularly with proper re-encryption processes
+5. Use blind indexes for searchable encrypted fields
+6. Maintain key hierarchy with separation of duties`
+      },
+      {
+        id: '6.3',
+        title: 'SQL Injection Prevention in Clinical Apps',
+        duration: '18 min',
+        content: `# SQL Injection Prevention in Clinical Apps
+
+## The Danger of SQL Injection in Healthcare
+
+SQL injection in healthcare applications can expose entire patient databases. Beyond data theft, attackers could modify clinical data, potentially affecting patient care.
+
+## Parameterized Queries
+
+### The Only Safe Approach
+\`\`\`typescript
+class PatientRepository {
+  // CORRECT: Parameterized query
+  async findPatientByMRN(mrn: string): Promise<Patient | null> {
+    const result = await this.db.query(
+      'SELECT * FROM patients WHERE mrn = $1',
+      [mrn]
+    );
+    return result.rows[0] || null;
+  }
+
+  // WRONG: String concatenation (NEVER DO THIS)
+  async findPatientUnsafe(mrn: string): Promise<Patient | null> {
+    // This is vulnerable to SQL injection!
+    const result = await this.db.query(
+      \`SELECT * FROM patients WHERE mrn = '\${mrn}'\`
+    );
+    return result.rows[0] || null;
+  }
+
+  // Attack example:
+  // mrn = "' OR '1'='1' --"
+  // Results in: SELECT * FROM patients WHERE mrn = '' OR '1'='1' --'
+  // Returns ALL patients!
+}
+\`\`\`
+
+### Complex Queries with Parameters
+\`\`\`typescript
+class ClinicalQueryBuilder {
+  async searchPatients(criteria: SearchCriteria): Promise<Patient[]> {
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    // Build query safely with parameters
+    if (criteria.name) {
+      conditions.push(\`name ILIKE $\${paramIndex++}\`);
+      params.push(\`%\${criteria.name}%\`);
+    }
+
+    if (criteria.dob) {
+      conditions.push(\`dob = $\${paramIndex++}\`);
+      params.push(criteria.dob);
+    }
+
+    if (criteria.departmentId) {
+      conditions.push(\`department_id = $\${paramIndex++}\`);
+      params.push(criteria.departmentId);
+    }
+
+    // Handle IN clauses safely
+    if (criteria.statusList?.length > 0) {
+      const placeholders = criteria.statusList.map(
+        (_, i) => \`$\${paramIndex + i}\`
+      ).join(', ');
+      conditions.push(\`status IN (\${placeholders})\`);
+      params.push(...criteria.statusList);
+      paramIndex += criteria.statusList.length;
+    }
+
+    const whereClause = conditions.length > 0
+      ? \`WHERE \${conditions.join(' AND ')}\`
+      : '';
+
+    const query = \`
+      SELECT * FROM patients
+      \${whereClause}
+      ORDER BY name
+      LIMIT $\${paramIndex++}
+      OFFSET $\${paramIndex}
+    \`;
+
+    params.push(criteria.limit || 100, criteria.offset || 0);
+
+    return this.db.query(query, params);
+  }
+}
+\`\`\`
+
+## ORM Security
+
+### Prisma Safe Patterns
+\`\`\`typescript
+// Prisma handles parameterization automatically
+class PrismaPatientRepository {
+  async findPatients(criteria: SearchCriteria): Promise<Patient[]> {
+    return prisma.patient.findMany({
+      where: {
+        // Prisma safely handles all these
+        name: criteria.name
+          ? { contains: criteria.name, mode: 'insensitive' }
+          : undefined,
+        dob: criteria.dob,
+        departmentId: criteria.departmentId,
+        status: criteria.statusList
+          ? { in: criteria.statusList }
+          : undefined
+      },
+      take: criteria.limit || 100,
+      skip: criteria.offset || 0,
+      orderBy: { name: 'asc' }
+    });
+  }
+
+  // DANGER: Raw queries bypass ORM protections
+  async unsafeRawQuery(userInput: string): Promise<any> {
+    // NEVER do this - even with an ORM
+    return prisma.$queryRawUnsafe(
+      \`SELECT * FROM patients WHERE name = '\${userInput}'\`
+    );
+  }
+
+  // SAFE: Use parameterized raw queries when needed
+  async safeRawQuery(userInput: string): Promise<any> {
+    return prisma.$queryRaw\`
+      SELECT * FROM patients WHERE name = \${userInput}
+    \`;
+  }
+}
+\`\`\`
+
+## Input Validation
+
+### Defense in Depth
+\`\`\`typescript
+class InputValidator {
+  // Validate before query - not instead of parameterization
+  validateMRN(mrn: string): string {
+    // MRN format validation
+    if (!/^[A-Z0-9]{6,12}$/.test(mrn)) {
+      throw new ValidationError('Invalid MRN format');
+    }
+    return mrn;
+  }
+
+  validatePatientName(name: string): string {
+    // Remove dangerous characters as extra protection
+    const sanitized = name.replace(/['"\\;]/g, '');
+
+    // Validate length
+    if (sanitized.length > 100) {
+      throw new ValidationError('Name too long');
+    }
+
+    return sanitized;
+  }
+
+  validateDepartmentId(id: string): number {
+    const parsed = parseInt(id, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      throw new ValidationError('Invalid department ID');
+    }
+    return parsed;
+  }
+
+  // Validate sort columns against allowlist
+  validateSortColumn(column: string): string {
+    const allowed = ['name', 'dob', 'created_at', 'mrn'];
+    if (!allowed.includes(column)) {
+      throw new ValidationError('Invalid sort column');
+    }
+    return column;
+  }
+}
+\`\`\`
+
+## Stored Procedures
+
+### Secure Stored Procedure Usage
+\`\`\`sql
+-- Stored procedure with parameterization
+CREATE OR REPLACE FUNCTION get_patient_encounters(
+  p_patient_id UUID,
+  p_start_date DATE,
+  p_end_date DATE
+)
+RETURNS TABLE (
+  encounter_id UUID,
+  encounter_date DATE,
+  encounter_type VARCHAR,
+  provider_name VARCHAR
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Validate inputs
+  IF p_patient_id IS NULL THEN
+    RAISE EXCEPTION 'Patient ID required';
+  END IF;
+
+  IF p_end_date < p_start_date THEN
+    RAISE EXCEPTION 'End date must be after start date';
+  END IF;
+
+  -- Execute parameterized query
+  RETURN QUERY
+  SELECT
+    e.id,
+    e.encounter_date,
+    e.type,
+    p.name
+  FROM encounters e
+  JOIN providers p ON e.provider_id = p.id
+  WHERE e.patient_id = p_patient_id
+    AND e.encounter_date BETWEEN p_start_date AND p_end_date
+  ORDER BY e.encounter_date DESC;
+END;
+$$;
+
+-- Grant execute to application role only
+GRANT EXECUTE ON FUNCTION get_patient_encounters TO clinical_app;
+\`\`\`
+
+## Error Handling
+
+### Safe Error Messages
+\`\`\`typescript
+class SecureErrorHandler {
+  handleDatabaseError(error: Error): ApiError {
+    // Log full error for debugging
+    this.logger.error('Database error', {
+      error: error.message,
+      stack: error.stack,
+      // DO NOT log query with user input
+    });
+
+    // Return generic error to client
+    if (error.message.includes('syntax error')) {
+      // Don't reveal SQL syntax issues
+      return new ApiError(
+        'An error occurred processing your request',
+        500
+      );
+    }
+
+    if (error.message.includes('duplicate key')) {
+      return new ApiError(
+        'A record with this identifier already exists',
+        409
+      );
+    }
+
+    // Generic fallback
+    return new ApiError(
+      'An unexpected error occurred',
+      500
+    );
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. ALWAYS use parameterized queries—no exceptions
+2. ORMs are safer but raw queries still need parameterization
+3. Validate input as defense in depth, not as primary protection
+4. Allowlist valid values for dynamic query parts (sort columns, etc.)
+5. Use stored procedures for complex queries when possible
+6. Never expose SQL error details to clients`
+      },
+      {
+        id: '6.4',
+        title: 'HIPAA Audit Logging Requirements',
+        duration: '20 min',
+        content: `# HIPAA Audit Logging Requirements
+
+## HIPAA Audit Requirements
+
+HIPAA requires covered entities to record and examine access to PHI. Audit logs are critical for breach investigation, compliance audits, and security monitoring.
+
+## What to Log
+
+### Required Audit Events
+\`\`\`typescript
+interface HIPAAAuditEvent {
+  // Event identification
+  eventId: string;
+  eventType: AuditEventType;
+  timestamp: Date;
+
+  // Actor information (WHO)
+  actor: {
+    userId: string;
+    userName: string;
+    role: string;
+    sessionId: string;
+    ipAddress: string;
+    userAgent?: string;
+  };
+
+  // Resource information (WHAT)
+  resource: {
+    type: 'Patient' | 'Encounter' | 'Medication' | 'Note' | string;
+    id: string;
+    patientId?: string; // For non-patient resources
+  };
+
+  // Action information (HOW)
+  action: {
+    type: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'PRINT';
+    outcome: 'SUCCESS' | 'FAILURE' | 'DENIED';
+    details?: string;
+  };
+
+  // Context (WHY)
+  context: {
+    purpose: 'TREATMENT' | 'PAYMENT' | 'OPERATIONS' | 'EMERGENCY';
+    encounterId?: string;
+    orderId?: string;
+    accessReason?: string;
+  };
+}
+
+enum AuditEventType {
+  // Access events
+  PHI_ACCESS = 'PHI_ACCESS',
+  PHI_CREATE = 'PHI_CREATE',
+  PHI_UPDATE = 'PHI_UPDATE',
+  PHI_DELETE = 'PHI_DELETE',
+  PHI_EXPORT = 'PHI_EXPORT',
+
+  // Authentication events
+  LOGIN_SUCCESS = 'LOGIN_SUCCESS',
+  LOGIN_FAILURE = 'LOGIN_FAILURE',
+  LOGOUT = 'LOGOUT',
+  SESSION_TIMEOUT = 'SESSION_TIMEOUT',
+
+  // Authorization events
+  ACCESS_DENIED = 'ACCESS_DENIED',
+  PRIVILEGE_ESCALATION = 'PRIVILEGE_ESCALATION',
+  BREAK_GLASS = 'BREAK_GLASS',
+
+  // System events
+  CONFIG_CHANGE = 'CONFIG_CHANGE',
+  AUDIT_LOG_ACCESS = 'AUDIT_LOG_ACCESS'
+}
+\`\`\`
+
+## Implementation
+
+### Audit Logger Service
+\`\`\`typescript
+class HIPAAAuditLogger {
+  private logStore: AuditLogStore;
+
+  async logPHIAccess(
+    userId: string,
+    resource: PHIResource,
+    action: string,
+    context: RequestContext
+  ): Promise<void> {
+    const event: HIPAAAuditEvent = {
+      eventId: crypto.randomUUID(),
+      eventType: AuditEventType.PHI_ACCESS,
+      timestamp: new Date(),
+
+      actor: {
+        userId,
+        userName: context.userName,
+        role: context.userRole,
+        sessionId: context.sessionId,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent
+      },
+
+      resource: {
+        type: resource.resourceType,
+        id: resource.id,
+        patientId: resource.patientId
+      },
+
+      action: {
+        type: this.mapAction(action),
+        outcome: 'SUCCESS',
+        details: \`Accessed \${resource.resourceType}\`
+      },
+
+      context: {
+        purpose: context.accessPurpose,
+        encounterId: context.encounterId
+      }
+    };
+
+    // Write to immutable log store
+    await this.logStore.append(event);
+
+    // Real-time alerting for sensitive access
+    if (this.isSensitiveAccess(event)) {
+      await this.alertSecurityTeam(event);
+    }
+  }
+
+  async logAccessDenied(
+    userId: string,
+    resource: PHIResource,
+    reason: string,
+    context: RequestContext
+  ): Promise<void> {
+    const event: HIPAAAuditEvent = {
+      eventId: crypto.randomUUID(),
+      eventType: AuditEventType.ACCESS_DENIED,
+      timestamp: new Date(),
+
+      actor: {
+        userId,
+        userName: context.userName,
+        role: context.userRole,
+        sessionId: context.sessionId,
+        ipAddress: context.ipAddress
+      },
+
+      resource: {
+        type: resource.resourceType,
+        id: resource.id,
+        patientId: resource.patientId
+      },
+
+      action: {
+        type: 'READ',
+        outcome: 'DENIED',
+        details: reason
+      },
+
+      context: {
+        purpose: context.accessPurpose
+      }
+    };
+
+    await this.logStore.append(event);
+
+    // Alert on repeated denials (potential attack)
+    await this.checkForAbusePattern(userId, 'ACCESS_DENIED');
+  }
+}
+\`\`\`
+
+### Immutable Log Storage
+\`\`\`typescript
+class ImmutableAuditStore {
+  // Write-once, append-only storage
+  async append(event: HIPAAAuditEvent): Promise<void> {
+    // Calculate hash chain
+    const previousHash = await this.getLastHash();
+    const eventWithHash = {
+      ...event,
+      previousHash,
+      hash: this.calculateHash(event, previousHash)
+    };
+
+    // Write to primary store
+    await this.writeToDatabase(eventWithHash);
+
+    // Write to immutable backup (S3 with Object Lock)
+    await this.writeToImmutableBackup(eventWithHash);
+  }
+
+  private calculateHash(
+    event: HIPAAAuditEvent,
+    previousHash: string
+  ): string {
+    const content = JSON.stringify(event) + previousHash;
+    return crypto.createHash('sha256').update(content).digest('hex');
+  }
+
+  // Verify chain integrity
+  async verifyIntegrity(
+    startDate: Date,
+    endDate: Date
+  ): Promise<IntegrityResult> {
+    const events = await this.getEventsInRange(startDate, endDate);
+
+    for (let i = 1; i < events.length; i++) {
+      const expectedHash = this.calculateHash(
+        events[i - 1],
+        events[i - 1].previousHash
+      );
+
+      if (events[i].previousHash !== expectedHash) {
+        return {
+          valid: false,
+          corruptionAt: events[i].eventId,
+          message: 'Hash chain broken - potential tampering detected'
+        };
+      }
+    }
+
+    return { valid: true };
+  }
+}
+\`\`\`
+
+## Retention and Access
+
+### Log Retention Policy
+\`\`\`typescript
+const auditRetentionPolicy = {
+  // HIPAA requires 6 years minimum
+  minimumRetention: {
+    years: 6,
+    source: 'HIPAA 45 CFR 164.530(j)'
+  },
+
+  // Many organizations keep 7+ years
+  recommendedRetention: {
+    years: 7,
+    reason: 'State law variations and litigation hold'
+  },
+
+  // Storage tiers
+  storageTiers: [
+    {
+      age: '0-90 days',
+      storage: 'HOT',
+      queryLatency: '<1 second'
+    },
+    {
+      age: '90 days - 2 years',
+      storage: 'WARM',
+      queryLatency: '<30 seconds'
+    },
+    {
+      age: '2-7 years',
+      storage: 'COLD',
+      queryLatency: '<5 minutes'
+    }
+  ],
+
+  // Deletion
+  deletion: {
+    method: 'CRYPTOGRAPHIC_ERASURE',
+    verification: 'DUAL_PERSON',
+    documentation: 'REQUIRED'
+  }
+};
+\`\`\`
+
+### Secure Audit Log Access
+\`\`\`typescript
+class AuditLogAccessControl {
+  // Audit log access is itself audited
+  async queryAuditLogs(
+    query: AuditQuery,
+    requester: User
+  ): Promise<AuditEvent[]> {
+    // Verify requester has audit access
+    if (!this.hasAuditAccess(requester)) {
+      await this.auditLogger.logAccessDenied(
+        requester.id,
+        { type: 'AUDIT_LOG', id: 'query' },
+        'Insufficient privileges for audit access',
+        requester.context
+      );
+      throw new UnauthorizedError('Audit log access denied');
+    }
+
+    // Log the audit log access
+    await this.auditLogger.log({
+      eventType: AuditEventType.AUDIT_LOG_ACCESS,
+      actor: requester,
+      action: 'QUERY',
+      details: JSON.stringify(query)
+    });
+
+    // Execute query with access controls
+    return this.executeAuditQuery(query, requester);
+  }
+
+  private hasAuditAccess(user: User): boolean {
+    // Only specific roles can access audit logs
+    const auditRoles = [
+      'PRIVACY_OFFICER',
+      'COMPLIANCE_OFFICER',
+      'SECURITY_ANALYST',
+      'INTERNAL_AUDIT'
+    ];
+
+    return auditRoles.includes(user.role);
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Log all PHI access with who, what, when, where, and why
+2. Include both successful and denied access attempts
+3. Use immutable storage with hash chains to prevent tampering
+4. Retain logs for minimum 6 years (7 recommended)
+5. Audit access to audit logs themselves
+6. Implement real-time alerting for suspicious patterns`
+      },
     ]
   },
   {
