@@ -7020,10 +7020,1011 @@ class AuditLogAccessControl {
     title: 'Frontend Security for Patient Portals',
     description: 'Securing patient-facing applications',
     lessons: [
-      { id: '7.1', title: 'Frontend Security Architecture', duration: '22 min', content: '' },
-      { id: '7.2', title: 'XSS Prevention in Patient Portals', duration: '20 min', content: '' },
-      { id: '7.3', title: 'Secure Browser Storage for Health Data', duration: '18 min', content: '' },
-      { id: '7.4', title: 'Third-Party Code Security & Supply Chain', duration: '20 min', content: '' },
+      {
+        id: '7.1',
+        title: 'Frontend Security Architecture',
+        duration: '22 min',
+        content: `# Frontend Security Architecture
+
+## Patient Portal Security Challenges
+
+Patient portals handle sensitive PHI in the browser, an inherently hostile environment. Proper architecture is critical to prevent data exposure.
+
+## Security Headers
+
+### Essential HTTP Headers
+\`\`\`typescript
+// Express.js security headers for patient portal
+const securityHeaders = {
+  // Content Security Policy - prevent XSS
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'", // Avoid if possible
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "connect-src 'self' https://api.yourhealthcare.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; '),
+
+  // Prevent clickjacking
+  'X-Frame-Options': 'DENY',
+
+  // Prevent MIME sniffing
+  'X-Content-Type-Options': 'nosniff',
+
+  // Enable XSS filter (legacy browsers)
+  'X-XSS-Protection': '1; mode=block',
+
+  // HTTPS only
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+
+  // Control referrer information
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+
+  // Permissions policy
+  'Permissions-Policy': [
+    'geolocation=()',
+    'microphone=()',
+    'camera=()',
+    'payment=()'
+  ].join(', ')
+};
+\`\`\`
+
+## Secure Component Architecture
+
+### PHI-Aware Components
+\`\`\`typescript
+// React component for displaying PHI
+interface PHIDisplayProps {
+  data: string;
+  sensitivityLevel: 'LOW' | 'MODERATE' | 'HIGH';
+  auditContext: AuditContext;
+}
+
+function PHIDisplay({ data, sensitivityLevel, auditContext }: PHIDisplayProps) {
+  // Log PHI access
+  useEffect(() => {
+    auditLog.logPHIView({
+      ...auditContext,
+      sensitivityLevel,
+      timestamp: new Date()
+    });
+  }, [data, auditContext]);
+
+  // Clear from DOM on unmount
+  useEffect(() => {
+    return () => {
+      // Force garbage collection hint
+      data = '';
+    };
+  }, []);
+
+  // Prevent copy/paste for high sensitivity
+  const preventCopy = sensitivityLevel === 'HIGH';
+
+  return (
+    <div
+      className="phi-display"
+      onCopy={preventCopy ? (e) => e.preventDefault() : undefined}
+      onCut={preventCopy ? (e) => e.preventDefault() : undefined}
+    >
+      {data}
+    </div>
+  );
+}
+\`\`\`
+
+### Secure Data Fetching
+\`\`\`typescript
+class SecureFetcher {
+  private baseUrl: string;
+
+  async fetchPHI<T>(
+    endpoint: string,
+    context: RequestContext
+  ): Promise<T> {
+    // Validate session before PHI request
+    if (!this.isSessionValid()) {
+      throw new SessionExpiredError();
+    }
+
+    // Add security headers
+    const response = await fetch(\`\${this.baseUrl}\${endpoint}\`, {
+      method: 'GET',
+      credentials: 'include', // Send cookies
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-ID': crypto.randomUUID(),
+        'X-CSRF-Token': this.getCsrfToken(),
+      }
+    });
+
+    // Check for session timeout
+    if (response.status === 401) {
+      this.handleSessionTimeout();
+      throw new SessionExpiredError();
+    }
+
+    // Validate response content type
+    const contentType = response.headers.get('Content-Type');
+    if (!contentType?.includes('application/json')) {
+      throw new SecurityError('Invalid response content type');
+    }
+
+    return response.json();
+  }
+}
+\`\`\`
+
+## Session Management
+
+### Secure Session Handling
+\`\`\`typescript
+class SessionManager {
+  private sessionTimeout: number = 15 * 60 * 1000; // 15 minutes
+  private warningTime: number = 2 * 60 * 1000; // 2 minutes before timeout
+  private lastActivity: number = Date.now();
+  private timeoutWarningShown: boolean = false;
+
+  constructor() {
+    this.setupActivityTracking();
+    this.setupTimeoutCheck();
+  }
+
+  private setupActivityTracking(): void {
+    // Track user activity
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, () => this.recordActivity(), {
+        passive: true
+      });
+    });
+  }
+
+  private recordActivity(): void {
+    this.lastActivity = Date.now();
+    this.timeoutWarningShown = false;
+
+    // Notify server of activity (debounced)
+    this.debouncedPing();
+  }
+
+  private setupTimeoutCheck(): void {
+    setInterval(() => {
+      const timeSinceActivity = Date.now() - this.lastActivity;
+
+      if (timeSinceActivity > this.sessionTimeout) {
+        this.handleSessionTimeout();
+      } else if (
+        timeSinceActivity > this.sessionTimeout - this.warningTime &&
+        !this.timeoutWarningShown
+      ) {
+        this.showTimeoutWarning();
+        this.timeoutWarningShown = true;
+      }
+    }, 10000); // Check every 10 seconds
+  }
+
+  private handleSessionTimeout(): void {
+    // Clear sensitive data
+    this.clearSensitiveData();
+
+    // Redirect to login
+    window.location.href = '/login?reason=timeout';
+  }
+
+  private clearSensitiveData(): void {
+    // Clear storage
+    sessionStorage.clear();
+    localStorage.removeItem('userData');
+
+    // Clear in-memory data
+    window.__PHI_CACHE__ = null;
+  }
+}
+\`\`\`
+
+## CSRF Protection
+
+### Token Management
+\`\`\`typescript
+class CSRFProtection {
+  private tokenKey = 'csrf_token';
+
+  // Get token from meta tag or cookie
+  getToken(): string {
+    // Try meta tag first
+    const metaToken = document.querySelector<HTMLMetaElement>(
+      'meta[name="csrf-token"]'
+    )?.content;
+
+    if (metaToken) return metaToken;
+
+    // Fall back to cookie
+    const cookies = document.cookie.split(';');
+    const csrfCookie = cookies.find(c => c.trim().startsWith('XSRF-TOKEN='));
+
+    if (csrfCookie) {
+      return decodeURIComponent(csrfCookie.split('=')[1]);
+    }
+
+    throw new SecurityError('CSRF token not found');
+  }
+
+  // Add token to all state-changing requests
+  setupInterceptor(): void {
+    const originalFetch = window.fetch;
+
+    window.fetch = async (url, options = {}) => {
+      const method = options.method?.toUpperCase() || 'GET';
+
+      // Add CSRF token to non-GET requests
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+        options.headers = {
+          ...options.headers,
+          'X-CSRF-Token': this.getToken()
+        };
+      }
+
+      return originalFetch(url, options);
+    };
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Implement strict Content Security Policy to prevent XSS
+2. Design PHI-aware components with audit logging
+3. Handle session timeouts gracefully with data cleanup
+4. Protect all state-changing requests with CSRF tokens
+5. Use security headers to enable browser protections
+6. Never trust client-side validation alone`
+      },
+      {
+        id: '7.2',
+        title: 'XSS Prevention in Patient Portals',
+        duration: '20 min',
+        content: `# XSS Prevention in Patient Portals
+
+## Why XSS is Critical in Healthcare
+
+Cross-Site Scripting (XSS) in a patient portal could allow attackers to steal session tokens, exfiltrate PHI, or impersonate patients and providers.
+
+## Types of XSS
+
+### Reflected XSS
+\`\`\`typescript
+// VULNERABLE: Reflected XSS in search
+// URL: /search?q=<script>alert('XSS')</script>
+function SearchResults() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const query = searchParams.get('q');
+
+  // WRONG: Directly inserting user input
+  return (
+    <div>
+      <h2>Results for: {query}</h2> {/* XSS if query contains HTML */}
+    </div>
+  );
+}
+
+// SAFE: React automatically escapes
+function SafeSearchResults() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const query = searchParams.get('q');
+
+  // React escapes this automatically
+  return (
+    <div>
+      <h2>Results for: {query}</h2> {/* Safe - React escapes */}
+    </div>
+  );
+}
+\`\`\`
+
+### Stored XSS
+\`\`\`typescript
+// VULNERABLE: Stored XSS in clinical notes
+interface ClinicalNote {
+  id: string;
+  content: string; // Could contain malicious HTML
+  author: string;
+}
+
+function UnsafeNoteDisplay({ note }: { note: ClinicalNote }) {
+  // WRONG: Using dangerouslySetInnerHTML
+  return (
+    <div
+      dangerouslySetInnerHTML={{ __html: note.content }} // XSS vulnerability!
+    />
+  );
+}
+
+// SAFE: Sanitize HTML content
+import DOMPurify from 'dompurify';
+
+function SafeNoteDisplay({ note }: { note: ClinicalNote }) {
+  const sanitizedContent = DOMPurify.sanitize(note.content, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: []
+  });
+
+  return (
+    <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+  );
+}
+\`\`\`
+
+## Input Sanitization
+
+### DOMPurify Configuration for Healthcare
+\`\`\`typescript
+import DOMPurify from 'dompurify';
+
+// Configure DOMPurify for clinical content
+const clinicalPurifyConfig = {
+  // Minimal allowed tags for clinical notes
+  ALLOWED_TAGS: [
+    'p', 'br', 'strong', 'em', 'u',
+    'ul', 'ol', 'li',
+    'h1', 'h2', 'h3', 'h4',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'blockquote', 'pre', 'code'
+  ],
+
+  // No attributes except specific ones
+  ALLOWED_ATTR: ['class', 'id'],
+
+  // No JavaScript URLs
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.:-]|$))/i,
+
+  // Custom hooks
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  RETURN_TRUSTED_TYPE: true
+};
+
+function sanitizeClinicalContent(html: string): string {
+  return DOMPurify.sanitize(html, clinicalPurifyConfig);
+}
+
+// Add hook to log potential XSS attempts
+DOMPurify.addHook('uponSanitizeElement', (node, data) => {
+  if (data.tagName === 'script' || data.tagName === 'iframe') {
+    console.warn('Potential XSS attempt blocked:', {
+      tagName: data.tagName,
+      content: node.textContent?.slice(0, 100)
+    });
+
+    // Report to security monitoring
+    reportSecurityEvent({
+      type: 'XSS_ATTEMPT',
+      details: { tagName: data.tagName }
+    });
+  }
+});
+\`\`\`
+
+## Content Security Policy
+
+### Strict CSP for Patient Portals
+\`\`\`typescript
+// Recommended CSP for healthcare applications
+const strictCSP = {
+  // Default: nothing allowed
+  'default-src': ["'self'"],
+
+  // Scripts: only from self, no inline
+  'script-src': [
+    "'self'",
+    // Use nonce for inline scripts if needed
+    "'nonce-{RANDOM_NONCE}'"
+  ],
+
+  // Styles: self only, minimize unsafe-inline
+  'style-src': [
+    "'self'",
+    // Only if absolutely necessary:
+    // "'unsafe-inline'"
+  ],
+
+  // Images: self and data URIs (for base64 images)
+  'img-src': ["'self'", 'data:', 'https:'],
+
+  // Connections: only to your API
+  'connect-src': [
+    "'self'",
+    'https://api.healthcare.com',
+    'wss://notifications.healthcare.com'
+  ],
+
+  // Fonts: self only
+  'font-src': ["'self'"],
+
+  // Forms: only submit to self
+  'form-action': ["'self'"],
+
+  // Frames: none allowed
+  'frame-ancestors': ["'none'"],
+  'frame-src': ["'none'"],
+
+  // Objects: none (no Flash, etc.)
+  'object-src': ["'none'"],
+
+  // Base URI: self only
+  'base-uri': ["'self'"],
+
+  // Upgrade insecure requests
+  'upgrade-insecure-requests': []
+};
+
+function generateCSPHeader(nonce: string): string {
+  const policy = { ...strictCSP };
+  policy['script-src'] = policy['script-src'].map(
+    src => src.replace('{RANDOM_NONCE}', nonce)
+  );
+
+  return Object.entries(policy)
+    .map(([key, values]) => \`\${key} \${values.join(' ')}\`)
+    .join('; ');
+}
+\`\`\`
+
+## React-Specific Protections
+
+### Safe Patterns
+\`\`\`typescript
+// React automatically escapes these - SAFE
+function SafePatterns() {
+  const patientName = userInput; // Even if malicious
+
+  return (
+    <>
+      {/* Safe: Text content is escaped */}
+      <p>{patientName}</p>
+
+      {/* Safe: Attributes are escaped */}
+      <input value={patientName} />
+
+      {/* Safe: href validated by React */}
+      <a href={\`/patients/\${encodeURIComponent(patientId)}\`}>View</a>
+    </>
+  );
+}
+
+// DANGEROUS patterns to avoid
+function DangerousPatterns() {
+  const userInput = '<script>alert("XSS")</script>';
+
+  return (
+    <>
+      {/* DANGEROUS: Direct HTML insertion */}
+      <div dangerouslySetInnerHTML={{ __html: userInput }} />
+
+      {/* DANGEROUS: eval or Function constructor */}
+      {eval(userInput)} {/* NEVER DO THIS */}
+
+      {/* DANGEROUS: javascript: URLs */}
+      <a href={\`javascript:\${userInput}\`}>Click</a> {/* XSS! */}
+    </>
+  );
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Never use dangerouslySetInnerHTML without sanitization
+2. Use DOMPurify with strict allowlists for HTML content
+3. Implement strict Content Security Policy
+4. React escapes by default - avoid bypassing it
+5. Validate and sanitize on server AND client
+6. Monitor and log potential XSS attempts`
+      },
+      {
+        id: '7.3',
+        title: 'Secure Browser Storage for Health Data',
+        duration: '18 min',
+        content: `# Secure Browser Storage for Health Data
+
+## Browser Storage Risks
+
+Storing PHI in the browser creates significant risks. Data can persist after logout, be accessed by malicious scripts, or survive in browser history.
+
+## Storage Options and Risks
+
+### Storage Comparison
+\`\`\`typescript
+interface StorageRisk {
+  type: string;
+  persistence: string;
+  xssAccess: boolean;
+  suitableForPHI: boolean;
+  recommendation: string;
+}
+
+const storageRisks: StorageRisk[] = [
+  {
+    type: 'localStorage',
+    persistence: 'Permanent until cleared',
+    xssAccess: true,
+    suitableForPHI: false,
+    recommendation: 'Never store PHI'
+  },
+  {
+    type: 'sessionStorage',
+    persistence: 'Until tab closes',
+    xssAccess: true,
+    suitableForPHI: false,
+    recommendation: 'Minimal non-PHI data only'
+  },
+  {
+    type: 'Cookies',
+    persistence: 'Configurable',
+    xssAccess: true, // Unless HttpOnly
+    suitableForPHI: false, // Sessions only
+    recommendation: 'HttpOnly session tokens only'
+  },
+  {
+    type: 'IndexedDB',
+    persistence: 'Permanent',
+    xssAccess: true,
+    suitableForPHI: false, // Unless encrypted
+    recommendation: 'Only with encryption'
+  },
+  {
+    type: 'Memory (variables)',
+    persistence: 'Until page unload',
+    xssAccess: true,
+    suitableForPHI: true, // Best option if needed
+    recommendation: 'Prefer for PHI display'
+  }
+];
+\`\`\`
+
+## Secure Session Token Storage
+
+### HttpOnly Cookie Pattern
+\`\`\`typescript
+// Server-side: Set secure session cookie
+function setSessionCookie(res: Response, sessionId: string): void {
+  res.cookie('session', sessionId, {
+    httpOnly: true,      // Not accessible via JavaScript
+    secure: true,        // HTTPS only
+    sameSite: 'strict',  // Prevent CSRF
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    path: '/',
+    domain: '.healthcare.com'
+  });
+}
+
+// Client-side: Session handled automatically
+// No JavaScript access to session token needed
+async function makeAuthenticatedRequest(url: string): Promise<Response> {
+  return fetch(url, {
+    credentials: 'include' // Sends cookies automatically
+  });
+}
+\`\`\`
+
+## Encrypted Client Storage
+
+### When You Must Store Sensitive Data
+\`\`\`typescript
+// Use Web Crypto API for client-side encryption
+class SecureClientStorage {
+  private encryptionKey: CryptoKey | null = null;
+
+  // Derive key from session (don't store the key itself)
+  async initializeKey(sessionToken: string): Promise<void> {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(sessionToken),
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+
+    this.encryptionKey = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: encoder.encode('healthcare-portal-storage'),
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async setItem(key: string, value: any): Promise<void> {
+    if (!this.encryptionKey) {
+      throw new Error('Storage not initialized');
+    }
+
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(JSON.stringify(value));
+
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      this.encryptionKey,
+      encoded
+    );
+
+    const stored = {
+      iv: Array.from(iv),
+      data: Array.from(new Uint8Array(encrypted))
+    };
+
+    sessionStorage.setItem(key, JSON.stringify(stored));
+  }
+
+  async getItem<T>(key: string): Promise<T | null> {
+    if (!this.encryptionKey) {
+      throw new Error('Storage not initialized');
+    }
+
+    const stored = sessionStorage.getItem(key);
+    if (!stored) return null;
+
+    const { iv, data } = JSON.parse(stored);
+
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: new Uint8Array(iv) },
+      this.encryptionKey,
+      new Uint8Array(data)
+    );
+
+    return JSON.parse(new TextDecoder().decode(decrypted));
+  }
+
+  clear(): void {
+    sessionStorage.clear();
+    this.encryptionKey = null;
+  }
+}
+\`\`\`
+
+## Memory-Only PHI Handling
+
+### Prefer In-Memory Storage
+\`\`\`typescript
+// Store PHI only in memory, never in persistent storage
+class PHIMemoryCache {
+  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private maxAge: number = 5 * 60 * 1000; // 5 minutes
+
+  set(key: string, data: any): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+  }
+
+  get(key: string): any | null {
+    const entry = this.cache.get(key);
+
+    if (!entry) return null;
+
+    // Check if expired
+    if (Date.now() - entry.timestamp > this.maxAge) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+// Use React context for PHI data
+const PHICacheContext = createContext<PHIMemoryCache | null>(null);
+
+function PHIProvider({ children }: { children: React.ReactNode }) {
+  const cacheRef = useRef(new PHIMemoryCache());
+
+  // Clear cache on window unload
+  useEffect(() => {
+    const handleUnload = () => {
+      cacheRef.current.clear();
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, []);
+
+  return (
+    <PHICacheContext.Provider value={cacheRef.current}>
+      {children}
+    </PHICacheContext.Provider>
+  );
+}
+\`\`\`
+
+## Data Cleanup
+
+### Secure Logout
+\`\`\`typescript
+async function secureLogout(): Promise<void> {
+  // 1. Clear all storage
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // 2. Clear cookies (server should invalidate)
+  await fetch('/api/logout', {
+    method: 'POST',
+    credentials: 'include'
+  });
+
+  // 3. Clear in-memory caches
+  window.__PHI_CACHE__?.clear();
+
+  // 4. Clear service worker caches
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames.map(name => caches.delete(name))
+    );
+  }
+
+  // 5. Navigate away to trigger page unload
+  window.location.href = '/login?logged_out=true';
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Never store PHI in localStorage - it persists indefinitely
+2. Use HttpOnly cookies for session tokens
+3. If client storage is necessary, encrypt with Web Crypto API
+4. Prefer in-memory storage for PHI display
+5. Implement comprehensive data cleanup on logout
+6. Clear service worker caches containing sensitive data`
+      },
+      {
+        id: '7.4',
+        title: 'Third-Party Code Security & Supply Chain',
+        duration: '20 min',
+        content: `# Third-Party Code Security & Supply Chain
+
+## Supply Chain Risks in Healthcare
+
+Third-party dependencies can introduce vulnerabilities or malicious code. A compromised npm package could exfiltrate PHI from every patient portal that uses it.
+
+## Dependency Auditing
+
+### Automated Vulnerability Scanning
+\`\`\`typescript
+// package.json scripts for security
+{
+  "scripts": {
+    "audit": "npm audit --production",
+    "audit:fix": "npm audit fix --production",
+    "audit:ci": "npm audit --production --audit-level=high",
+    "snyk": "snyk test --production",
+    "outdated": "npm outdated"
+  }
+}
+\`\`\`
+
+### Pre-commit Hook
+\`\`\`bash
+#!/bin/sh
+# .husky/pre-commit
+
+# Check for high/critical vulnerabilities
+npm audit --production --audit-level=high
+
+if [ $? -ne 0 ]; then
+  echo "Security vulnerabilities found. Fix before committing."
+  exit 1
+fi
+\`\`\`
+
+## Dependency Lockfiles
+
+### Ensuring Reproducible Builds
+\`\`\`typescript
+// .npmrc for security
+// Always use exact versions
+save-exact=true
+
+// Use package-lock.json
+package-lock=true
+
+// Verify integrity
+audit=true
+
+// Only allow packages from npm registry
+registry=https://registry.npmjs.org/
+
+// .yarnrc.yml for Yarn
+npmRegistryServer: "https://registry.npmjs.org"
+enableGlobalCache: false
+checksumBehavior: "update"
+\`\`\`
+
+## Subresource Integrity
+
+### SRI for External Resources
+\`\`\`html
+<!-- Always use SRI for CDN resources -->
+<script
+  src="https://cdn.example.com/library.min.js"
+  integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
+  crossorigin="anonymous"
+></script>
+
+<!-- Generate SRI hashes -->
+<!-- echo sha384-$(cat library.min.js | openssl dgst -sha384 -binary | openssl base64 -A) -->
+\`\`\`
+
+### SRI for Dynamic Imports
+\`\`\`typescript
+// Verify integrity of dynamically loaded modules
+class SecureModuleLoader {
+  private integrityHashes: Map<string, string> = new Map([
+    ['analytics', 'sha384-abc123...'],
+    ['charting', 'sha384-def456...']
+  ]);
+
+  async loadModule(name: string): Promise<any> {
+    const expectedHash = this.integrityHashes.get(name);
+    if (!expectedHash) {
+      throw new SecurityError(\`Unknown module: \${name}\`);
+    }
+
+    const response = await fetch(\`/modules/\${name}.js\`);
+    const content = await response.text();
+
+    // Verify integrity
+    const actualHash = await this.computeHash(content);
+    if (actualHash !== expectedHash) {
+      throw new SecurityError(\`Integrity check failed for \${name}\`);
+    }
+
+    // Safe to evaluate
+    return this.executeModule(content);
+  }
+
+  private async computeHash(content: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-384', data);
+    return 'sha384-' + btoa(
+      String.fromCharCode(...new Uint8Array(hashBuffer))
+    );
+  }
+}
+\`\`\`
+
+## Vendor Security Assessment
+
+### Due Diligence Checklist
+\`\`\`typescript
+interface VendorSecurityChecklist {
+  vendor: string;
+  package: string;
+  checks: {
+    // Code quality
+    maintainerReputation: boolean;
+    regularUpdates: boolean;
+    responsibleDisclosure: boolean;
+    securityPolicy: boolean;
+
+    // HIPAA considerations
+    noDataCollection: boolean;
+    noExternalRequests: boolean;
+    noEval: boolean;
+    noDynamicCode: boolean;
+
+    // Technical checks
+    minifiedSourceMaps: boolean;
+    typeDefinitions: boolean;
+    testCoverage: boolean;
+    auditHistory: boolean;
+  };
+}
+
+// Before adding a new dependency
+async function assessDependency(packageName: string): Promise<VendorSecurityChecklist> {
+  const npmData = await fetch(\`https://registry.npmjs.org/\${packageName}\`);
+  const packageJson = await npmData.json();
+
+  return {
+    vendor: packageJson.author?.name || 'Unknown',
+    package: packageName,
+    checks: {
+      maintainerReputation: await checkMaintainer(packageJson),
+      regularUpdates: checkUpdateFrequency(packageJson),
+      responsibleDisclosure: await checkSecurityPolicy(packageName),
+      securityPolicy: packageJson.security !== undefined,
+
+      noDataCollection: await auditForDataCollection(packageName),
+      noExternalRequests: await auditForExternalRequests(packageName),
+      noEval: await auditForEval(packageName),
+      noDynamicCode: await auditForDynamicCode(packageName),
+
+      minifiedSourceMaps: packageJson.files?.includes('*.map'),
+      typeDefinitions: packageJson.types !== undefined,
+      testCoverage: await checkTestCoverage(packageName),
+      auditHistory: await checkVulnerabilityHistory(packageName)
+    }
+  };
+}
+\`\`\`
+
+## Runtime Protection
+
+### Content Security Policy for Dependencies
+\`\`\`typescript
+// Strict CSP that blocks inline scripts from dependencies
+const productionCSP = {
+  'script-src': [
+    "'self'",
+    // Specific allowed CDNs with SRI
+    "https://cdn.trusted-vendor.com"
+  ],
+
+  // Block connections to unknown domains
+  'connect-src': [
+    "'self'",
+    "https://api.yourhealthcare.com"
+    // NO third-party analytics or tracking
+  ],
+
+  // Report violations
+  'report-uri': ['/api/csp-violation']
+};
+
+// CSP violation handler
+app.post('/api/csp-violation', (req, res) => {
+  const violation = req.body;
+
+  // Log and alert on violations
+  securityLogger.warn('CSP Violation', {
+    blockedUri: violation['blocked-uri'],
+    violatedDirective: violation['violated-directive'],
+    sourceFile: violation['source-file'],
+    lineNumber: violation['line-number']
+  });
+
+  // Alert security team for script violations
+  if (violation['violated-directive'].includes('script-src')) {
+    alertSecurityTeam({
+      type: 'CSP_SCRIPT_VIOLATION',
+      details: violation
+    });
+  }
+
+  res.sendStatus(204);
+});
+\`\`\`
+
+## Key Takeaways
+
+1. Audit dependencies regularly with npm audit and Snyk
+2. Lock dependency versions in lockfiles
+3. Use Subresource Integrity for all external resources
+4. Conduct security assessments before adding dependencies
+5. Implement strict CSP to limit runtime behavior
+6. Monitor for supply chain compromises and have an incident plan`
+      },
     ]
   },
   {
