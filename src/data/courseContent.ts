@@ -2945,10 +2945,1113 @@ Prompt templates create a security perimeter around LLM interactions. Use versio
     title: 'Authentication & Authorization',
     description: 'Identity management in healthcare systems',
     lessons: [
-      { id: '4.1', title: 'Healthcare Authentication Requirements', duration: '20 min', content: '' },
-      { id: '4.2', title: 'Role-Based Access Control (RBAC) for Clinical Data', duration: '22 min', content: '' },
-      { id: '4.3', title: 'OAuth 2.0 & SMART on FHIR', duration: '25 min', content: '' },
-      { id: '4.4', title: 'Session Management & Timeout Policies', duration: '18 min', content: '' },
+      {
+        id: '4.1',
+        title: 'Healthcare Authentication Requirements',
+        duration: '20 min',
+        content: `# Healthcare Authentication Requirements
+
+## Why Healthcare Authentication is Different
+
+Healthcare authentication goes far beyond username and password. It must balance security requirements with clinical workflow demands where seconds can matter for patient care.
+
+## Regulatory Requirements
+
+### HIPAA Authentication Requirements
+- Unique user identification (164.312(a)(2)(i))
+- Emergency access procedure (164.312(a)(2)(ii))
+- Automatic logoff (164.312(a)(2)(iii))
+- Encryption and decryption (164.312(a)(2)(iv))
+
+### Key Standards
+- **NIST 800-63B**: Digital identity guidelines
+- **21 CFR Part 11**: Electronic signatures for FDA-regulated systems
+- **Joint Commission**: Access control requirements for accreditation
+
+## Multi-Factor Authentication (MFA)
+
+### MFA Categories
+1. **Something you know**: Password, PIN
+2. **Something you have**: Badge, phone, hardware token
+3. **Something you are**: Fingerprint, facial recognition
+
+### Healthcare-Appropriate MFA
+\`\`\`typescript
+interface HealthcareMFAConfig {
+  // Standard access
+  standardAccess: {
+    factors: ['password', 'badge_tap'];
+    timeout: 900; // 15 minutes
+  };
+
+  // Elevated access for sensitive data
+  sensitiveAccess: {
+    factors: ['password', 'badge_tap', 'biometric'];
+    timeout: 300; // 5 minutes
+    reAuthForExport: true;
+  };
+
+  // Emergency override
+  breakGlass: {
+    factors: ['password', 'supervisor_approval'];
+    auditLevel: 'CRITICAL';
+    notifyPrivacyOfficer: true;
+  };
+}
+\`\`\`
+
+## Workflow-Integrated Authentication
+
+### Badge Tap + Proximity
+\`\`\`typescript
+class ClinicalWorkstationAuth {
+  private proximityMonitor: ProximityMonitor;
+
+  async handleBadgeTap(badgeId: string): Promise<AuthResult> {
+    // Validate badge
+    const user = await this.validateBadge(badgeId);
+    if (!user) {
+      return { success: false, reason: 'INVALID_BADGE' };
+    }
+
+    // Check if workstation is in clinical area
+    const workstationType = await this.getWorkstationType();
+
+    if (workstationType === 'CLINICAL') {
+      // Start proximity monitoring
+      this.proximityMonitor.startTracking(user.id);
+
+      return {
+        success: true,
+        sessionType: 'PROXIMITY_MONITORED',
+        autoLogoffOnExit: true
+      };
+    }
+
+    return { success: true, sessionType: 'STANDARD' };
+  }
+}
+\`\`\`
+
+### Single Sign-On (SSO) for Clinical Systems
+\`\`\`typescript
+interface ClinicalSSOConfig {
+  // SAML 2.0 for enterprise applications
+  saml: {
+    identityProvider: string;
+    assertionConsumerService: string;
+    signatureAlgorithm: 'RSA-SHA256';
+    encryptAssertions: true;
+  };
+
+  // Context preservation across systems
+  contextSharing: {
+    patientContext: true; // CCOW patient context
+    encounterContext: true;
+    userContext: true;
+  };
+
+  // Session synchronization
+  sessionSync: {
+    globalLogout: true;
+    sessionTimeout: 'SHORTEST_WINS';
+  };
+}
+\`\`\`
+
+## Service Account Management
+
+### Agentic System Authentication
+\`\`\`typescript
+interface AgenticServiceAuth {
+  // Use short-lived tokens
+  tokenConfig: {
+    type: 'JWT';
+    lifetime: 300; // 5 minutes
+    refreshable: false; // Force re-auth
+  };
+
+  // Scope limitations
+  scopes: string[];
+
+  // Rate limiting
+  rateLimit: {
+    requestsPerMinute: 100;
+    burstLimit: 20;
+  };
+
+  // Audit all actions
+  auditConfig: {
+    logAllRequests: true;
+    includePayloadHash: true;
+    alertOnAnomaly: true;
+  };
+}
+\`\`\`
+
+## Emergency Access (Break Glass)
+
+### Implementation Pattern
+\`\`\`typescript
+class BreakGlassAccess {
+  async requestEmergencyAccess(
+    userId: string,
+    patientId: string,
+    reason: EmergencyReason
+  ): Promise<EmergencyAccessGrant> {
+    // Log the request immediately
+    await this.auditLog.critical({
+      event: 'BREAK_GLASS_REQUESTED',
+      userId,
+      patientId,
+      reason,
+      timestamp: new Date()
+    });
+
+    // Validate emergency scenario
+    const isValidEmergency = await this.validateEmergency(reason);
+
+    // Grant temporary access
+    const grant = await this.createTemporaryGrant({
+      userId,
+      patientId,
+      duration: 3600, // 1 hour max
+      accessLevel: 'EMERGENCY_READ_WRITE',
+      requiresFollowUp: true
+    });
+
+    // Notify compliance team
+    await this.notifyPrivacyTeam({
+      type: 'BREAK_GLASS_ACTIVATED',
+      grant,
+      requiresReview: true
+    });
+
+    return grant;
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Healthcare authentication must be HIPAA-compliant and workflow-friendly
+2. MFA should be context-aware (clinical vs. administrative)
+3. SSO reduces friction while maintaining security
+4. Service accounts for agents need strict scoping and monitoring
+5. Emergency access must be audited and time-limited
+6. Always prefer short-lived tokens over long-lived credentials`
+      },
+      {
+        id: '4.2',
+        title: 'Role-Based Access Control (RBAC) for Clinical Data',
+        duration: '22 min',
+        content: `# Role-Based Access Control (RBAC) for Clinical Data
+
+## Understanding Healthcare RBAC
+
+Healthcare RBAC isn't just about job titles—it's about clinical relationships, treatment contexts, and the minimum necessary principle.
+
+## The Minimum Necessary Standard
+
+HIPAA's minimum necessary standard requires that access be limited to only the PHI needed for the specific task.
+
+### Beyond Simple Roles
+\`\`\`typescript
+interface ClinicalAccessContext {
+  // User's role
+  role: ClinicalRole;
+
+  // Relationship to patient
+  careTeamMembership?: {
+    patientId: string;
+    relationship: 'ATTENDING' | 'CONSULTING' | 'NURSING' | 'ALLIED';
+    department: string;
+    effectiveDate: Date;
+    expirationDate?: Date;
+  };
+
+  // Current clinical context
+  context?: {
+    encounterId?: string;
+    orderingContext?: string;
+    treatmentPurpose?: string;
+  };
+
+  // Access purpose (required for audit)
+  purpose: 'TREATMENT' | 'PAYMENT' | 'OPERATIONS' | 'RESEARCH';
+}
+\`\`\`
+
+## Role Hierarchy for Healthcare
+
+### Clinical Roles
+\`\`\`typescript
+enum ClinicalRole {
+  // Physicians
+  ATTENDING_PHYSICIAN = 'ATTENDING_PHYSICIAN',
+  CONSULTING_PHYSICIAN = 'CONSULTING_PHYSICIAN',
+  RESIDENT = 'RESIDENT',
+  FELLOW = 'FELLOW',
+
+  // Nursing
+  REGISTERED_NURSE = 'REGISTERED_NURSE',
+  NURSE_PRACTITIONER = 'NURSE_PRACTITIONER',
+  LICENSED_PRACTICAL_NURSE = 'LPN',
+
+  // Allied Health
+  PHARMACIST = 'PHARMACIST',
+  PHYSICAL_THERAPIST = 'PT',
+  RESPIRATORY_THERAPIST = 'RT',
+  SOCIAL_WORKER = 'SOCIAL_WORKER',
+
+  // Administrative
+  UNIT_CLERK = 'UNIT_CLERK',
+  REGISTRATION = 'REGISTRATION',
+  BILLING = 'BILLING',
+
+  // Technical
+  LAB_TECHNICIAN = 'LAB_TECH',
+  RADIOLOGY_TECHNICIAN = 'RAD_TECH'
+}
+\`\`\`
+
+### Permission Matrix
+\`\`\`typescript
+const rolePermissions: Record<ClinicalRole, Permission[]> = {
+  [ClinicalRole.ATTENDING_PHYSICIAN]: [
+    'patient:demographics:read',
+    'patient:demographics:write',
+    'patient:clinical_notes:read',
+    'patient:clinical_notes:write',
+    'patient:orders:read',
+    'patient:orders:write',
+    'patient:medications:read',
+    'patient:medications:prescribe',
+    'patient:labs:read',
+    'patient:labs:order',
+    'patient:imaging:read',
+    'patient:imaging:order',
+    'patient:sensitive:read', // With additional controls
+  ],
+
+  [ClinicalRole.REGISTERED_NURSE]: [
+    'patient:demographics:read',
+    'patient:clinical_notes:read',
+    'patient:clinical_notes:write', // Nursing notes only
+    'patient:orders:read',
+    'patient:medications:read',
+    'patient:medications:administer',
+    'patient:labs:read',
+    'patient:vitals:read',
+    'patient:vitals:write',
+  ],
+
+  [ClinicalRole.BILLING]: [
+    'patient:demographics:read',
+    'patient:demographics:limited', // Name, DOB, insurance only
+    'patient:diagnosis_codes:read',
+    'patient:procedure_codes:read',
+    // NO clinical notes access
+  ],
+};
+\`\`\`
+
+## Attribute-Based Access Control (ABAC)
+
+### Combining Roles with Attributes
+\`\`\`typescript
+class HealthcareAccessDecision {
+  async canAccess(
+    user: User,
+    resource: PatientResource,
+    action: Action
+  ): Promise<AccessDecision> {
+    // Check base role permissions
+    const hasRolePermission = this.checkRolePermission(
+      user.role,
+      resource.type,
+      action
+    );
+
+    if (!hasRolePermission) {
+      return { allowed: false, reason: 'INSUFFICIENT_ROLE' };
+    }
+
+    // Check patient relationship
+    const hasRelationship = await this.checkCareTeamRelationship(
+      user.id,
+      resource.patientId
+    );
+
+    if (!hasRelationship && !user.hasGlobalAccess) {
+      return { allowed: false, reason: 'NO_CARE_RELATIONSHIP' };
+    }
+
+    // Check sensitive data restrictions
+    if (resource.isSensitive) {
+      const canAccessSensitive = await this.checkSensitiveAccess(
+        user,
+        resource
+      );
+
+      if (!canAccessSensitive) {
+        return { allowed: false, reason: 'SENSITIVE_DATA_RESTRICTED' };
+      }
+    }
+
+    // Check time-based restrictions
+    if (resource.hasTimeRestriction) {
+      const isWithinWindow = this.checkAccessWindow(user, resource);
+      if (!isWithinWindow) {
+        return { allowed: false, reason: 'OUTSIDE_ACCESS_WINDOW' };
+      }
+    }
+
+    return {
+      allowed: true,
+      auditRequired: true,
+      purpose: user.currentContext.purpose
+    };
+  }
+}
+\`\`\`
+
+## Sensitive Data Categories
+
+### Special Protection Categories
+\`\`\`typescript
+enum SensitiveDataCategory {
+  // Federal protections
+  SUBSTANCE_ABUSE = '42_CFR_PART_2', // 42 CFR Part 2
+  HIV_AIDS = 'HIV_AIDS',
+  MENTAL_HEALTH = 'MENTAL_HEALTH',
+  GENETIC_INFO = 'GINA', // Genetic Information Nondiscrimination Act
+
+  // State-specific
+  REPRODUCTIVE_HEALTH = 'REPRODUCTIVE',
+  MINOR_CONSENT = 'MINOR_CONSENT',
+
+  // Organizational
+  VIP_PATIENT = 'VIP',
+  EMPLOYEE_HEALTH = 'EMPLOYEE',
+  RESEARCH_SUBJECT = 'RESEARCH'
+}
+
+class SensitiveDataAccess {
+  async checkAccess(
+    user: User,
+    category: SensitiveDataCategory
+  ): Promise<boolean> {
+    const restrictions = this.getRestrictions(category);
+
+    // Some categories require explicit consent
+    if (restrictions.requiresPatientConsent) {
+      const hasConsent = await this.checkPatientConsent(
+        user.currentPatientId,
+        category
+      );
+      if (!hasConsent) return false;
+    }
+
+    // Some require special role assignments
+    if (restrictions.requiredRoles) {
+      const hasRole = restrictions.requiredRoles.includes(user.role);
+      if (!hasRole) return false;
+    }
+
+    // Some require additional authentication
+    if (restrictions.requiresReAuth) {
+      const reAuthed = await this.verifyRecentAuth(user, 300); // 5 min
+      if (!reAuthed) return false;
+    }
+
+    return true;
+  }
+}
+\`\`\`
+
+## RBAC for AI Agents
+
+### Agent Permission Scoping
+\`\`\`typescript
+interface AgentRBACConfig {
+  agentId: string;
+  agentType: 'CLINICAL_ASSISTANT' | 'DOCUMENTATION' | 'ANALYTICS';
+
+  // Explicit permission allowlist
+  allowedPermissions: string[];
+
+  // Deny list takes precedence
+  deniedPermissions: string[];
+
+  // Context restrictions
+  contextRestrictions: {
+    // Can only access patients in active encounters
+    requireActiveEncounter: boolean;
+
+    // Can only access assigned patients
+    requireAssignment: boolean;
+
+    // Department restrictions
+    allowedDepartments: string[];
+
+    // Time-based restrictions
+    accessHours?: { start: number; end: number };
+  };
+
+  // Data restrictions
+  dataRestrictions: {
+    // No access to sensitive categories
+    blockedCategories: SensitiveDataCategory[];
+
+    // Field-level restrictions
+    redactedFields: string[];
+
+    // Historical data limits
+    historicalLimit?: { days: number };
+  };
+}
+\`\`\`
+
+## Implementation Best Practices
+
+1. **Start restrictive**: Default deny, explicit allow
+2. **Use care team relationships**: Not just roles
+3. **Time-limit elevated access**: Especially for agents
+4. **Log all access decisions**: Both grants and denials
+5. **Regular access reviews**: Quarterly at minimum
+6. **Separate sensitive data controls**: Additional layer for protected data`
+      },
+      {
+        id: '4.3',
+        title: 'OAuth 2.0 & SMART on FHIR',
+        duration: '25 min',
+        content: `# OAuth 2.0 & SMART on FHIR
+
+## Introduction to SMART on FHIR
+
+SMART (Substitutable Medical Applications, Reusable Technologies) on FHIR is the standard for healthcare application authorization. It builds on OAuth 2.0 with healthcare-specific extensions.
+
+## OAuth 2.0 Fundamentals for Healthcare
+
+### Key OAuth 2.0 Flows
+
+\`\`\`typescript
+// Authorization Code Flow (for user-facing apps)
+interface AuthorizationCodeFlow {
+  // Step 1: Redirect to authorization server
+  authorizationUrl: string;
+
+  // Step 2: User authenticates and grants consent
+  // Step 3: Receive authorization code
+
+  // Step 4: Exchange code for tokens
+  tokenEndpoint: string;
+
+  // Tokens received
+  accessToken: string;
+  refreshToken?: string;
+  idToken?: string; // OpenID Connect
+}
+
+// Client Credentials Flow (for backend services)
+interface ClientCredentialsFlow {
+  // Service-to-service authentication
+  clientId: string;
+  clientSecret: string; // Or private key JWT
+
+  // Direct token request
+  tokenEndpoint: string;
+
+  // Access token only (no refresh)
+  accessToken: string;
+}
+\`\`\`
+
+## SMART on FHIR Scopes
+
+### Clinical Scopes
+\`\`\`typescript
+// SMART scope format: [context]/[resource].[permission]
+const smartScopes = {
+  // Patient context scopes (user-launched apps)
+  patientContext: [
+    'patient/Patient.read',
+    'patient/Observation.read',
+    'patient/MedicationRequest.read',
+    'patient/Condition.read',
+    'patient/AllergyIntolerance.read',
+  ],
+
+  // User context scopes (EHR-launched apps)
+  userContext: [
+    'user/Patient.read',
+    'user/Encounter.read',
+    'user/Observation.write',
+  ],
+
+  // System context scopes (backend services)
+  systemContext: [
+    'system/Patient.read',
+    'system/*.read', // Careful with wildcards!
+  ],
+
+  // Launch context
+  launchContext: [
+    'launch',           // EHR launch
+    'launch/patient',   // Patient context
+    'launch/encounter', // Encounter context
+  ],
+
+  // OpenID Connect
+  identity: [
+    'openid',
+    'profile',
+    'fhirUser',
+  ],
+};
+\`\`\`
+
+### Scope Validation
+\`\`\`typescript
+class SMARTScopeValidator {
+  validateRequestedScopes(
+    requestedScopes: string[],
+    clientConfig: ClientConfig,
+    userContext: UserContext
+  ): ValidationResult {
+    const errors: string[] = [];
+    const allowedScopes: string[] = [];
+
+    for (const scope of requestedScopes) {
+      // Check client is allowed this scope
+      if (!clientConfig.allowedScopes.includes(scope)) {
+        errors.push(\`Client not authorized for scope: \${scope}\`);
+        continue;
+      }
+
+      // Check user has permission for this scope
+      const resourcePermission = this.parseScope(scope);
+      if (!this.userHasPermission(userContext, resourcePermission)) {
+        errors.push(\`User lacks permission for scope: \${scope}\`);
+        continue;
+      }
+
+      // Check scope restrictions (e.g., no system/* for user apps)
+      if (this.isScopeRestricted(scope, clientConfig.appType)) {
+        errors.push(\`Scope restricted for app type: \${scope}\`);
+        continue;
+      }
+
+      allowedScopes.push(scope);
+    }
+
+    return { allowedScopes, errors };
+  }
+}
+\`\`\`
+
+## EHR Launch Flow
+
+### Launch Sequence
+\`\`\`typescript
+class SMARTLaunchHandler {
+  // Step 1: EHR calls app launch URL with launch token
+  async handleLaunch(
+    launchToken: string,
+    issuer: string
+  ): Promise<LaunchContext> {
+    // Discover authorization endpoints
+    const smartConfig = await this.discoverSMARTConfig(issuer);
+
+    // Build authorization URL
+    const authUrl = this.buildAuthUrl({
+      authorizationEndpoint: smartConfig.authorization_endpoint,
+      clientId: this.config.clientId,
+      redirectUri: this.config.redirectUri,
+      scope: this.config.requestedScopes.join(' '),
+      state: this.generateState(),
+      launch: launchToken, // Include launch token
+      aud: issuer,
+    });
+
+    return { redirectTo: authUrl };
+  }
+
+  // Step 2: Handle callback with authorization code
+  async handleCallback(
+    code: string,
+    state: string
+  ): Promise<TokenResponse> {
+    // Validate state
+    if (!this.validateState(state)) {
+      throw new Error('Invalid state parameter');
+    }
+
+    // Exchange code for tokens
+    const tokens = await this.exchangeCodeForTokens(code);
+
+    // Extract launch context
+    const context = {
+      patient: tokens.patient,       // Patient ID in context
+      encounter: tokens.encounter,   // Encounter ID if available
+      user: tokens.id_token?.fhirUser, // Practitioner reference
+    };
+
+    return { tokens, context };
+  }
+}
+\`\`\`
+
+## Backend Service Authorization
+
+### JWT Bearer Flow for Services
+\`\`\`typescript
+class SMARTBackendAuth {
+  async getAccessToken(): Promise<string> {
+    // Create signed JWT assertion
+    const assertion = await this.createAssertion({
+      iss: this.clientId,
+      sub: this.clientId,
+      aud: this.tokenEndpoint,
+      exp: Math.floor(Date.now() / 1000) + 300, // 5 minutes
+      jti: crypto.randomUUID(),
+    });
+
+    // Request token
+    const response = await fetch(this.tokenEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_assertion_type:
+          'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: assertion,
+        scope: this.requestedScopes.join(' '),
+      }),
+    });
+
+    const tokens = await response.json();
+    return tokens.access_token;
+  }
+
+  private async createAssertion(claims: JWTClaims): Promise<string> {
+    // Sign with private key (RS384 recommended)
+    return jwt.sign(claims, this.privateKey, {
+      algorithm: 'RS384',
+      keyid: this.keyId,
+    });
+  }
+}
+\`\`\`
+
+## Token Management
+
+### Secure Token Storage
+\`\`\`typescript
+class SecureTokenManager {
+  // Never store tokens in localStorage for PHI apps
+  private tokenStorage: EncryptedStorage;
+
+  async storeTokens(tokens: TokenResponse): Promise<void> {
+    // Encrypt tokens at rest
+    const encrypted = await this.encrypt({
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: Date.now() + (tokens.expires_in * 1000),
+      scope: tokens.scope,
+    });
+
+    // Store in secure, HttpOnly cookie or encrypted session
+    await this.tokenStorage.set('smart_tokens', encrypted);
+  }
+
+  async getValidAccessToken(): Promise<string> {
+    const tokens = await this.tokenStorage.get('smart_tokens');
+
+    // Check if token is expired (with 60 second buffer)
+    if (tokens.expiresAt < Date.now() + 60000) {
+      if (tokens.refreshToken) {
+        return await this.refreshAccessToken(tokens.refreshToken);
+      }
+      throw new Error('Token expired and no refresh token available');
+    }
+
+    return tokens.accessToken;
+  }
+}
+\`\`\`
+
+## Security Best Practices
+
+### PKCE Implementation
+\`\`\`typescript
+class PKCEHandler {
+  async generateChallenge(): Promise<PKCEParams> {
+    // Generate random verifier (43-128 characters)
+    const verifier = this.generateRandomString(64);
+
+    // Create SHA-256 challenge
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+
+    // Base64url encode
+    const challenge = this.base64urlEncode(hash);
+
+    // Store verifier securely for token exchange
+    await this.storeVerifier(verifier);
+
+    return {
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+    };
+  }
+}
+\`\`\`
+
+### Token Security Checklist
+1. Always use PKCE for authorization code flow
+2. Validate token signatures and claims
+3. Check token expiration on every use
+4. Use short-lived access tokens (15-60 minutes)
+5. Implement token revocation on logout
+6. Never expose tokens to client-side JavaScript
+7. Use state parameter to prevent CSRF
+8. Validate issuer and audience claims`
+      },
+      {
+        id: '4.4',
+        title: 'Session Management & Timeout Policies',
+        duration: '18 min',
+        content: `# Session Management & Timeout Policies
+
+## Healthcare Session Requirements
+
+Healthcare environments have unique session management needs—balancing security timeouts with clinical workflow demands where constant re-authentication disrupts patient care.
+
+## HIPAA Session Requirements
+
+### Automatic Logoff (164.312(a)(2)(iii))
+\`\`\`typescript
+interface HIPAASessionConfig {
+  // Required: Automatic termination after inactivity
+  inactivityTimeout: number; // seconds
+
+  // Required: Procedures for emergency access
+  emergencyAccessEnabled: boolean;
+
+  // Addressable: Encryption of session data
+  sessionEncryption: boolean;
+
+  // Implementation specification
+  implementationSpec: {
+    // How timeout is measured
+    activityDetection: 'USER_INPUT' | 'API_CALLS' | 'BOTH';
+
+    // Warning before logout
+    warningPeriod: number;
+
+    // Grace period for re-authentication
+    gracePeriod: number;
+  };
+}
+\`\`\`
+
+## Context-Aware Timeouts
+
+### Different Timeouts for Different Contexts
+\`\`\`typescript
+class ContextAwareSessionManager {
+  private timeoutConfigs: Map<SessionContext, TimeoutConfig> = new Map([
+    // Clinical workstation in patient room
+    ['CLINICAL_BEDSIDE', {
+      inactivityTimeout: 900, // 15 minutes
+      absoluteTimeout: 28800, // 8 hours (shift-based)
+      requiresProximity: true,
+      lockBehavior: 'LOCK_SCREEN'
+    }],
+
+    // Administrative workstation
+    ['ADMINISTRATIVE', {
+      inactivityTimeout: 600, // 10 minutes
+      absoluteTimeout: 14400, // 4 hours
+      requiresProximity: false,
+      lockBehavior: 'LOGOUT'
+    }],
+
+    // Mobile device in clinical area
+    ['MOBILE_CLINICAL', {
+      inactivityTimeout: 300, // 5 minutes
+      absoluteTimeout: 3600, // 1 hour
+      requiresProximity: false,
+      lockBehavior: 'LOCK_APP'
+    }],
+
+    // Kiosk or shared terminal
+    ['SHARED_TERMINAL', {
+      inactivityTimeout: 120, // 2 minutes
+      absoluteTimeout: 120, // Same as inactivity
+      requiresProximity: false,
+      lockBehavior: 'FULL_LOGOUT'
+    }],
+
+    // API/Service session
+    ['SERVICE_ACCOUNT', {
+      inactivityTimeout: 300, // 5 minutes
+      absoluteTimeout: 3600, // 1 hour
+      requiresProximity: false,
+      lockBehavior: 'REVOKE_TOKEN'
+    }],
+  ]);
+
+  getTimeoutForContext(context: SessionContext): TimeoutConfig {
+    return this.timeoutConfigs.get(context) || this.defaultConfig;
+  }
+}
+\`\`\`
+
+## Session Lifecycle Management
+
+### Session Creation and Tracking
+\`\`\`typescript
+class SecureSessionManager {
+  async createSession(
+    user: AuthenticatedUser,
+    context: SessionContext
+  ): Promise<Session> {
+    // Generate cryptographically secure session ID
+    const sessionId = await this.generateSecureId();
+
+    // Create session with security attributes
+    const session: Session = {
+      id: sessionId,
+      userId: user.id,
+      context,
+
+      // Timestamps
+      createdAt: new Date(),
+      lastActivityAt: new Date(),
+
+      // Security attributes
+      ipAddress: this.getClientIP(),
+      userAgent: this.getUserAgent(),
+      deviceFingerprint: await this.getDeviceFingerprint(),
+
+      // Timeout configuration
+      timeoutConfig: this.getTimeoutForContext(context),
+
+      // Authentication strength
+      authLevel: user.authLevel,
+      mfaVerified: user.mfaVerified,
+    };
+
+    // Store session securely
+    await this.sessionStore.set(sessionId, session, {
+      encrypt: true,
+      ttl: session.timeoutConfig.absoluteTimeout
+    });
+
+    // Log session creation
+    await this.auditLog.log({
+      event: 'SESSION_CREATED',
+      sessionId,
+      userId: user.id,
+      context
+    });
+
+    return session;
+  }
+}
+\`\`\`
+
+### Activity Tracking
+\`\`\`typescript
+class SessionActivityTracker {
+  async recordActivity(sessionId: string): Promise<void> {
+    const session = await this.sessionStore.get(sessionId);
+    if (!session) {
+      throw new SessionExpiredError();
+    }
+
+    // Check for session anomalies
+    await this.checkSessionAnomaly(session);
+
+    // Update last activity
+    session.lastActivityAt = new Date();
+
+    // Reset inactivity timer
+    await this.sessionStore.set(sessionId, session);
+
+    // Check if approaching timeout
+    const timeRemaining = this.getTimeUntilTimeout(session);
+    if (timeRemaining < session.timeoutConfig.warningPeriod) {
+      await this.sendTimeoutWarning(session);
+    }
+  }
+
+  private async checkSessionAnomaly(session: Session): Promise<void> {
+    // Check for IP address change
+    const currentIP = this.getClientIP();
+    if (currentIP !== session.ipAddress) {
+      await this.handleIPChange(session, currentIP);
+    }
+
+    // Check for concurrent sessions
+    const activeSessions = await this.getUserActiveSessions(session.userId);
+    if (activeSessions.length > this.maxConcurrentSessions) {
+      await this.handleExcessiveSessions(session.userId, activeSessions);
+    }
+  }
+}
+\`\`\`
+
+## Timeout Warning UI
+
+### Clinical-Friendly Warning
+\`\`\`typescript
+class TimeoutWarningHandler {
+  showWarning(session: Session, timeRemaining: number): void {
+    // Create non-intrusive but visible warning
+    const warning = {
+      message: \`Your session will expire in \${Math.ceil(timeRemaining / 60)} minutes\`,
+      actions: [
+        {
+          label: 'Continue Working',
+          action: () => this.extendSession(session.id),
+          primary: true
+        },
+        {
+          label: 'Save & Logout',
+          action: () => this.saveAndLogout(session.id)
+        }
+      ],
+      // Position to not obscure critical patient data
+      position: 'TOP_RIGHT',
+
+      // Don't auto-dismiss in clinical settings
+      persistent: session.context === 'CLINICAL_BEDSIDE'
+    };
+
+    this.displayWarning(warning);
+  }
+
+  async extendSession(sessionId: string): Promise<void> {
+    // May require re-authentication for sensitive contexts
+    const session = await this.sessionStore.get(sessionId);
+
+    if (session.context === 'ADMINISTRATIVE' &&
+        session.extensionCount >= 2) {
+      // Require re-auth after 2 extensions
+      await this.requireReAuthentication(session);
+    }
+
+    // Extend session
+    session.lastActivityAt = new Date();
+    session.extensionCount = (session.extensionCount || 0) + 1;
+    await this.sessionStore.set(sessionId, session);
+  }
+}
+\`\`\`
+
+## Session Termination
+
+### Secure Logout Process
+\`\`\`typescript
+class SessionTerminator {
+  async terminateSession(
+    sessionId: string,
+    reason: TerminationReason
+  ): Promise<void> {
+    const session = await this.sessionStore.get(sessionId);
+    if (!session) return;
+
+    // Save any unsaved work (clinical notes, etc.)
+    if (reason !== 'SECURITY_VIOLATION') {
+      await this.autoSaveUserWork(session);
+    }
+
+    // Revoke all associated tokens
+    await this.tokenManager.revokeSessionTokens(sessionId);
+
+    // Clear session data
+    await this.sessionStore.delete(sessionId);
+
+    // Clear client-side session markers
+    await this.clearClientSession(session);
+
+    // Audit log
+    await this.auditLog.log({
+      event: 'SESSION_TERMINATED',
+      sessionId,
+      userId: session.userId,
+      reason,
+      duration: Date.now() - session.createdAt.getTime()
+    });
+
+    // Notify connected clients/services
+    if (reason === 'SECURITY_VIOLATION') {
+      await this.securityAlert.notify({
+        type: 'FORCED_LOGOUT',
+        session,
+        reason
+      });
+    }
+  }
+}
+\`\`\`
+
+## Concurrent Session Management
+
+### Healthcare-Specific Policies
+\`\`\`typescript
+class ConcurrentSessionPolicy {
+  // Healthcare often requires multiple sessions
+  async evaluateConcurrentSession(
+    userId: string,
+    newContext: SessionContext
+  ): Promise<ConcurrentSessionDecision> {
+    const existingSessions = await this.getActiveSessions(userId);
+
+    // Allow multiple sessions for legitimate clinical workflows
+    const validReasons = [
+      'Different devices for different workflows',
+      'Covering multiple units/departments',
+      'Training/supervising residents'
+    ];
+
+    // But track and limit
+    if (existingSessions.length >= 5) {
+      return {
+        allowed: false,
+        action: 'REQUIRE_LOGOUT',
+        message: 'Maximum concurrent sessions reached'
+      };
+    }
+
+    // Alert on suspicious patterns
+    if (this.isSuspiciousPattern(existingSessions, newContext)) {
+      await this.securityAlert.notify({
+        type: 'SUSPICIOUS_CONCURRENT_SESSIONS',
+        userId,
+        sessions: existingSessions
+      });
+    }
+
+    return { allowed: true };
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Timeout policies must balance security with clinical workflow
+2. Context matters: bedside workstations differ from admin terminals
+3. Always warn users before timeout with save-work options
+4. Track session anomalies for security monitoring
+5. Concurrent sessions are legitimate in healthcare but should be monitored
+6. Clean termination includes token revocation and audit logging`
+      },
     ]
   },
   {
