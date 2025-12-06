@@ -4059,12 +4059,1820 @@ class ConcurrentSessionPolicy {
     title: 'API Security & EHR Integration',
     description: 'Securing FHIR APIs and EHR connections',
     lessons: [
-      { id: '5.1', title: 'FHIR API Security Fundamentals', duration: '25 min', content: '' },
-      { id: '5.2', title: 'API Keys & Service Authentication', duration: '20 min', content: '' },
-      { id: '5.3', title: 'API Versioning & Deprecation', duration: '15 min', content: '' },
-      { id: '5.4', title: 'EHR Integration Security (Epic, Cerner)', duration: '30 min', content: '' },
-      { id: '5.5', title: 'Webhook Security for Clinical Events', duration: '18 min', content: '' },
-      { id: '5.6', title: 'Rate Limiting for Healthcare APIs', duration: '15 min', content: '' },
+      {
+        id: '5.1',
+        title: 'FHIR API Security Fundamentals',
+        duration: '25 min',
+        content: `# FHIR API Security Fundamentals
+
+## Introduction to FHIR
+
+FHIR (Fast Healthcare Interoperability Resources) is the modern standard for healthcare data exchange. Security is built into the specification, but implementation matters.
+
+## FHIR Security Basics
+
+### Resource-Level Security
+\`\`\`typescript
+// FHIR resources require authorization per-resource
+interface FHIRSecurityContext {
+  // Resource being accessed
+  resourceType: 'Patient' | 'Observation' | 'MedicationRequest' | string;
+  resourceId: string;
+
+  // Operation being performed
+  operation: 'read' | 'create' | 'update' | 'delete' | 'search';
+
+  // Compartment for patient-centric access
+  compartment?: {
+    type: 'Patient';
+    id: string;
+  };
+
+  // Required scopes
+  requiredScopes: string[];
+}
+\`\`\`
+
+### Patient Compartment Model
+\`\`\`typescript
+class FHIRCompartmentEnforcer {
+  // Ensure queries are scoped to authorized patients
+  async enforceCompartment(
+    query: FHIRQuery,
+    authorizedPatients: string[]
+  ): Promise<FHIRQuery> {
+    // If searching for patient-related resources
+    if (this.isPatientCompartmentResource(query.resourceType)) {
+      // Add patient filter if not present
+      if (!query.hasPatientFilter()) {
+        query.addFilter('patient', authorizedPatients);
+      }
+
+      // Validate existing patient filter against authorization
+      const requestedPatients = query.getPatientFilter();
+      const unauthorized = requestedPatients.filter(
+        p => !authorizedPatients.includes(p)
+      );
+
+      if (unauthorized.length > 0) {
+        throw new UnauthorizedAccessError(
+          \`Not authorized for patients: \${unauthorized.join(', ')}\`
+        );
+      }
+    }
+
+    return query;
+  }
+}
+\`\`\`
+
+## Transport Security
+
+### TLS Requirements
+\`\`\`typescript
+const fhirTLSConfig = {
+  // Minimum TLS 1.2, prefer 1.3
+  minVersion: 'TLSv1.2',
+
+  // Strong cipher suites only
+  ciphers: [
+    'TLS_AES_256_GCM_SHA384',
+    'TLS_AES_128_GCM_SHA256',
+    'TLS_CHACHA20_POLY1305_SHA256',
+    'ECDHE-RSA-AES256-GCM-SHA384',
+    'ECDHE-RSA-AES128-GCM-SHA256',
+  ].join(':'),
+
+  // Require client certificate for backend services
+  requestCert: true,
+  rejectUnauthorized: true,
+
+  // Certificate pinning for known EHR endpoints
+  checkServerIdentity: (host, cert) => {
+    const expectedFingerprint = knownEndpoints[host];
+    if (expectedFingerprint && cert.fingerprint !== expectedFingerprint) {
+      throw new Error('Certificate fingerprint mismatch');
+    }
+  }
+};
+\`\`\`
+
+## Request Validation
+
+### FHIR Resource Validation
+\`\`\`typescript
+class FHIRRequestValidator {
+  async validateIncomingResource(
+    resource: unknown,
+    operation: 'create' | 'update'
+  ): Promise<ValidationResult> {
+    const errors: ValidationError[] = [];
+
+    // 1. Schema validation
+    const schemaResult = await this.validateSchema(resource);
+    errors.push(...schemaResult.errors);
+
+    // 2. Reference validation
+    const refResult = await this.validateReferences(resource);
+    errors.push(...refResult.errors);
+
+    // 3. Business rule validation
+    const businessResult = await this.validateBusinessRules(resource);
+    errors.push(...businessResult.errors);
+
+    // 4. Security-specific validation
+    const securityResult = await this.validateSecurityConstraints(resource);
+    errors.push(...securityResult.errors);
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  private async validateSecurityConstraints(
+    resource: FHIRResource
+  ): Promise<ValidationResult> {
+    const errors: ValidationError[] = [];
+
+    // Check for forbidden extensions
+    if (this.hasForbiddenExtensions(resource)) {
+      errors.push({
+        path: 'extension',
+        message: 'Resource contains forbidden extensions'
+      });
+    }
+
+    // Check for PHI in unexpected fields
+    if (await this.detectUnexpectedPHI(resource)) {
+      errors.push({
+        path: 'meta',
+        message: 'Unexpected PHI detected in resource metadata'
+      });
+    }
+
+    // Validate security labels
+    if (!this.hasRequiredSecurityLabels(resource)) {
+      errors.push({
+        path: 'meta.security',
+        message: 'Missing required security labels'
+      });
+    }
+
+    return { valid: errors.length === 0, errors };
+  }
+}
+\`\`\`
+
+## Search Parameter Security
+
+### Preventing Data Leakage Through Search
+\`\`\`typescript
+class SecureFHIRSearch {
+  private blockedSearchParams = new Map([
+    // Block searches that could enumerate all patients
+    ['Patient', ['_id:not', 'active:not']],
+
+    // Block broad clinical data searches
+    ['Observation', ['_lastUpdated:gt', 'code:not']],
+  ]);
+
+  async executeSearch(
+    resourceType: string,
+    params: SearchParams,
+    context: SecurityContext
+  ): Promise<Bundle> {
+    // Validate search parameters
+    this.validateSearchParams(resourceType, params);
+
+    // Add required filters based on authorization
+    const securedParams = await this.addSecurityFilters(
+      resourceType,
+      params,
+      context
+    );
+
+    // Apply result limits
+    securedParams._count = Math.min(
+      securedParams._count || 100,
+      this.maxResultsPerPage
+    );
+
+    // Execute and filter results
+    const results = await this.fhirClient.search(resourceType, securedParams);
+
+    // Post-filter for any resources that slipped through
+    return this.postFilterResults(results, context);
+  }
+
+  private validateSearchParams(
+    resourceType: string,
+    params: SearchParams
+  ): void {
+    const blocked = this.blockedSearchParams.get(resourceType) || [];
+
+    for (const param of Object.keys(params)) {
+      if (blocked.includes(param)) {
+        throw new SecurityError(\`Search parameter blocked: \${param}\`);
+      }
+    }
+
+    // Prevent wildcard searches without filters
+    if (Object.keys(params).length === 0) {
+      throw new SecurityError('Unfiltered searches not allowed');
+    }
+  }
+}
+\`\`\`
+
+## Security Labels and Tags
+
+### Implementing Security Labels
+\`\`\`typescript
+// FHIR security labels for PHI classification
+const securityLabels = {
+  confidentiality: {
+    unrestricted: 'U',
+    low: 'L',
+    moderate: 'M',
+    normal: 'N',
+    restricted: 'R',
+    veryRestricted: 'V'
+  },
+
+  sensitivity: {
+    substanceAbuse: 'ETH',  // 42 CFR Part 2
+    hiv: 'HIV',
+    mentalHealth: 'PSY',
+    sexualHealth: 'SEX',
+    genetic: 'GDIS'
+  }
+};
+
+class SecurityLabelEnforcer {
+  async checkResourceAccess(
+    resource: FHIRResource,
+    user: User
+  ): Promise<boolean> {
+    const labels = resource.meta?.security || [];
+
+    for (const label of labels) {
+      // Check confidentiality level
+      if (label.system === 'http://terminology.hl7.org/CodeSystem/v3-Confidentiality') {
+        if (!this.userCanAccessConfidentiality(user, label.code)) {
+          return false;
+        }
+      }
+
+      // Check sensitivity categories
+      if (label.system === 'http://terminology.hl7.org/CodeSystem/v3-ActCode') {
+        if (!this.userCanAccessSensitivity(user, label.code)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. FHIR security is resource-centric—validate at resource level
+2. Use compartment model to scope access to authorized patients
+3. Validate all incoming resources for schema and security constraints
+4. Secure search parameters to prevent data enumeration
+5. Implement security labels for sensitive data classification
+6. Always use TLS 1.2+ with strong cipher suites`
+      },
+      {
+        id: '5.2',
+        title: 'API Keys & Service Authentication',
+        duration: '20 min',
+        content: `# API Keys & Service Authentication
+
+## Service-to-Service Authentication in Healthcare
+
+Healthcare integrations require robust service authentication that goes beyond simple API keys.
+
+## API Key Best Practices
+
+### Key Generation and Storage
+\`\`\`typescript
+class HealthcareAPIKeyManager {
+  // Generate cryptographically secure API keys
+  async generateAPIKey(
+    clientId: string,
+    scopes: string[]
+  ): Promise<APIKey> {
+    // Generate high-entropy key
+    const keyBytes = crypto.randomBytes(32);
+    const apiKey = \`hc_\${keyBytes.toString('base64url')}\`;
+
+    // Hash for storage (never store raw keys)
+    const keyHash = await this.hashKey(apiKey);
+
+    // Store key metadata
+    await this.keyStore.create({
+      clientId,
+      keyHash,
+      scopes,
+      createdAt: new Date(),
+      expiresAt: this.calculateExpiry(),
+      status: 'ACTIVE'
+    });
+
+    // Return key only once - client must store securely
+    return {
+      key: apiKey,
+      clientId,
+      scopes,
+      expiresAt: this.calculateExpiry()
+    };
+  }
+
+  async validateAPIKey(apiKey: string): Promise<KeyValidation> {
+    // Check key format
+    if (!apiKey.startsWith('hc_')) {
+      return { valid: false, reason: 'INVALID_FORMAT' };
+    }
+
+    // Hash and lookup
+    const keyHash = await this.hashKey(apiKey);
+    const keyRecord = await this.keyStore.findByHash(keyHash);
+
+    if (!keyRecord) {
+      return { valid: false, reason: 'KEY_NOT_FOUND' };
+    }
+
+    // Check expiration
+    if (keyRecord.expiresAt < new Date()) {
+      return { valid: false, reason: 'KEY_EXPIRED' };
+    }
+
+    // Check revocation
+    if (keyRecord.status !== 'ACTIVE') {
+      return { valid: false, reason: 'KEY_REVOKED' };
+    }
+
+    return {
+      valid: true,
+      clientId: keyRecord.clientId,
+      scopes: keyRecord.scopes
+    };
+  }
+}
+\`\`\`
+
+## Mutual TLS (mTLS)
+
+### Client Certificate Authentication
+\`\`\`typescript
+class MTLSAuthenticator {
+  async authenticateClient(
+    clientCert: X509Certificate
+  ): Promise<AuthResult> {
+    // Validate certificate chain
+    const chainValid = await this.validateCertChain(clientCert);
+    if (!chainValid) {
+      return { authenticated: false, reason: 'INVALID_CERT_CHAIN' };
+    }
+
+    // Check certificate hasn't been revoked
+    const revoked = await this.checkCRL(clientCert);
+    if (revoked) {
+      return { authenticated: false, reason: 'CERT_REVOKED' };
+    }
+
+    // Extract client identity from certificate
+    const clientId = this.extractClientId(clientCert);
+    const client = await this.clientRegistry.find(clientId);
+
+    if (!client) {
+      return { authenticated: false, reason: 'CLIENT_NOT_REGISTERED' };
+    }
+
+    // Verify certificate fingerprint matches registered client
+    if (clientCert.fingerprint !== client.certFingerprint) {
+      await this.alertSecurityTeam({
+        type: 'CERT_FINGERPRINT_MISMATCH',
+        clientId,
+        presented: clientCert.fingerprint,
+        expected: client.certFingerprint
+      });
+      return { authenticated: false, reason: 'FINGERPRINT_MISMATCH' };
+    }
+
+    return {
+      authenticated: true,
+      clientId,
+      scopes: client.scopes
+    };
+  }
+}
+\`\`\`
+
+## JWT-Based Service Authentication
+
+### Backend Service JWT
+\`\`\`typescript
+class ServiceJWTAuth {
+  async createServiceAssertion(
+    serviceId: string,
+    targetAudience: string
+  ): Promise<string> {
+    const now = Math.floor(Date.now() / 1000);
+
+    const claims = {
+      // Standard JWT claims
+      iss: serviceId,
+      sub: serviceId,
+      aud: targetAudience,
+      iat: now,
+      exp: now + 300, // 5 minute expiry
+      jti: crypto.randomUUID(),
+
+      // Healthcare-specific claims
+      client_type: 'backend_service',
+      scopes: this.getServiceScopes(serviceId),
+    };
+
+    // Sign with private key
+    return jwt.sign(claims, this.privateKey, {
+      algorithm: 'RS384',
+      keyid: this.currentKeyId
+    });
+  }
+
+  async validateServiceJWT(token: string): Promise<JWTValidation> {
+    try {
+      // Decode header to get key ID
+      const decoded = jwt.decode(token, { complete: true });
+      if (!decoded) {
+        return { valid: false, reason: 'INVALID_TOKEN' };
+      }
+
+      // Get public key for this issuer and key ID
+      const publicKey = await this.getPublicKey(
+        decoded.payload.iss,
+        decoded.header.kid
+      );
+
+      // Verify signature and claims
+      const verified = jwt.verify(token, publicKey, {
+        algorithms: ['RS384', 'ES384'],
+        clockTolerance: 30
+      });
+
+      // Check JTI hasn't been used (replay protection)
+      if (await this.isJTIUsed(verified.jti)) {
+        return { valid: false, reason: 'TOKEN_REUSED' };
+      }
+
+      // Mark JTI as used
+      await this.markJTIUsed(verified.jti, verified.exp);
+
+      return {
+        valid: true,
+        serviceId: verified.sub,
+        scopes: verified.scopes
+      };
+    } catch (error) {
+      return { valid: false, reason: error.message };
+    }
+  }
+}
+\`\`\`
+
+## Key Rotation
+
+### Automated Key Rotation
+\`\`\`typescript
+class APIKeyRotation {
+  // Rotate keys before expiration
+  async rotateKey(clientId: string): Promise<RotationResult> {
+    // Get current key
+    const currentKey = await this.keyStore.getActiveKey(clientId);
+
+    // Generate new key
+    const newKey = await this.generateAPIKey(clientId, currentKey.scopes);
+
+    // Set grace period on old key
+    await this.keyStore.update(currentKey.id, {
+      status: 'DEPRECATED',
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hour grace
+    });
+
+    // Notify client of rotation
+    await this.notifyClient(clientId, {
+      type: 'KEY_ROTATED',
+      oldKeyPrefix: currentKey.prefix,
+      newKeyPrefix: newKey.prefix,
+      graceEndAt: currentKey.expiresAt
+    });
+
+    // Audit log
+    await this.auditLog({
+      event: 'API_KEY_ROTATED',
+      clientId,
+      oldKeyId: currentKey.id,
+      newKeyId: newKey.id
+    });
+
+    return { newKey, graceEndAt: currentKey.expiresAt };
+  }
+
+  // Automatic rotation scheduler
+  async scheduleRotations(): Promise<void> {
+    const keys = await this.keyStore.getKeysNearingExpiry(30); // 30 days
+
+    for (const key of keys) {
+      await this.rotateKey(key.clientId);
+    }
+  }
+}
+\`\`\`
+
+## Scope Management
+
+### Healthcare Scope Definitions
+\`\`\`typescript
+const healthcareScopes = {
+  // Read scopes
+  'patient:read': {
+    description: 'Read patient demographics',
+    phiLevel: 'MODERATE'
+  },
+  'clinical:read': {
+    description: 'Read clinical data (observations, conditions)',
+    phiLevel: 'HIGH'
+  },
+  'medications:read': {
+    description: 'Read medication orders and history',
+    phiLevel: 'HIGH'
+  },
+
+  // Write scopes
+  'clinical:write': {
+    description: 'Create/update clinical data',
+    phiLevel: 'HIGH',
+    requiresMFA: true
+  },
+  'medications:write': {
+    description: 'Create/update medication orders',
+    phiLevel: 'CRITICAL',
+    requiresMFA: true,
+    requiresClinicalRole: true
+  },
+
+  // Admin scopes
+  'admin:audit': {
+    description: 'Access audit logs',
+    phiLevel: 'LOW',
+    restrictedToAdmins: true
+  }
+};
+
+class ScopeEnforcer {
+  checkScope(
+    requiredScope: string,
+    grantedScopes: string[]
+  ): boolean {
+    // Direct match
+    if (grantedScopes.includes(requiredScope)) {
+      return true;
+    }
+
+    // Check for wildcard scopes (carefully!)
+    const [resource, action] = requiredScope.split(':');
+    if (grantedScopes.includes(\`\${resource}:*\`)) {
+      return true;
+    }
+
+    return false;
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Never store API keys in plaintext—hash before storage
+2. Use mTLS for backend service authentication
+3. JWTs should be short-lived with replay protection
+4. Implement automated key rotation with grace periods
+5. Define clear scope hierarchies for healthcare operations
+6. Audit all authentication events`
+      },
+      {
+        id: '5.3',
+        title: 'API Versioning & Deprecation',
+        duration: '15 min',
+        content: `# API Versioning & Deprecation
+
+## Why Versioning Matters in Healthcare
+
+Healthcare APIs often integrate with legacy systems and require long support windows. Breaking changes can disrupt critical clinical workflows.
+
+## Versioning Strategies
+
+### URL Path Versioning
+\`\`\`typescript
+// Most common and explicit approach
+// /api/v1/patients/{id}
+// /api/v2/patients/{id}
+
+class VersionedRouter {
+  private versionHandlers: Map<string, Router> = new Map();
+
+  registerVersion(version: string, router: Router): void {
+    this.versionHandlers.set(version, router);
+  }
+
+  route(request: Request): Response {
+    const version = this.extractVersion(request.path);
+
+    if (!this.versionHandlers.has(version)) {
+      return this.handleUnsupportedVersion(version);
+    }
+
+    // Check if version is deprecated
+    if (this.isDeprecated(version)) {
+      this.addDeprecationHeaders(response, version);
+    }
+
+    return this.versionHandlers.get(version).handle(request);
+  }
+
+  private addDeprecationHeaders(
+    response: Response,
+    version: string
+  ): void {
+    const deprecation = this.getDeprecationInfo(version);
+
+    response.headers.set('Deprecation', deprecation.deprecatedAt);
+    response.headers.set('Sunset', deprecation.sunsetAt);
+    response.headers.set(
+      'Link',
+      \`</api/\${deprecation.migrateTo}>; rel="successor-version"\`
+    );
+  }
+}
+\`\`\`
+
+### Header-Based Versioning
+\`\`\`typescript
+// Accept: application/fhir+json; fhirVersion=4.0
+// X-API-Version: 2023-01-01
+
+class HeaderVersionRouter {
+  route(request: Request): Response {
+    const version = this.extractVersionFromHeaders(request);
+
+    // Default to latest stable version if not specified
+    const effectiveVersion = version || this.getLatestStableVersion();
+
+    // Validate version is supported
+    if (!this.isVersionSupported(effectiveVersion)) {
+      return new Response(JSON.stringify({
+        error: 'UNSUPPORTED_VERSION',
+        supported: this.getSupportedVersions()
+      }), { status: 400 });
+    }
+
+    return this.handleWithVersion(request, effectiveVersion);
+  }
+
+  private extractVersionFromHeaders(request: Request): string | null {
+    // Check Accept header for FHIR version
+    const accept = request.headers.get('Accept');
+    if (accept?.includes('fhirVersion=')) {
+      return accept.match(/fhirVersion=([\\d.]+)/)?.[1];
+    }
+
+    // Check custom version header
+    return request.headers.get('X-API-Version');
+  }
+}
+\`\`\`
+
+## Deprecation Policies
+
+### Healthcare API Lifecycle
+\`\`\`typescript
+interface APIVersionLifecycle {
+  version: string;
+  status: 'PREVIEW' | 'STABLE' | 'DEPRECATED' | 'SUNSET';
+
+  // Lifecycle dates
+  releasedAt: Date;
+  stableAt?: Date;
+  deprecatedAt?: Date;
+  sunsetAt?: Date;
+
+  // Support commitments
+  support: {
+    // Minimum months in stable before deprecation
+    minStablePeriod: 12;
+
+    // Minimum months of deprecation warning
+    minDeprecationNotice: 6;
+
+    // Security patches during deprecation
+    securityPatchesDuringDeprecation: true;
+  };
+}
+
+class VersionLifecycleManager {
+  async deprecateVersion(version: string): Promise<void> {
+    const lifecycle = await this.getLifecycle(version);
+
+    // Ensure minimum stable period has passed
+    const monthsStable = this.monthsBetween(
+      lifecycle.stableAt,
+      new Date()
+    );
+
+    if (monthsStable < lifecycle.support.minStablePeriod) {
+      throw new Error(
+        \`Version must be stable for \${lifecycle.support.minStablePeriod} months before deprecation\`
+      );
+    }
+
+    // Calculate sunset date
+    const sunsetAt = new Date();
+    sunsetAt.setMonth(
+      sunsetAt.getMonth() + lifecycle.support.minDeprecationNotice
+    );
+
+    // Update lifecycle
+    await this.updateLifecycle(version, {
+      status: 'DEPRECATED',
+      deprecatedAt: new Date(),
+      sunsetAt
+    });
+
+    // Notify all clients using this version
+    await this.notifyClientsOfDeprecation(version, sunsetAt);
+  }
+}
+\`\`\`
+
+## Client Communication
+
+### Deprecation Notifications
+\`\`\`typescript
+class DeprecationNotifier {
+  async notifyClients(
+    version: string,
+    sunsetAt: Date
+  ): Promise<void> {
+    // Find all clients using this version
+    const clients = await this.findClientsUsingVersion(version);
+
+    for (const client of clients) {
+      // Send initial notification
+      await this.sendNotification(client, {
+        type: 'API_VERSION_DEPRECATED',
+        version,
+        sunsetAt,
+        migrationGuide: this.getMigrationGuide(version),
+        action: 'MIGRATE_BEFORE_SUNSET'
+      });
+
+      // Schedule follow-up reminders
+      await this.scheduleReminders(client, version, sunsetAt);
+    }
+  }
+
+  private async scheduleReminders(
+    client: Client,
+    version: string,
+    sunsetAt: Date
+  ): Promise<void> {
+    const reminderSchedule = [
+      { daysBeforeSunset: 90, priority: 'LOW' },
+      { daysBeforeSunset: 30, priority: 'MEDIUM' },
+      { daysBeforeSunset: 7, priority: 'HIGH' },
+      { daysBeforeSunset: 1, priority: 'CRITICAL' }
+    ];
+
+    for (const reminder of reminderSchedule) {
+      const reminderDate = new Date(sunsetAt);
+      reminderDate.setDate(
+        reminderDate.getDate() - reminder.daysBeforeSunset
+      );
+
+      await this.scheduleReminder(client, {
+        date: reminderDate,
+        version,
+        priority: reminder.priority,
+        sunsetAt
+      });
+    }
+  }
+}
+\`\`\`
+
+## Migration Support
+
+### Automated Migration Helpers
+\`\`\`typescript
+class APIMigrationHelper {
+  // Provide request/response transformation for clients
+  async transformRequest(
+    request: Request,
+    fromVersion: string,
+    toVersion: string
+  ): Promise<Request> {
+    const transformations = this.getTransformations(fromVersion, toVersion);
+
+    let transformedRequest = request;
+    for (const transform of transformations) {
+      transformedRequest = await transform.apply(transformedRequest);
+    }
+
+    return transformedRequest;
+  }
+
+  // Shadow mode: run request against both versions
+  async shadowTest(request: Request): Promise<ShadowTestResult> {
+    const oldVersion = this.extractVersion(request);
+    const newVersion = this.getNextVersion(oldVersion);
+
+    // Execute against both versions
+    const [oldResponse, newResponse] = await Promise.all([
+      this.executeWithVersion(request, oldVersion),
+      this.executeWithVersion(request, newVersion)
+    ]);
+
+    // Compare responses
+    const differences = this.compareResponses(oldResponse, newResponse);
+
+    // Log for analysis
+    if (differences.length > 0) {
+      await this.logVersionDifferences({
+        request,
+        oldVersion,
+        newVersion,
+        differences
+      });
+    }
+
+    // Return old version response (shadow testing)
+    return {
+      response: oldResponse,
+      shadowDifferences: differences
+    };
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Use URL path versioning for clarity in healthcare APIs
+2. Maintain stable versions for minimum 12 months before deprecation
+3. Provide at least 6 months deprecation notice
+4. Send proactive notifications to clients using deprecated versions
+5. Offer migration guides and transformation tools
+6. Use shadow testing to validate new versions before forcing migration`
+      },
+      {
+        id: '5.4',
+        title: 'EHR Integration Security (Epic, Cerner)',
+        duration: '30 min',
+        content: `# EHR Integration Security (Epic, Cerner)
+
+## Understanding EHR Integration
+
+Integrating with major EHR systems like Epic and Cerner requires understanding their security models and certification requirements.
+
+## Epic Integration Security
+
+### Epic App Orchard Certification
+\`\`\`typescript
+interface EpicAppConfig {
+  // OAuth 2.0 / SMART on FHIR configuration
+  oauth: {
+    clientId: string;
+    clientSecret?: string; // Confidential clients only
+    redirectUri: string;
+    scope: string[];
+  };
+
+  // Epic-specific requirements
+  epicRequirements: {
+    // Must use Epic's FHIR endpoints
+    fhirBaseUrl: string;
+
+    // Required security certifications
+    certifications: [
+      'SMART_ON_FHIR',
+      'HIPAA_COMPLIANT',
+      'SOC2_TYPE2'
+    ];
+
+    // App Orchard review requirements
+    appOrchardReview: {
+      securityQuestionnaire: boolean;
+      penetrationTest: boolean;
+      architectureReview: boolean;
+    };
+  };
+}
+\`\`\`
+
+### Epic Backend Services
+\`\`\`typescript
+class EpicBackendService {
+  private keyPair: CryptoKeyPair;
+
+  async getAccessToken(): Promise<string> {
+    // Epic uses JWT for backend service auth
+    const assertion = await this.createClientAssertion();
+
+    const response = await fetch(this.tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_assertion_type:
+          'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: assertion
+      })
+    });
+
+    if (!response.ok) {
+      throw new EpicAuthError(await response.text());
+    }
+
+    return (await response.json()).access_token;
+  }
+
+  private async createClientAssertion(): Promise<string> {
+    const now = Math.floor(Date.now() / 1000);
+
+    return jwt.sign({
+      iss: this.clientId,
+      sub: this.clientId,
+      aud: this.tokenEndpoint,
+      jti: crypto.randomUUID(),
+      exp: now + 300,
+      iat: now
+    }, this.privateKey, {
+      algorithm: 'RS384',
+      keyid: this.keyId
+    });
+  }
+}
+\`\`\`
+
+## Cerner Integration Security
+
+### Cerner Code App Registration
+\`\`\`typescript
+interface CernerAppConfig {
+  // Cerner sandbox vs production
+  environment: 'SANDBOX' | 'PRODUCTION';
+
+  // OAuth configuration
+  oauth: {
+    clientId: string;
+    clientSecret: string;
+    scopes: string[];
+  };
+
+  // Cerner-specific security requirements
+  security: {
+    // Required for production
+    productionCertification: {
+      securityReview: boolean;
+      appValidation: boolean;
+      clinicalSafetyReview: boolean;
+    };
+
+    // Access levels
+    accessLevel: 'PATIENT' | 'PRACTITIONER' | 'SYSTEM';
+  };
+}
+\`\`\`
+
+### Cerner Millennium Integration
+\`\`\`typescript
+class CernerMillenniumClient {
+  // Handle Cerner-specific FHIR extensions
+  async getPatient(patientId: string): Promise<Patient> {
+    const response = await this.fhirClient.read(
+      'Patient',
+      patientId
+    );
+
+    // Cerner includes custom extensions
+    return this.processPatient(response, {
+      // Handle Cerner-specific identifiers
+      extractMRN: true,
+      // Handle Cerner security tags
+      processSecurityTags: true
+    });
+  }
+
+  // Cerner uses specific authentication for certain operations
+  async placeOrder(order: MedicationRequest): Promise<void> {
+    // Cerner requires specific scopes for order placement
+    if (!this.hasScope('system/MedicationRequest.write')) {
+      throw new InsufficientScopeError('Missing order write scope');
+    }
+
+    // Cerner validates ordering provider
+    if (!order.requester?.reference) {
+      throw new ValidationError('Ordering provider required');
+    }
+
+    await this.fhirClient.create(order);
+  }
+}
+\`\`\`
+
+## Common Security Patterns
+
+### Context Preservation
+\`\`\`typescript
+class EHRContextManager {
+  // CCOW-like context sharing
+  async shareContext(
+    context: ClinicalContext
+  ): Promise<void> {
+    // Validate context before sharing
+    this.validateContext(context);
+
+    // Encrypt sensitive context data
+    const encryptedContext = await this.encryptContext(context);
+
+    // Store with expiration
+    await this.contextStore.set(
+      context.sessionId,
+      encryptedContext,
+      { ttl: 3600 } // 1 hour
+    );
+  }
+
+  async getContext(sessionId: string): Promise<ClinicalContext> {
+    const encrypted = await this.contextStore.get(sessionId);
+    if (!encrypted) {
+      throw new ContextNotFoundError();
+    }
+
+    const context = await this.decryptContext(encrypted);
+
+    // Validate context is still valid
+    this.validateContext(context);
+
+    return context;
+  }
+}
+\`\`\`
+
+### Audit Trail Integration
+\`\`\`typescript
+class EHRAuditBridge {
+  // Forward audit events to EHR
+  async logAccess(
+    event: PHIAccessEvent
+  ): Promise<void> {
+    // Log locally first
+    await this.localAudit.log(event);
+
+    // Forward to EHR audit system
+    const ehrAuditEvent = this.transformToEHRFormat(event);
+
+    try {
+      await this.ehrClient.submitAuditEvent(ehrAuditEvent);
+    } catch (error) {
+      // Queue for retry - audit must succeed
+      await this.auditQueue.enqueue({
+        event: ehrAuditEvent,
+        retryCount: 0,
+        maxRetries: 10
+      });
+    }
+  }
+
+  private transformToEHRFormat(
+    event: PHIAccessEvent
+  ): EHRAuditEvent {
+    return {
+      // Standard ATNA format
+      eventId: event.id,
+      eventType: this.mapEventType(event.type),
+      eventDateTime: event.timestamp.toISOString(),
+
+      // Actor (user/system performing action)
+      activeParticipant: {
+        userId: event.userId,
+        userIsRequestor: true,
+        networkAccessPoint: event.sourceIp
+      },
+
+      // Patient whose data was accessed
+      participantObject: {
+        objectId: event.patientId,
+        objectTypeCode: 'PATIENT',
+        sensitivity: event.sensitivityLevel
+      }
+    };
+  }
+}
+\`\`\`
+
+## Data Handling Security
+
+### Safe Data Transfer
+\`\`\`typescript
+class EHRDataTransfer {
+  // Secure data extraction from EHR
+  async extractPatientData(
+    patientId: string,
+    dataTypes: DataType[]
+  ): Promise<PatientBundle> {
+    // Validate authorization for all requested types
+    for (const dataType of dataTypes) {
+      if (!await this.checkAuthorization(patientId, dataType)) {
+        throw new UnauthorizedAccessError(
+          \`Not authorized for \${dataType}\`
+        );
+      }
+    }
+
+    // Fetch data with audit
+    const bundle = await this.fhirClient.search({
+      patient: patientId,
+      _type: dataTypes.join(','),
+      _count: 1000
+    });
+
+    // Log the access
+    await this.auditLog.log({
+      event: 'DATA_EXPORT',
+      patientId,
+      dataTypes,
+      resourceCount: bundle.entry?.length || 0
+    });
+
+    return bundle;
+  }
+
+  // Secure data writing to EHR
+  async writeToEHR(
+    resources: FHIRResource[]
+  ): Promise<WriteResult> {
+    // Validate all resources
+    const validationResults = await Promise.all(
+      resources.map(r => this.validateResource(r))
+    );
+
+    const invalid = validationResults.filter(r => !r.valid);
+    if (invalid.length > 0) {
+      throw new ValidationError('Invalid resources', invalid);
+    }
+
+    // Write with transaction
+    const transaction = this.createTransaction(resources);
+    const result = await this.fhirClient.transaction(transaction);
+
+    // Audit the write operation
+    await this.auditLog.log({
+      event: 'DATA_IMPORT',
+      resourceCount: resources.length,
+      transactionId: result.id
+    });
+
+    return result;
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. EHR integrations require vendor-specific certification processes
+2. Use SMART on FHIR as the authentication standard
+3. Maintain clinical context across integrated applications
+4. Forward audit events to EHR systems for unified logging
+5. Validate all data before writing to EHR
+6. Handle vendor-specific FHIR extensions appropriately`
+      },
+      {
+        id: '5.5',
+        title: 'Webhook Security for Clinical Events',
+        duration: '18 min',
+        content: `# Webhook Security for Clinical Events
+
+## Clinical Event Webhooks
+
+Webhooks enable real-time clinical event notifications, but require careful security implementation to protect PHI.
+
+## Webhook Registration Security
+
+### Secure Endpoint Registration
+\`\`\`typescript
+class WebhookRegistration {
+  async registerWebhook(
+    clientId: string,
+    config: WebhookConfig
+  ): Promise<Webhook> {
+    // Validate endpoint URL
+    await this.validateEndpoint(config.url);
+
+    // Generate webhook secret for signing
+    const secret = crypto.randomBytes(32).toString('hex');
+
+    // Create webhook with security settings
+    const webhook = await this.webhookStore.create({
+      id: crypto.randomUUID(),
+      clientId,
+      url: config.url,
+      events: config.events,
+      secret,
+
+      // Security settings
+      security: {
+        requireTLS: true,
+        verifySSL: true,
+        signatureHeader: 'X-Webhook-Signature',
+        signatureAlgorithm: 'HMAC-SHA256'
+      },
+
+      // Rate limiting
+      rateLimit: {
+        maxPerMinute: 60,
+        maxPerHour: 1000
+      },
+
+      status: 'PENDING_VERIFICATION'
+    });
+
+    // Send verification request
+    await this.sendVerification(webhook);
+
+    return webhook;
+  }
+
+  private async validateEndpoint(url: string): Promise<void> {
+    const parsedUrl = new URL(url);
+
+    // Must be HTTPS
+    if (parsedUrl.protocol !== 'https:') {
+      throw new ValidationError('Webhook URL must use HTTPS');
+    }
+
+    // No localhost or private IPs
+    if (this.isPrivateAddress(parsedUrl.hostname)) {
+      throw new ValidationError('Webhook URL cannot be private');
+    }
+
+    // Verify endpoint is reachable
+    const reachable = await this.checkEndpointReachability(url);
+    if (!reachable) {
+      throw new ValidationError('Webhook endpoint not reachable');
+    }
+  }
+}
+\`\`\`
+
+## Request Signing
+
+### HMAC Signature Generation
+\`\`\`typescript
+class WebhookSigner {
+  async signPayload(
+    webhook: Webhook,
+    payload: object
+  ): Promise<SignedRequest> {
+    const timestamp = Date.now();
+    const payloadString = JSON.stringify(payload);
+
+    // Create signature
+    const signatureBase = \`\${timestamp}.\${payloadString}\`;
+    const signature = crypto
+      .createHmac('sha256', webhook.secret)
+      .update(signatureBase)
+      .digest('hex');
+
+    return {
+      headers: {
+        'X-Webhook-Signature': \`t=\${timestamp},v1=\${signature}\`,
+        'X-Webhook-Id': webhook.id,
+        'Content-Type': 'application/json'
+      },
+      body: payloadString
+    };
+  }
+}
+
+// Client-side verification
+class WebhookVerifier {
+  verifySignature(
+    request: Request,
+    secret: string
+  ): boolean {
+    const signature = request.headers.get('X-Webhook-Signature');
+    if (!signature) return false;
+
+    // Parse signature header
+    const parts = Object.fromEntries(
+      signature.split(',').map(p => p.split('='))
+    );
+
+    const timestamp = parseInt(parts.t);
+    const providedSignature = parts.v1;
+
+    // Check timestamp is recent (prevent replay)
+    const ageSeconds = (Date.now() - timestamp) / 1000;
+    if (ageSeconds > 300) { // 5 minute tolerance
+      return false;
+    }
+
+    // Compute expected signature
+    const signatureBase = \`\${timestamp}.\${request.body}\`;
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(signatureBase)
+      .digest('hex');
+
+    // Constant-time comparison
+    return crypto.timingSafeEqual(
+      Buffer.from(providedSignature),
+      Buffer.from(expectedSignature)
+    );
+  }
+}
+\`\`\`
+
+## PHI Protection in Webhooks
+
+### Minimal PHI in Notifications
+\`\`\`typescript
+class ClinicalEventNotifier {
+  async sendNotification(
+    event: ClinicalEvent,
+    webhook: Webhook
+  ): Promise<void> {
+    // Create minimal notification payload
+    const notification = {
+      eventId: event.id,
+      eventType: event.type,
+      timestamp: event.timestamp.toISOString(),
+
+      // Reference only - no PHI in notification
+      resourceType: event.resourceType,
+      resourceId: event.resourceId,
+
+      // Link to fetch full details (with auth)
+      detailsUrl: \`\${this.baseUrl}/events/\${event.id}\`
+    };
+
+    // DO NOT include PHI directly
+    // ❌ patientName: event.patient.name
+    // ❌ diagnosis: event.condition.code.display
+
+    await this.sendWebhook(webhook, notification);
+  }
+}
+\`\`\`
+
+### Encrypted Webhook Payloads
+\`\`\`typescript
+class EncryptedWebhookSender {
+  async sendEncrypted(
+    webhook: Webhook,
+    payload: object
+  ): Promise<void> {
+    // Get client's public key
+    const clientPublicKey = await this.getClientPublicKey(
+      webhook.clientId
+    );
+
+    // Encrypt payload with hybrid encryption
+    const encrypted = await this.encryptPayload(
+      payload,
+      clientPublicKey
+    );
+
+    // Send encrypted notification
+    await this.sendWebhook(webhook, {
+      encrypted: true,
+      algorithm: 'RSA-OAEP+AES-256-GCM',
+      payload: encrypted.ciphertext,
+      encryptedKey: encrypted.encryptedKey,
+      iv: encrypted.iv
+    });
+  }
+
+  private async encryptPayload(
+    payload: object,
+    publicKey: CryptoKey
+  ): Promise<EncryptedPayload> {
+    // Generate random AES key
+    const aesKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt']
+    );
+
+    // Encrypt payload with AES
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      aesKey,
+      new TextEncoder().encode(JSON.stringify(payload))
+    );
+
+    // Encrypt AES key with client's public key
+    const exportedAesKey = await crypto.subtle.exportKey('raw', aesKey);
+    const encryptedKey = await crypto.subtle.encrypt(
+      { name: 'RSA-OAEP' },
+      publicKey,
+      exportedAesKey
+    );
+
+    return {
+      ciphertext: Buffer.from(ciphertext).toString('base64'),
+      encryptedKey: Buffer.from(encryptedKey).toString('base64'),
+      iv: Buffer.from(iv).toString('base64')
+    };
+  }
+}
+\`\`\`
+
+## Delivery Reliability
+
+### Retry with Backoff
+\`\`\`typescript
+class WebhookDelivery {
+  private retryDelays = [1, 5, 30, 120, 600]; // seconds
+
+  async deliver(
+    webhook: Webhook,
+    payload: object
+  ): Promise<DeliveryResult> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= this.retryDelays.length; attempt++) {
+      try {
+        const result = await this.attemptDelivery(webhook, payload);
+
+        if (result.success) {
+          return result;
+        }
+
+        lastError = new Error(\`HTTP \${result.statusCode}\`);
+      } catch (error) {
+        lastError = error;
+      }
+
+      // Wait before retry
+      if (attempt < this.retryDelays.length) {
+        await this.sleep(this.retryDelays[attempt] * 1000);
+      }
+    }
+
+    // All retries exhausted
+    await this.handleDeliveryFailure(webhook, payload, lastError);
+
+    return { success: false, error: lastError.message };
+  }
+
+  private async handleDeliveryFailure(
+    webhook: Webhook,
+    payload: object,
+    error: Error
+  ): Promise<void> {
+    // Store in dead letter queue
+    await this.deadLetterQueue.add({
+      webhookId: webhook.id,
+      payload,
+      error: error.message,
+      timestamp: new Date()
+    });
+
+    // Alert if too many failures
+    const recentFailures = await this.getRecentFailures(webhook.id);
+    if (recentFailures > 10) {
+      await this.alertWebhookUnreliable(webhook);
+    }
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Always use HTTPS for webhook endpoints
+2. Sign all webhook payloads with HMAC
+3. Include timestamps to prevent replay attacks
+4. Never include PHI directly in webhook payloads
+5. Use reference IDs and require authenticated fetch for details
+6. Implement retry logic with exponential backoff
+7. Monitor delivery failures and alert on persistent issues`
+      },
+      {
+        id: '5.6',
+        title: 'Rate Limiting for Healthcare APIs',
+        duration: '15 min',
+        content: `# Rate Limiting for Healthcare APIs
+
+## Why Rate Limiting Matters in Healthcare
+
+Rate limiting protects healthcare APIs from abuse while ensuring critical clinical workflows aren't disrupted.
+
+## Rate Limiting Strategies
+
+### Tiered Rate Limits
+\`\`\`typescript
+interface HealthcareRateLimits {
+  // Different limits by client type
+  clientTiers: {
+    // EHR integrations get higher limits
+    ehr_integration: {
+      requestsPerMinute: 1000,
+      requestsPerHour: 50000,
+      burstLimit: 100
+    };
+
+    // Clinical applications
+    clinical_app: {
+      requestsPerMinute: 200,
+      requestsPerHour: 10000,
+      burstLimit: 50
+    };
+
+    // Patient-facing apps
+    patient_app: {
+      requestsPerMinute: 60,
+      requestsPerHour: 1000,
+      burstLimit: 20
+    };
+
+    // Analytics/reporting
+    analytics: {
+      requestsPerMinute: 30,
+      requestsPerHour: 500,
+      burstLimit: 10
+    };
+  };
+}
+\`\`\`
+
+### Token Bucket Implementation
+\`\`\`typescript
+class TokenBucketRateLimiter {
+  private buckets: Map<string, TokenBucket> = new Map();
+
+  async checkLimit(
+    clientId: string,
+    clientTier: string
+  ): Promise<RateLimitResult> {
+    const config = this.getConfig(clientTier);
+    const bucket = await this.getOrCreateBucket(clientId, config);
+
+    // Try to consume a token
+    const consumed = bucket.tryConsume(1);
+
+    if (!consumed) {
+      return {
+        allowed: false,
+        retryAfter: bucket.getTimeUntilRefill(),
+        remaining: 0,
+        limit: config.requestsPerMinute
+      };
+    }
+
+    return {
+      allowed: true,
+      remaining: bucket.getRemaining(),
+      limit: config.requestsPerMinute
+    };
+  }
+
+  private async getOrCreateBucket(
+    clientId: string,
+    config: RateLimitConfig
+  ): Promise<TokenBucket> {
+    if (!this.buckets.has(clientId)) {
+      this.buckets.set(clientId, new TokenBucket({
+        capacity: config.burstLimit,
+        refillRate: config.requestsPerMinute / 60
+      }));
+    }
+
+    return this.buckets.get(clientId)!;
+  }
+}
+
+class TokenBucket {
+  private tokens: number;
+  private lastRefill: number;
+
+  constructor(private config: BucketConfig) {
+    this.tokens = config.capacity;
+    this.lastRefill = Date.now();
+  }
+
+  tryConsume(count: number): boolean {
+    this.refill();
+
+    if (this.tokens >= count) {
+      this.tokens -= count;
+      return true;
+    }
+
+    return false;
+  }
+
+  private refill(): void {
+    const now = Date.now();
+    const elapsed = (now - this.lastRefill) / 1000;
+    const tokensToAdd = elapsed * this.config.refillRate;
+
+    this.tokens = Math.min(
+      this.config.capacity,
+      this.tokens + tokensToAdd
+    );
+    this.lastRefill = now;
+  }
+}
+\`\`\`
+
+## Endpoint-Specific Limits
+
+### Critical vs Standard Endpoints
+\`\`\`typescript
+const endpointRateLimits = {
+  // Critical clinical endpoints - higher limits
+  '/api/v1/patients/:id/allergies': {
+    multiplier: 2.0,
+    priority: 'CRITICAL'
+  },
+  '/api/v1/patients/:id/medications': {
+    multiplier: 2.0,
+    priority: 'CRITICAL'
+  },
+
+  // Standard endpoints
+  '/api/v1/patients/:id': {
+    multiplier: 1.0,
+    priority: 'STANDARD'
+  },
+
+  // Heavy endpoints - lower limits
+  '/api/v1/patients/search': {
+    multiplier: 0.5,
+    priority: 'HEAVY'
+  },
+  '/api/v1/reports/generate': {
+    multiplier: 0.1,
+    priority: 'HEAVY'
+  }
+};
+
+class EndpointRateLimiter {
+  async checkLimit(
+    clientId: string,
+    endpoint: string,
+    baseLimit: number
+  ): Promise<RateLimitResult> {
+    const endpointConfig = this.getEndpointConfig(endpoint);
+    const effectiveLimit = baseLimit * endpointConfig.multiplier;
+
+    return this.limiter.checkLimit(
+      \`\${clientId}:\${endpoint}\`,
+      effectiveLimit
+    );
+  }
+}
+\`\`\`
+
+## Response Headers
+
+### Standard Rate Limit Headers
+\`\`\`typescript
+class RateLimitHeaderMiddleware {
+  handle(request: Request, response: Response): void {
+    const result = this.rateLimiter.checkLimit(
+      request.clientId,
+      request.path
+    );
+
+    // Standard headers
+    response.headers.set('X-RateLimit-Limit', result.limit.toString());
+    response.headers.set('X-RateLimit-Remaining', result.remaining.toString());
+    response.headers.set(
+      'X-RateLimit-Reset',
+      Math.ceil(Date.now() / 1000 + result.resetIn).toString()
+    );
+
+    if (!result.allowed) {
+      response.status = 429;
+      response.headers.set('Retry-After', result.retryAfter.toString());
+      response.body = {
+        error: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests',
+        retryAfter: result.retryAfter
+      };
+    }
+  }
+}
+\`\`\`
+
+## Emergency Override
+
+### Clinical Emergency Bypass
+\`\`\`typescript
+class EmergencyRateLimitOverride {
+  async checkEmergencyAccess(
+    request: Request
+  ): Promise<boolean> {
+    // Check for emergency header
+    const emergencyToken = request.headers.get('X-Emergency-Access');
+    if (!emergencyToken) return false;
+
+    // Validate emergency token
+    const valid = await this.validateEmergencyToken(emergencyToken);
+    if (!valid) return false;
+
+    // Log emergency access
+    await this.auditLog.critical({
+      event: 'EMERGENCY_RATE_LIMIT_BYPASS',
+      clientId: request.clientId,
+      endpoint: request.path,
+      timestamp: new Date()
+    });
+
+    return true;
+  }
+}
+
+class AdaptiveRateLimiter {
+  async checkLimit(request: Request): Promise<RateLimitResult> {
+    // Check for emergency override
+    if (await this.emergencyOverride.checkEmergencyAccess(request)) {
+      return { allowed: true, emergency: true };
+    }
+
+    // Normal rate limiting
+    return this.standardLimiter.checkLimit(
+      request.clientId,
+      request.path
+    );
+  }
+}
+\`\`\`
+
+## Monitoring and Alerting
+
+### Rate Limit Monitoring
+\`\`\`typescript
+class RateLimitMonitor {
+  async recordLimitCheck(
+    clientId: string,
+    result: RateLimitResult
+  ): Promise<void> {
+    // Track metrics
+    this.metrics.increment('rate_limit.checks', {
+      client: clientId,
+      allowed: result.allowed
+    });
+
+    if (!result.allowed) {
+      this.metrics.increment('rate_limit.exceeded', {
+        client: clientId
+      });
+
+      // Alert if client is consistently hitting limits
+      const recentExceeded = await this.getRecentExceeded(clientId);
+      if (recentExceeded > 100) {
+        await this.alertOps({
+          type: 'PERSISTENT_RATE_LIMIT',
+          clientId,
+          count: recentExceeded,
+          recommendation: 'Consider increasing limits or contacting client'
+        });
+      }
+    }
+  }
+}
+\`\`\`
+
+## Key Takeaways
+
+1. Implement tiered rate limits based on client type
+2. Use token bucket for smooth rate limiting with burst support
+3. Apply different limits per endpoint based on resource cost
+4. Include standard rate limit headers in all responses
+5. Provide emergency override for clinical emergencies
+6. Monitor rate limit patterns and alert on persistent issues
+7. Balance security with clinical workflow needs`
+      },
     ]
   },
   {
