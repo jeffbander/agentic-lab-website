@@ -10874,9 +10874,1472 @@ async function generateHIPAAReport(): Promise<HIPAAComplianceReport> {
     title: 'Building Secure Healthcare Agents',
     description: 'Capstone: End-to-end secure agentic system',
     lessons: [
-      { id: '10.1', title: 'Architecture Review for Healthcare Agents', duration: '25 min', content: '' },
-      { id: '10.2', title: 'Security Checklist & Go-Live', duration: '20 min', content: '' },
-      { id: '10.3', title: 'Ongoing Compliance Monitoring', duration: '18 min', content: '' },
+      { id: '10.1', title: 'Architecture Review for Healthcare Agents', duration: '25 min', content: `# Architecture Review for Healthcare Agents
+
+## Introduction
+
+This capstone lesson brings together everything you've learned to design a production-ready, HIPAA-compliant healthcare AI agent. We'll conduct a comprehensive architecture review covering all security domains.
+
+## Complete Healthcare Agent Architecture
+
+### System Overview
+
+\`\`\`typescript
+// Complete healthcare agent architecture
+interface HealthcareAgentArchitecture {
+  // Frontend Layer
+  frontend: {
+    patientPortal: PatientPortalConfig;
+    clinicianDashboard: ClinicianDashboardConfig;
+    mobileApps: MobileAppConfig;
+  };
+
+  // API Gateway Layer
+  gateway: {
+    authentication: AuthConfig;
+    rateLimit: RateLimitConfig;
+    waf: WAFConfig;
+  };
+
+  // Application Layer
+  application: {
+    agentOrchestrator: AgentOrchestratorConfig;
+    fhirConnector: FHIRConnectorConfig;
+    auditService: AuditServiceConfig;
+  };
+
+  // AI Layer
+  ai: {
+    llmProvider: LLMProviderConfig;
+    promptManagement: PromptManagementConfig;
+    outputValidation: OutputValidationConfig;
+  };
+
+  // Data Layer
+  data: {
+    primaryDatabase: DatabaseConfig;
+    cacheLayer: CacheConfig;
+    vectorStore: VectorStoreConfig;
+  };
+
+  // Infrastructure Layer
+  infrastructure: {
+    compute: ComputeConfig;
+    networking: NetworkConfig;
+    monitoring: MonitoringConfig;
+  };
+}
+
+const productionArchitecture: HealthcareAgentArchitecture = {
+  frontend: {
+    patientPortal: {
+      framework: 'React',
+      security: {
+        csp: 'strict',
+        xssProtection: true,
+        httpsOnly: true,
+        cookiePolicy: 'secure-httponly-samesite'
+      },
+      phi: {
+        displayMasking: true,
+        autoLogout: '15-minutes',
+        sessionManagement: 'server-side'
+      }
+    },
+    clinicianDashboard: {
+      framework: 'React',
+      security: {
+        mfa: 'required',
+        roleBasedAccess: true,
+        auditTrail: true
+      }
+    },
+    mobileApps: {
+      platforms: ['ios', 'android'],
+      security: {
+        biometricAuth: true,
+        certificatePinning: true,
+        secureStorage: 'keychain/keystore'
+      }
+    }
+  },
+
+  gateway: {
+    authentication: {
+      provider: 'oauth2-oidc',
+      mfa: 'totp-sms',
+      sessionTimeout: '15-minutes',
+      jwtValidation: 'rs256'
+    },
+    rateLimit: {
+      default: '100-per-minute',
+      authenticated: '500-per-minute',
+      aiEndpoints: '20-per-minute'
+    },
+    waf: {
+      provider: 'aws-waf',
+      rules: ['owasp-top-10', 'rate-limiting', 'ip-reputation']
+    }
+  },
+
+  application: {
+    agentOrchestrator: {
+      framework: 'custom',
+      security: {
+        inputSanitization: true,
+        outputValidation: true,
+        contextIsolation: true,
+        toolRestrictions: ['read-only-phi', 'no-external-calls']
+      }
+    },
+    fhirConnector: {
+      version: 'R4',
+      security: {
+        smartOnFhir: true,
+        scopeEnforcement: true,
+        auditLogging: true
+      }
+    },
+    auditService: {
+      immutableLogs: true,
+      retention: '7-years',
+      realTimeAlerts: true
+    }
+  },
+
+  ai: {
+    llmProvider: {
+      provider: 'anthropic',
+      model: 'claude-3-sonnet',
+      security: {
+        dataProcessingAgreement: true,
+        noTraining: true,
+        phiMinimization: true
+      }
+    },
+    promptManagement: {
+      versionControl: true,
+      securityReview: true,
+      injectionPrevention: 'defense-in-depth'
+    },
+    outputValidation: {
+      phiScanning: true,
+      hallucinationDetection: true,
+      medicalClaimValidation: true
+    }
+  },
+
+  data: {
+    primaryDatabase: {
+      type: 'postgresql',
+      encryption: 'aes-256-gcm',
+      backupEncryption: true,
+      pointInTimeRecovery: true
+    },
+    cacheLayer: {
+      type: 'redis',
+      phiAllowed: false,
+      encryption: 'tls',
+      ttl: '15-minutes'
+    },
+    vectorStore: {
+      type: 'pgvector',
+      phiAllowed: false,
+      embeddingsOnly: true
+    }
+  },
+
+  infrastructure: {
+    compute: {
+      type: 'kubernetes',
+      podSecurity: 'restricted',
+      resourceLimits: true
+    },
+    networking: {
+      vpcIsolation: true,
+      privateSubnets: true,
+      noPublicIPs: true,
+      transitGateway: true
+    },
+    monitoring: {
+      logging: 'centralized',
+      metrics: 'prometheus',
+      alerting: 'pagerduty',
+      siem: 'splunk'
+    }
+  }
+};
+\`\`\`
+
+## Architecture Security Review Checklist
+
+### Layer-by-Layer Review
+
+\`\`\`typescript
+interface ArchitectureReview {
+  layer: string;
+  checks: SecurityCheck[];
+  status: 'pass' | 'fail' | 'warning';
+  findings: Finding[];
+}
+
+const architectureReviewChecklist: ArchitectureReview[] = [
+  {
+    layer: 'Frontend Security',
+    checks: [
+      { name: 'Content Security Policy', required: true },
+      { name: 'XSS Prevention', required: true },
+      { name: 'Secure Cookie Configuration', required: true },
+      { name: 'PHI Display Masking', required: true },
+      { name: 'Session Timeout', required: true },
+      { name: 'HTTPS Enforcement', required: true },
+      { name: 'Input Validation', required: true }
+    ],
+    status: 'pass',
+    findings: []
+  },
+  {
+    layer: 'Authentication & Authorization',
+    checks: [
+      { name: 'Multi-Factor Authentication', required: true },
+      { name: 'Role-Based Access Control', required: true },
+      { name: 'Session Management', required: true },
+      { name: 'Password Policy Compliance', required: true },
+      { name: 'Account Lockout Policy', required: true },
+      { name: 'Break Glass Access', required: true },
+      { name: 'Access Review Process', required: true }
+    ],
+    status: 'pass',
+    findings: []
+  },
+  {
+    layer: 'API Security',
+    checks: [
+      { name: 'Authentication Required', required: true },
+      { name: 'Authorization Enforcement', required: true },
+      { name: 'Rate Limiting', required: true },
+      { name: 'Input Validation', required: true },
+      { name: 'Output Encoding', required: true },
+      { name: 'CORS Configuration', required: true },
+      { name: 'API Versioning', required: false }
+    ],
+    status: 'pass',
+    findings: []
+  },
+  {
+    layer: 'AI Agent Security',
+    checks: [
+      { name: 'Prompt Injection Prevention', required: true },
+      { name: 'Output Validation', required: true },
+      { name: 'PHI Leakage Prevention', required: true },
+      { name: 'Context Isolation', required: true },
+      { name: 'Tool Restrictions', required: true },
+      { name: 'Audit Logging', required: true },
+      { name: 'Model Access Controls', required: true }
+    ],
+    status: 'pass',
+    findings: []
+  },
+  {
+    layer: 'Data Security',
+    checks: [
+      { name: 'Encryption at Rest', required: true },
+      { name: 'Encryption in Transit', required: true },
+      { name: 'Key Management', required: true },
+      { name: 'Backup Encryption', required: true },
+      { name: 'Data Retention Policy', required: true },
+      { name: 'PHI Minimization', required: true },
+      { name: 'De-identification Procedures', required: false }
+    ],
+    status: 'pass',
+    findings: []
+  },
+  {
+    layer: 'Infrastructure Security',
+    checks: [
+      { name: 'Network Isolation', required: true },
+      { name: 'Container Security', required: true },
+      { name: 'Secrets Management', required: true },
+      { name: 'Vulnerability Management', required: true },
+      { name: 'Patch Management', required: true },
+      { name: 'Disaster Recovery', required: true },
+      { name: 'Incident Response Plan', required: true }
+    ],
+    status: 'pass',
+    findings: []
+  },
+  {
+    layer: 'Compliance & Audit',
+    checks: [
+      { name: 'HIPAA Security Rule', required: true },
+      { name: 'Audit Logging', required: true },
+      { name: 'Log Retention (7 years)', required: true },
+      { name: 'Access Reviews', required: true },
+      { name: 'Risk Assessment', required: true },
+      { name: 'BAA with Vendors', required: true },
+      { name: 'Breach Notification Plan', required: true }
+    ],
+    status: 'pass',
+    findings: []
+  }
+];
+\`\`\`
+
+## Data Flow Security Analysis
+
+### PHI Data Flow Diagram
+
+\`\`\`typescript
+// Trace PHI through the system to identify security controls
+interface DataFlowAnalysis {
+  source: string;
+  destination: string;
+  dataType: 'phi' | 'pii' | 'clinical' | 'operational';
+  securityControls: string[];
+  risks: string[];
+}
+
+const phiDataFlows: DataFlowAnalysis[] = [
+  {
+    source: 'Patient Portal',
+    destination: 'API Gateway',
+    dataType: 'phi',
+    securityControls: [
+      'TLS 1.3 encryption',
+      'JWT authentication',
+      'Input validation',
+      'CSRF protection'
+    ],
+    risks: ['Man-in-the-middle (mitigated by TLS)', 'Session hijacking (mitigated by secure cookies)']
+  },
+  {
+    source: 'API Gateway',
+    destination: 'Agent Orchestrator',
+    dataType: 'phi',
+    securityControls: [
+      'Service mesh encryption',
+      'Service authentication',
+      'Request validation',
+      'Rate limiting'
+    ],
+    risks: ['Internal network sniffing (mitigated by mTLS)']
+  },
+  {
+    source: 'Agent Orchestrator',
+    destination: 'LLM Provider',
+    dataType: 'clinical',  // PHI should be minimized/anonymized
+    securityControls: [
+      'PHI stripping before transmission',
+      'API key authentication',
+      'TLS encryption',
+      'No logging of prompts by provider'
+    ],
+    risks: ['PHI leakage to third party (mitigated by minimization)']
+  },
+  {
+    source: 'Agent Orchestrator',
+    destination: 'FHIR Server',
+    dataType: 'phi',
+    securityControls: [
+      'SMART on FHIR authentication',
+      'Scope-based authorization',
+      'Audit logging',
+      'TLS encryption'
+    ],
+    risks: ['Over-fetching data (mitigated by minimal scopes)']
+  },
+  {
+    source: 'Application',
+    destination: 'Database',
+    dataType: 'phi',
+    securityControls: [
+      'Connection encryption',
+      'Column-level encryption',
+      'Row-level security',
+      'Audit logging'
+    ],
+    risks: ['SQL injection (mitigated by parameterized queries)']
+  }
+];
+
+// Verify all PHI flows have required controls
+function validatePHIFlows(flows: DataFlowAnalysis[]): ValidationResult {
+  const requiredControls = [
+    'encryption',
+    'authentication',
+    'audit'
+  ];
+
+  const violations = flows.filter(flow => {
+    if (flow.dataType === 'phi') {
+      return !requiredControls.every(req =>
+        flow.securityControls.some(ctrl =>
+          ctrl.toLowerCase().includes(req)
+        )
+      );
+    }
+    return false;
+  });
+
+  return {
+    valid: violations.length === 0,
+    violations: violations
+  };
+}
+\`\`\`
+
+## Threat Model Review
+
+### STRIDE Analysis for Healthcare Agents
+
+\`\`\`typescript
+interface ThreatModel {
+  category: 'Spoofing' | 'Tampering' | 'Repudiation' | 'Information Disclosure' | 'Denial of Service' | 'Elevation of Privilege';
+  threats: Threat[];
+}
+
+const healthcareAgentThreatModel: ThreatModel[] = [
+  {
+    category: 'Spoofing',
+    threats: [
+      {
+        name: 'User impersonation',
+        impact: 'high',
+        mitigations: ['MFA', 'Session management', 'Device fingerprinting'],
+        residualRisk: 'low'
+      },
+      {
+        name: 'AI agent impersonation',
+        impact: 'high',
+        mitigations: ['Signed responses', 'Agent identification', 'Prompt validation'],
+        residualRisk: 'low'
+      }
+    ]
+  },
+  {
+    category: 'Tampering',
+    threats: [
+      {
+        name: 'Prompt injection attack',
+        impact: 'critical',
+        mitigations: ['Input sanitization', 'System prompt protection', 'Output validation'],
+        residualRisk: 'medium'
+      },
+      {
+        name: 'Medical record modification',
+        impact: 'critical',
+        mitigations: ['Audit logging', 'Approval workflows', 'Integrity checks'],
+        residualRisk: 'low'
+      }
+    ]
+  },
+  {
+    category: 'Repudiation',
+    threats: [
+      {
+        name: 'Denial of AI recommendations',
+        impact: 'high',
+        mitigations: ['Immutable audit logs', 'User acknowledgments', 'Timestamps'],
+        residualRisk: 'low'
+      }
+    ]
+  },
+  {
+    category: 'Information Disclosure',
+    threats: [
+      {
+        name: 'PHI leakage through AI',
+        impact: 'critical',
+        mitigations: ['Output scanning', 'PHI minimization', 'Access controls'],
+        residualRisk: 'medium'
+      },
+      {
+        name: 'Cross-patient data exposure',
+        impact: 'critical',
+        mitigations: ['Context isolation', 'Session boundaries', 'Cache partitioning'],
+        residualRisk: 'low'
+      }
+    ]
+  },
+  {
+    category: 'Denial of Service',
+    threats: [
+      {
+        name: 'AI service unavailability',
+        impact: 'high',
+        mitigations: ['Rate limiting', 'Fallback mechanisms', 'Graceful degradation'],
+        residualRisk: 'low'
+      }
+    ]
+  },
+  {
+    category: 'Elevation of Privilege',
+    threats: [
+      {
+        name: 'Role escalation via AI',
+        impact: 'critical',
+        mitigations: ['Tool restrictions', 'Role enforcement', 'Audit logging'],
+        residualRisk: 'low'
+      }
+    ]
+  }
+];
+\`\`\`
+
+## Key Takeaways
+
+1. **Defense in depth**: Apply security controls at every layer
+2. **Data flow analysis**: Trace PHI through the system to ensure protection
+3. **Threat modeling**: Identify and mitigate healthcare-specific threats
+4. **Comprehensive review**: Check all HIPAA requirements before deployment
+5. **Document everything**: Architecture decisions must be auditable
+` },
+      { id: '10.2', title: 'Security Checklist & Go-Live', duration: '20 min', content: `# Security Checklist & Go-Live
+
+## Introduction
+
+Before deploying a healthcare AI agent to production, you must complete a comprehensive security checklist. This lesson provides a go-live checklist covering all HIPAA requirements and security controls.
+
+## Pre-Deployment Security Checklist
+
+### Complete Go-Live Checklist
+
+\`\`\`typescript
+interface GoLiveChecklist {
+  category: string;
+  items: ChecklistItem[];
+  signoff: {
+    role: string;
+    required: boolean;
+    signature?: string;
+    date?: Date;
+  };
+}
+
+const healthcareAgentGoLiveChecklist: GoLiveChecklist[] = [
+  {
+    category: 'Access Controls (§164.312(a))',
+    items: [
+      {
+        id: 'AC-1',
+        description: 'Unique user identification implemented',
+        evidence: 'User management system configured with unique IDs',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AC-2',
+        description: 'Emergency access procedure documented and tested',
+        evidence: 'Break glass procedure runbook and test results',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AC-3',
+        description: 'Automatic logoff implemented (15 min inactivity)',
+        evidence: 'Session timeout configuration and test results',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AC-4',
+        description: 'Encryption implemented for all PHI',
+        evidence: 'Encryption configuration audit',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AC-5',
+        description: 'Multi-factor authentication enabled',
+        evidence: 'MFA provider configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AC-6',
+        description: 'Role-based access control configured',
+        evidence: 'RBAC policy documentation and role matrix',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'Security Lead',
+      required: true
+    }
+  },
+  {
+    category: 'Audit Controls (§164.312(b))',
+    items: [
+      {
+        id: 'AU-1',
+        description: 'Audit logging enabled for all PHI access',
+        evidence: 'Logging configuration and sample logs',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AU-2',
+        description: 'Log retention configured for 7 years',
+        evidence: 'Retention policy configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AU-3',
+        description: 'Log integrity protection implemented',
+        evidence: 'Immutable storage configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AU-4',
+        description: 'Real-time alerting configured',
+        evidence: 'Alerting rules and notification channels',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AU-5',
+        description: 'Audit log review process documented',
+        evidence: 'Review schedule and procedures',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'Compliance Officer',
+      required: true
+    }
+  },
+  {
+    category: 'Integrity Controls (§164.312(c))',
+    items: [
+      {
+        id: 'IC-1',
+        description: 'Data integrity mechanisms implemented',
+        evidence: 'Checksums, digital signatures configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IC-2',
+        description: 'AI output validation implemented',
+        evidence: 'Output validation test results',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IC-3',
+        description: 'Database integrity constraints configured',
+        evidence: 'Database schema with constraints',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'Technical Lead',
+      required: true
+    }
+  },
+  {
+    category: 'AI Agent Security',
+    items: [
+      {
+        id: 'AI-1',
+        description: 'Prompt injection prevention tested',
+        evidence: 'Security test results for prompt injection',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AI-2',
+        description: 'PHI leakage prevention verified',
+        evidence: 'PHI scanning test results',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AI-3',
+        description: 'Context isolation implemented',
+        evidence: 'Context boundary test results',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AI-4',
+        description: 'Tool restrictions configured',
+        evidence: 'Tool whitelist and restriction configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AI-5',
+        description: 'Medical disclaimer implemented',
+        evidence: 'Disclaimer display and acknowledgment flow',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'AI-6',
+        description: 'Hallucination detection configured',
+        evidence: 'Detection system configuration and test results',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'AI Safety Lead',
+      required: true
+    }
+  },
+  {
+    category: 'Infrastructure Security',
+    items: [
+      {
+        id: 'IS-1',
+        description: 'Network segmentation verified',
+        evidence: 'Network diagram and firewall rules',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IS-2',
+        description: 'Container security policies applied',
+        evidence: 'Pod security policy configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IS-3',
+        description: 'Secrets management configured',
+        evidence: 'Secrets manager configuration',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IS-4',
+        description: 'Vulnerability scan completed',
+        evidence: 'Scan report with no critical/high findings',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IS-5',
+        description: 'Penetration test completed',
+        evidence: 'Pen test report with remediation',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'Infrastructure Lead',
+      required: true
+    }
+  },
+  {
+    category: 'Business Associate Agreements',
+    items: [
+      {
+        id: 'BA-1',
+        description: 'BAA signed with LLM provider',
+        evidence: 'Signed BAA document',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'BA-2',
+        description: 'BAA signed with cloud provider',
+        evidence: 'Signed BAA document',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'BA-3',
+        description: 'BAA signed with all subcontractors',
+        evidence: 'Signed BAA documents',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'Legal Counsel',
+      required: true
+    }
+  },
+  {
+    category: 'Incident Response',
+    items: [
+      {
+        id: 'IR-1',
+        description: 'Incident response plan documented',
+        evidence: 'IR plan document',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IR-2',
+        description: 'Breach notification procedures documented',
+        evidence: 'Notification templates and procedures',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IR-3',
+        description: 'Incident response team identified',
+        evidence: 'Contact list and escalation procedures',
+        status: 'pending',
+        required: true
+      },
+      {
+        id: 'IR-4',
+        description: 'Tabletop exercise completed',
+        evidence: 'Exercise report and lessons learned',
+        status: 'pending',
+        required: true
+      }
+    ],
+    signoff: {
+      role: 'CISO',
+      required: true
+    }
+  }
+];
+\`\`\`
+
+## Go-Live Decision Gate
+
+### Final Approval Process
+
+\`\`\`typescript
+interface GoLiveDecision {
+  status: 'approved' | 'conditional' | 'blocked';
+  conditions?: string[];
+  approvals: Approval[];
+  riskAcceptance: RiskAcceptance[];
+}
+
+function evaluateGoLiveReadiness(
+  checklist: GoLiveChecklist[]
+): GoLiveDecision {
+  const allItems = checklist.flatMap(c => c.items);
+  const requiredItems = allItems.filter(i => i.required);
+  const pendingRequired = requiredItems.filter(i => i.status !== 'complete');
+
+  // Check for blockers
+  if (pendingRequired.length > 0) {
+    return {
+      status: 'blocked',
+      conditions: pendingRequired.map(i => \`\${i.id}: \${i.description}\`),
+      approvals: [],
+      riskAcceptance: []
+    };
+  }
+
+  // Check for missing signoffs
+  const missingSignoffs = checklist.filter(
+    c => c.signoff.required && !c.signoff.signature
+  );
+
+  if (missingSignoffs.length > 0) {
+    return {
+      status: 'conditional',
+      conditions: missingSignoffs.map(c =>
+        \`Awaiting \${c.signoff.role} signoff for \${c.category}\`
+      ),
+      approvals: [],
+      riskAcceptance: []
+    };
+  }
+
+  return {
+    status: 'approved',
+    approvals: [
+      { role: 'Security Lead', date: new Date(), signature: 'verified' },
+      { role: 'Compliance Officer', date: new Date(), signature: 'verified' },
+      { role: 'CISO', date: new Date(), signature: 'verified' }
+    ],
+    riskAcceptance: []
+  };
+}
+\`\`\`
+
+## Deployment Runbook
+
+### Production Deployment Steps
+
+\`\`\`typescript
+const deploymentRunbook = {
+  preDeployment: [
+    {
+      step: 1,
+      action: 'Verify all go-live checklist items complete',
+      responsible: 'Release Manager',
+      verification: 'Checklist report signed off'
+    },
+    {
+      step: 2,
+      action: 'Confirm deployment window with stakeholders',
+      responsible: 'Release Manager',
+      verification: 'Calendar invite accepted'
+    },
+    {
+      step: 3,
+      action: 'Notify on-call team of deployment',
+      responsible: 'Release Manager',
+      verification: 'Acknowledgment received'
+    },
+    {
+      step: 4,
+      action: 'Verify rollback procedure is tested',
+      responsible: 'DevOps Engineer',
+      verification: 'Rollback test results'
+    },
+    {
+      step: 5,
+      action: 'Take database backup',
+      responsible: 'DBA',
+      verification: 'Backup confirmation'
+    }
+  ],
+
+  deployment: [
+    {
+      step: 1,
+      action: 'Deploy infrastructure changes',
+      responsible: 'DevOps Engineer',
+      verification: 'Terraform apply success'
+    },
+    {
+      step: 2,
+      action: 'Run database migrations',
+      responsible: 'DBA',
+      verification: 'Migration logs clean'
+    },
+    {
+      step: 3,
+      action: 'Deploy application containers',
+      responsible: 'DevOps Engineer',
+      verification: 'All pods healthy'
+    },
+    {
+      step: 4,
+      action: 'Verify health checks passing',
+      responsible: 'DevOps Engineer',
+      verification: 'Health endpoint 200'
+    },
+    {
+      step: 5,
+      action: 'Run smoke tests',
+      responsible: 'QA Engineer',
+      verification: 'Smoke test report'
+    }
+  ],
+
+  postDeployment: [
+    {
+      step: 1,
+      action: 'Monitor error rates for 30 minutes',
+      responsible: 'DevOps Engineer',
+      verification: 'Error rate < threshold'
+    },
+    {
+      step: 2,
+      action: 'Verify audit logging is working',
+      responsible: 'Security Engineer',
+      verification: 'Sample audit log entries'
+    },
+    {
+      step: 3,
+      action: 'Confirm PHI access controls active',
+      responsible: 'Security Engineer',
+      verification: 'Access test results'
+    },
+    {
+      step: 4,
+      action: 'Update status page and notify stakeholders',
+      responsible: 'Release Manager',
+      verification: 'Notification sent'
+    },
+    {
+      step: 5,
+      action: 'Document deployment in change log',
+      responsible: 'Release Manager',
+      verification: 'Change record created'
+    }
+  ],
+
+  rollbackTriggers: [
+    'Error rate exceeds 5%',
+    'PHI access controls failing',
+    'Audit logging not functioning',
+    'Critical security alert triggered',
+    'Patient safety concern identified'
+  ]
+};
+\`\`\`
+
+## Post-Launch Monitoring
+
+### First 24-48 Hours
+
+\`\`\`typescript
+const postLaunchMonitoring = {
+  criticalMetrics: [
+    { metric: 'Error Rate', threshold: '< 1%', alertLevel: 'critical' },
+    { metric: 'Response Time P99', threshold: '< 3s', alertLevel: 'warning' },
+    { metric: 'Authentication Failures', threshold: '< 10/min', alertLevel: 'critical' },
+    { metric: 'PHI Access Anomalies', threshold: '0', alertLevel: 'critical' },
+    { metric: 'AI Output Validation Failures', threshold: '< 5%', alertLevel: 'warning' }
+  ],
+
+  watchItems: [
+    'User login success rate',
+    'AI agent response quality',
+    'PHI access patterns',
+    'Session timeout behavior',
+    'Audit log completeness'
+  ],
+
+  escalationProcedure: [
+    { level: 1, condition: 'Warning threshold exceeded', action: 'Alert on-call engineer' },
+    { level: 2, condition: 'Critical threshold exceeded', action: 'Page security team' },
+    { level: 3, condition: 'PHI-related incident', action: 'Invoke incident response' }
+  ]
+};
+\`\`\`
+
+## Key Takeaways
+
+1. **Complete all required items**: No deployment without full checklist completion
+2. **Get all signoffs**: Each category needs responsible party approval
+3. **Document everything**: Evidence required for each checklist item
+4. **Have rollback ready**: Know your rollback triggers and procedure
+5. **Monitor closely post-launch**: First 48 hours are critical for catching issues
+` },
+      { id: '10.3', title: 'Ongoing Compliance Monitoring', duration: '18 min', content: `# Ongoing Compliance Monitoring
+
+## Introduction
+
+HIPAA compliance is not a one-time achievement but an ongoing process. This final lesson covers how to maintain compliance continuously through monitoring, regular assessments, and continuous improvement.
+
+## Continuous Compliance Framework
+
+### Compliance Monitoring Architecture
+
+\`\`\`typescript
+interface ContinuousComplianceSystem {
+  automatedControls: AutomatedControl[];
+  periodicAssessments: Assessment[];
+  incidentManagement: IncidentProcess;
+  documentation: DocumentationRequirements;
+}
+
+const complianceSystem: ContinuousComplianceSystem = {
+  automatedControls: [
+    {
+      name: 'Real-time PHI Access Monitoring',
+      frequency: 'continuous',
+      alerts: ['bulk-access', 'after-hours', 'cross-department'],
+      response: 'immediate-alert'
+    },
+    {
+      name: 'Security Configuration Drift Detection',
+      frequency: 'hourly',
+      checks: ['encryption-enabled', 'access-controls', 'network-isolation'],
+      response: 'alert-and-remediate'
+    },
+    {
+      name: 'Vulnerability Scanning',
+      frequency: 'daily',
+      scope: ['containers', 'dependencies', 'infrastructure'],
+      response: 'ticket-creation'
+    },
+    {
+      name: 'Compliance Policy Evaluation',
+      frequency: 'every-4-hours',
+      policies: ['hipaa-encryption', 'hipaa-access', 'hipaa-audit'],
+      response: 'compliance-report'
+    }
+  ],
+
+  periodicAssessments: [
+    {
+      name: 'Access Review',
+      frequency: 'quarterly',
+      scope: 'All user access to PHI systems',
+      responsible: 'Security Team + Managers',
+      output: 'Access review report with remediation actions'
+    },
+    {
+      name: 'Penetration Testing',
+      frequency: 'annually',
+      scope: 'Full healthcare application stack',
+      responsible: 'Third-party security firm',
+      output: 'Pen test report with findings and remediation'
+    },
+    {
+      name: 'HIPAA Risk Assessment',
+      frequency: 'annually',
+      scope: 'All ePHI handling systems',
+      responsible: 'Compliance Officer + Security Team',
+      output: 'Risk assessment report with mitigation plan'
+    },
+    {
+      name: 'Business Associate Review',
+      frequency: 'annually',
+      scope: 'All BAAs and vendor security',
+      responsible: 'Legal + Compliance',
+      output: 'Vendor compliance attestations'
+    },
+    {
+      name: 'Policy Review',
+      frequency: 'annually',
+      scope: 'All security and privacy policies',
+      responsible: 'Compliance Officer',
+      output: 'Updated policy documents'
+    }
+  ],
+
+  incidentManagement: {
+    classification: {
+      security: ['unauthorized-access', 'malware', 'data-breach'],
+      privacy: ['phi-exposure', 'improper-disclosure', 'lost-device'],
+      availability: ['system-outage', 'data-loss']
+    },
+    responseTimelines: {
+      critical: '1-hour',
+      high: '4-hours',
+      medium: '24-hours',
+      low: '72-hours'
+    },
+    notificationRequirements: {
+      breach: {
+        individuals: '60-days',
+        hhs: '60-days',
+        media: '60-days-if-over-500'
+      }
+    }
+  },
+
+  documentation: {
+    retention: '7-years',
+    types: [
+      'Security policies and procedures',
+      'Risk assessments',
+      'Training records',
+      'Incident reports',
+      'Audit logs',
+      'Access reviews',
+      'BAAs and contracts'
+    ]
+  }
+};
+\`\`\`
+
+## AI Agent Specific Monitoring
+
+### Healthcare AI Compliance Checks
+
+\`\`\`typescript
+interface AIComplianceMonitoring {
+  promptSecurity: PromptMonitoring;
+  outputQuality: OutputMonitoring;
+  behaviorAnalysis: BehaviorMonitoring;
+  modelGovernance: ModelGovernance;
+}
+
+const aiComplianceMonitoring: AIComplianceMonitoring = {
+  promptSecurity: {
+    checks: [
+      {
+        name: 'Prompt injection detection',
+        frequency: 'real-time',
+        threshold: 'zero-tolerance',
+        action: 'block-and-alert'
+      },
+      {
+        name: 'PHI in prompts analysis',
+        frequency: 'real-time',
+        threshold: 'minimize-per-policy',
+        action: 'log-and-review'
+      },
+      {
+        name: 'System prompt integrity',
+        frequency: 'daily',
+        check: 'hash-verification',
+        action: 'alert-on-change'
+      }
+    ],
+    reporting: 'weekly-security-summary'
+  },
+
+  outputQuality: {
+    checks: [
+      {
+        name: 'PHI leakage detection',
+        frequency: 'real-time',
+        method: 'pattern-scanning',
+        action: 'block-and-alert'
+      },
+      {
+        name: 'Medical accuracy sampling',
+        frequency: 'weekly',
+        method: 'expert-review',
+        sampleSize: '5%'
+      },
+      {
+        name: 'Hallucination detection',
+        frequency: 'real-time',
+        method: 'fact-verification',
+        action: 'flag-for-review'
+      },
+      {
+        name: 'Dangerous advice detection',
+        frequency: 'real-time',
+        method: 'safety-classifier',
+        action: 'block-immediately'
+      }
+    ],
+    reporting: 'monthly-quality-report'
+  },
+
+  behaviorAnalysis: {
+    metrics: [
+      'Response patterns over time',
+      'User satisfaction scores',
+      'Escalation rates to human clinicians',
+      'Error and refusal rates',
+      'Token usage patterns'
+    ],
+    anomalyDetection: {
+      method: 'statistical-baseline',
+      alertThreshold: '3-sigma',
+      action: 'investigate-and-report'
+    }
+  },
+
+  modelGovernance: {
+    inventory: {
+      models: ['claude-3-sonnet'],
+      versions: 'tracked-and-documented',
+      changes: 'require-security-review'
+    },
+    evaluation: {
+      frequency: 'before-any-model-change',
+      tests: ['security', 'safety', 'accuracy', 'bias'],
+      approval: 'AI-safety-lead'
+    }
+  }
+};
+\`\`\`
+
+## Compliance Dashboard
+
+### Executive Compliance Reporting
+
+\`\`\`typescript
+interface ComplianceDashboard {
+  overallStatus: 'compliant' | 'at-risk' | 'non-compliant';
+  controlCategories: CategoryStatus[];
+  recentIncidents: Incident[];
+  upcomingAssessments: Assessment[];
+  actionItems: ActionItem[];
+}
+
+async function generateComplianceDashboard(): Promise<ComplianceDashboard> {
+  const controlStatus = await evaluateAllControls();
+  const incidents = await getRecentIncidents(30);  // Last 30 days
+  const assessments = await getUpcomingAssessments(90);  // Next 90 days
+
+  return {
+    overallStatus: determineOverallStatus(controlStatus),
+    controlCategories: [
+      {
+        category: 'Access Controls',
+        status: 'compliant',
+        score: 98,
+        findings: 0,
+        lastAssessed: new Date('2025-01-01')
+      },
+      {
+        category: 'Audit Controls',
+        status: 'compliant',
+        score: 100,
+        findings: 0,
+        lastAssessed: new Date('2025-01-01')
+      },
+      {
+        category: 'Integrity Controls',
+        status: 'compliant',
+        score: 95,
+        findings: 1,
+        lastAssessed: new Date('2025-01-01')
+      },
+      {
+        category: 'Transmission Security',
+        status: 'compliant',
+        score: 100,
+        findings: 0,
+        lastAssessed: new Date('2025-01-01')
+      },
+      {
+        category: 'AI Agent Security',
+        status: 'at-risk',
+        score: 85,
+        findings: 3,
+        lastAssessed: new Date('2025-01-01')
+      }
+    ],
+    recentIncidents: incidents,
+    upcomingAssessments: assessments,
+    actionItems: await generateActionItems(controlStatus, incidents)
+  };
+}
+\`\`\`
+
+## Continuous Improvement Process
+
+### Learning from Incidents and Assessments
+
+\`\`\`typescript
+interface ContinuousImprovement {
+  sources: ImprovementSource[];
+  process: ImprovementProcess;
+  tracking: MetricTracking;
+}
+
+const continuousImprovement: ContinuousImprovement = {
+  sources: [
+    {
+      name: 'Security Incidents',
+      input: 'Incident post-mortems',
+      output: 'Control improvements',
+      frequency: 'per-incident'
+    },
+    {
+      name: 'Penetration Tests',
+      input: 'Pen test findings',
+      output: 'Security enhancements',
+      frequency: 'annual'
+    },
+    {
+      name: 'Compliance Audits',
+      input: 'Audit findings',
+      output: 'Policy and procedure updates',
+      frequency: 'annual'
+    },
+    {
+      name: 'Industry Threats',
+      input: 'Threat intelligence',
+      output: 'Proactive defenses',
+      frequency: 'continuous'
+    },
+    {
+      name: 'AI Safety Research',
+      input: 'New attack vectors',
+      output: 'Enhanced AI security',
+      frequency: 'continuous'
+    }
+  ],
+
+  process: {
+    steps: [
+      'Identify improvement opportunity',
+      'Assess risk and priority',
+      'Design solution',
+      'Security review',
+      'Implement change',
+      'Verify effectiveness',
+      'Update documentation'
+    ],
+    governance: {
+      lowRisk: 'Security team approval',
+      mediumRisk: 'Security lead approval',
+      highRisk: 'CISO and Compliance approval'
+    }
+  },
+
+  tracking: {
+    metrics: [
+      { name: 'Mean Time to Detect (MTTD)', target: '< 1 hour', trend: 'improving' },
+      { name: 'Mean Time to Respond (MTTR)', target: '< 4 hours', trend: 'stable' },
+      { name: 'Compliance Score', target: '> 95%', trend: 'improving' },
+      { name: 'Security Finding Closure Rate', target: '> 90% within SLA', trend: 'stable' },
+      { name: 'Training Completion Rate', target: '100%', trend: 'stable' }
+    ],
+    reporting: 'monthly-to-leadership'
+  }
+};
+\`\`\`
+
+## Training and Awareness
+
+### Ongoing Security Training
+
+\`\`\`typescript
+const securityTrainingProgram = {
+  audiences: [
+    {
+      group: 'All Staff',
+      training: [
+        { topic: 'HIPAA Awareness', frequency: 'annual', duration: '1 hour' },
+        { topic: 'Phishing Awareness', frequency: 'quarterly', duration: '15 min' },
+        { topic: 'Incident Reporting', frequency: 'annual', duration: '30 min' }
+      ]
+    },
+    {
+      group: 'Developers',
+      training: [
+        { topic: 'Secure Coding for Healthcare', frequency: 'annual', duration: '4 hours' },
+        { topic: 'AI Security Best Practices', frequency: 'semi-annual', duration: '2 hours' },
+        { topic: 'OWASP Top 10', frequency: 'annual', duration: '2 hours' }
+      ]
+    },
+    {
+      group: 'Clinical Staff',
+      training: [
+        { topic: 'PHI Handling Procedures', frequency: 'annual', duration: '1 hour' },
+        { topic: 'AI Assistant Safe Use', frequency: 'annual', duration: '30 min' }
+      ]
+    },
+    {
+      group: 'Security Team',
+      training: [
+        { topic: 'Healthcare Threat Landscape', frequency: 'quarterly', duration: '2 hours' },
+        { topic: 'Incident Response Drills', frequency: 'quarterly', duration: '4 hours' },
+        { topic: 'AI Security Threats', frequency: 'quarterly', duration: '2 hours' }
+      ]
+    }
+  ],
+
+  tracking: {
+    completion: 'LMS-tracked',
+    reminders: 'automated-30-days-before-due',
+    reporting: 'monthly-to-compliance'
+  }
+};
+\`\`\`
+
+## Course Conclusion
+
+Congratulations on completing the Secure Agentic Coding for Healthcare course! You now have the knowledge to:
+
+1. **Build HIPAA-compliant AI agents** that protect patient data
+2. **Implement defense-in-depth security** across all application layers
+3. **Prevent AI-specific threats** like prompt injection and data leakage
+4. **Integrate securely with EHR systems** using FHIR and SMART on FHIR
+5. **Deploy with confidence** using comprehensive security checklists
+6. **Maintain compliance** through continuous monitoring and improvement
+
+## Key Takeaways
+
+1. **Compliance is continuous**: Regular assessments, monitoring, and improvement
+2. **AI requires special attention**: Monitor prompts, outputs, and behavior
+3. **Document everything**: Policies, procedures, and evidence for audits
+4. **Train your team**: Security awareness is everyone's responsibility
+5. **Stay current**: Healthcare threats and regulations evolve constantly
+` }
     ]
   },
 ];
