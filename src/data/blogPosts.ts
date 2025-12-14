@@ -23,6 +23,162 @@ export type BlogPost = {
 // Initial blog posts data - can be extended via API
 export const blogPosts: BlogPost[] = [
   {
+    id: '4',
+    slug: 'beyond-vibe-coding-agentic-clinician-led-ai',
+    title: "Beyond 'Vibe Coding': Why Agentic, Clinician-Led AI Is the Future of Secure Healthcare Software",
+    subtitle: 'Why Agentic, Clinician-Led AI Is the Future of Secure Healthcare Software',
+    excerpt: 'In healthcare, software is never just software. Every line of code has the potential to influence a clinical decision. Learn why "vibe coding" is dangerous in healthcare and how the MSW Agentic Lab is building a safer alternative.',
+    content: `In healthcare, software is never just software.
+
+Every line of code has the potential to influence a clinical decision, shape a workflow, or affect a patient's outcome. As artificial intelligence becomes increasingly embedded in how healthcare tools are built, the methods we use to create those tools matter more than ever.
+
+Recently, a trend sometimes referred to as "vibe coding" has gained attention in the broader tech community. The idea is simple: provide an AI system with a high-level prompt, let it generate code end-to-end, and trust that it will work itself out. In consumer or experimental settings, this may feel fast, creative, and even magical.
+
+**In healthcare, it is dangerous.**
+
+At the Mount Sinai West (MSW) Agentic Coding Laboratory, part of the Mount Sinai Health System, we are building a different future—one grounded in clinical accountability, security, and structured intelligence. We call this approach **agentic, AI-augmented coding**: a clinician-led model that pairs medical expertise with carefully orchestrated AI agents to produce secure, production-grade healthcare software.
+
+This is not about replacing clinicians or engineers. It is about building systems where AI works under supervision, within guardrails, and in service of patient care.
+
+## Why "Vibe Coding" Fails in Healthcare
+
+"Vibe coding" captures a real temptation: delegate complexity to AI and move fast. But healthcare is not a sandbox.
+
+AI systems do not inherently understand:
+
+- Which clinical guidelines are authoritative
+- Which data fields are incomplete, unreliable, or delayed
+- Where regulatory boundaries lie
+- When uncertainty should halt execution rather than be smoothed over
+
+A large language model will confidently proceed even when inputs are flawed. It does not pause to question whether a guideline is outdated, whether a lab value is missing due to hemolysis, or whether an edge case could cause harm. In healthcare, this behavior is unacceptable.
+
+Consider a hypothetical example:
+An AI is prompted to "build a sepsis prediction tool using EHR data." If the underlying references are outdated, or if the data schema does not distinguish between preliminary and finalized labs, the resulting system may appear functional while silently introducing clinical risk.
+
+This is not malicious behavior—it is **unconstrained automation**.
+
+In clinical environments, we do not tolerate this from humans. We should not tolerate it from machines.
+
+## The Agentic Alternative: Planning Before Coding
+
+At MSW Agentic Lab, we start from a different assumption: **AI should never be the first or final decision-maker in healthcare software development.**
+
+Instead, we use agentic AI systems—collections of specialized AI agents that operate within a defined workflow, each with a narrow, auditable responsibility. Before any code is written, these agents enter a structured planning phase, guided by clinician-developers.
+
+During planning, agents:
+
+- Review clinical guidelines and identify authoritative sources
+- Analyze EHR schemas and data provenance
+- Surface ambiguity, missing inputs, and assumptions
+- Generate explicit technical and clinical specifications
+
+Only once this plan is reviewed and validated by a clinician does implementation begin.
+
+This mirrors clinical practice itself: **assess, plan, act, monitor.**
+
+## Our Six-Phase Agentic Development Model
+
+The MSW Agentic Lab follows a repeatable, healthcare-specific development lifecycle designed to balance speed with safety:
+
+### 1. Requirements & Clinical Planning (2–3 days)
+
+AI agents translate clinical needs into technical specifications while explicitly documenting assumptions, risks, and exclusions.
+
+### 2. Secure Development Setup (1 day)
+
+Project scaffolding is generated with security, access controls, and auditability built in from the start.
+
+### 3. Core Development (3–4 weeks)
+
+AI agents generate features incrementally while physician-developers review logic, validate outputs, and adjust clinical reasoning.
+
+### 4. Integration & Testing (1–2 weeks)
+
+Agents generate unit tests, integration tests, and failure scenarios—including missing data and edge cases common in real EHRs.
+
+### 5. Deployment & Compliance (3–5 days)
+
+Infrastructure is configured with HIPAA-aligned logging, encryption, and role-based access.
+
+### 6. Monitoring & Iteration (Ongoing)
+
+Post-deployment, agents analyze usage patterns and surface safety, bias, or workflow concerns for clinician review.
+
+This model has delivered:
+
+- **~84% AI-generated code**
+- **~58% reduction in development time**
+- **Six-figure annual cost savings per application**
+
+More importantly, it produces systems clinicians trust.
+
+## What We've Built at the MSW Agentic Lab
+
+This methodology is not theoretical. It is already producing real tools inside healthcare.
+
+### HeartVoice Monitor
+
+An AI system that analyzes subtle changes in patient voice patterns to detect heart failure exacerbations weeks before symptoms appear—allowing earlier intervention and fewer hospitalizations.
+
+### IRBVer2
+
+A clinician-built, AI-powered IRB management system developed in eight weeks, replacing expensive enterprise tools and accelerating clinical research workflows.
+
+### HIPAA-Compliant Voice AI Agents
+
+Secure voice systems for patient interaction that respect privacy, log access, and integrate safely with clinical systems.
+
+### Automated Clinical Trial Enrollment
+
+Agentic workflows that screen patients for eligibility while documenting rationale and exclusions—critical for ethical research oversight.
+
+Each of these tools was built with clinicians in the loop, security by design, and AI as an assistant—not an authority.
+
+## Security and Trust: The Role of Model Context Protocols
+
+Healthcare software cannot rely on informal data access or opaque prompts.
+
+At MSW Agentic Lab, we use **Model Context Protocols (MCPs)** to define how AI agents interact with sensitive data. MCPs ensure:
+
+- Explicit scoping of accessible data
+- Encrypted, auditable access paths
+- Reproducible decision contexts
+- Clear separation between reasoning and execution
+
+These protocols function like clinical checklists for AI—preventing silent overreach and ensuring accountability.
+
+## The Future: Clinicians as Builders, AI as Infrastructure
+
+The most important shift we are seeing is cultural.
+
+Clinicians are no longer passive recipients of software built elsewhere. With agentic, AI-augmented coding, they become active architects of the tools they use, while AI handles the mechanical complexity.
+
+This does not lower standards—it raises them.
+
+The future of healthcare innovation is not fast prompts and blind trust. It is **structured intelligence, clinician oversight, and secure systems** designed for real patients in real hospitals.
+
+At the MSW Agentic Coding Lab, we are building that future—one carefully planned line of code at a time.
+
+---
+
+Learn more about our work: [MSW Agentic Lab](https://mswagenticlab.netlify.app)
+
+**The future of healthcare software isn't a vibe. It's a plan.**`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: '/images/blog/beyond-vibe-coding.jpg',
+    tags: ['Agentic AI', 'Healthcare', 'Vibe Coding', 'Clinical AI', 'Security', 'HIPAA', 'Software Development'],
+    category: 'Healthcare AI',
+    status: 'published',
+    publishedAt: '2024-12-14T10:00:00Z',
+    updatedAt: '2024-12-14T10:00:00Z',
+    readingTime: 10,
+    featured: true,
+  },
+  {
     id: '1',
     slug: 'building-hipaa-compliant-ai-agents',
     title: 'Building HIPAA-Compliant AI Agents for Healthcare',
