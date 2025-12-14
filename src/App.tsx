@@ -9,6 +9,9 @@ import './index.css';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PatientEducation = lazy(() => import('./pages/PatientEducation'));
 const SecureCodingCourse = lazy(() => import('./pages/SecureCodingCourse'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
+const BlogAdminPage = lazy(() => import('./pages/BlogAdminPage'));
 const Footer = lazy(() => import('./components/Footer').then(m => ({ default: m.Footer })));
 
 function App() {
@@ -26,6 +29,9 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/patient-education" element={<PatientEducation />} />
                 <Route path="/secure-coding" element={<SecureCodingCourse />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/blog-admin" element={<BlogAdminPage />} />
               </Routes>
             </Suspense>
           </main>
