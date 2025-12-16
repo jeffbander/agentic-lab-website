@@ -1,0 +1,37 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgRapid" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101E46"/>
+      <stop offset="1" stop-color="#2A1C55"/>
+    </linearGradient>
+    <linearGradient id="bars" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#36E5F2"/>
+      <stop offset="1" stop-color="#D640B4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="32" fill="url(#bgRapid)"/>
+  <circle cx="1020" cy="180" r="170" fill="#36E5F2" opacity="0.12"/>
+  <circle cx="220" cy="520" r="190" fill="#D640B4" opacity="0.08"/>
+  <rect x="150" y="140" width="900" height="360" rx="28" fill="#0E1434" opacity="0.7" stroke="#36E5F2" stroke-opacity="0.2"/>
+  <g transform="translate(220 200)">
+    <rect x="0" y="0" width="220" height="240" rx="18" fill="#111A40" stroke="#36E5F2" stroke-opacity="0.4"/>
+    <text x="24" y="60" fill="#8AE9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="18" font-weight="700">Week 1–2</text>
+    <text x="24" y="90" fill="#C7D9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="14">secure scaffolding</text>
+    <text x="24" y="140" fill="#8AE9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="18" font-weight="700">Week 3–4</text>
+    <text x="24" y="170" fill="#C7D9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="14">workflow build</text>
+    <text x="24" y="220" fill="#8AE9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="18" font-weight="700">Week 5–8</text>
+    <text x="24" y="250" fill="#C7D9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="14">AI, QA, release</text>
+  </g>
+  <g transform="translate(500 220)">
+    <rect x="0" y="0" width="480" height="200" rx="18" fill="#111A40" stroke="#D640B4" stroke-opacity="0.5"/>
+    <rect x="40" y="130" width="70" height="40" rx="12" fill="#36E5F2" opacity="0.7"/>
+    <rect x="140" y="110" width="90" height="60" rx="14" fill="#36E5F2" opacity="0.8"/>
+    <rect x="260" y="80" width="120" height="90" rx="16" fill="#7DF0C0" opacity="0.9"/>
+    <rect x="410" y="40" width="60" height="130" rx="18" fill="#D640B4" opacity="0.95"/>
+    <path d="M40 50 L440 50" stroke="#8AE9FF" stroke-width="4" stroke-dasharray="10 8" opacity="0.7"/>
+    <path d="M40 90 L440 90" stroke="#8AE9FF" stroke-width="4" stroke-dasharray="10 8" opacity="0.5"/>
+    <text x="36" y="36" fill="#C7D9FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="14">velocity with guardrails</text>
+  </g>
+  <text x="220" y="210" fill="#E8F7FF" font-family="'Inter', 'Segoe UI', system-ui" font-size="34" font-weight="700">Agentic delivery in eight weeks</text>
+  <text x="220" y="245" fill="#B7CEEC" font-family="'Inter', 'Segoe UI', system-ui" font-size="18" letter-spacing="0.4">Clinical oversight, iterative releases, and production-ready security.</text>
+</svg>
