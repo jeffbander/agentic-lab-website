@@ -4,9 +4,10 @@ import { Video, Play, Download, Loader2, AlertCircle, CheckCircle, Sparkles } fr
 
 interface VideoGenerationRequest {
   prompt: string;
-  width: number;
-  height: number;
-  duration: number;
+  duration: 5 | 10;
+  aspect_ratio: '16:9' | '9:16' | '1:1';
+  negative_prompt?: string;
+  cfg_scale?: number;
 }
 
 interface GeneratedVideo {
@@ -21,8 +22,8 @@ interface PresetPrompt {
   title: string;
   description: string;
   prompt: string;
-  duration: number;
-  resolution: { width: number; height: number };
+  duration: 5 | 10;
+  aspect_ratio: '16:9' | '9:16' | '1:1';
 }
 
 export function VideoGenerator() {
@@ -33,39 +34,39 @@ export function VideoGenerator() {
   const [errorMessage, setErrorMessage] = useState('');
   const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([]);
 
-  // Preset prompts from SORA_VIDEO_GUIDE.md
+  // Preset prompts optimized for Kling 2.5 Turbo Pro
   const presetPrompts: PresetPrompt[] = [
     {
       id: 'exterior',
       title: 'Cinematic Hospital Exterior',
       description: 'Aerial shot of Mount Sinai West Hospital with AI visualization overlays',
-      prompt: 'A stunning cinematic aerial shot of Mount Sinai West Hospital at 1000 Tenth Avenue, New York City. The camera slowly descends from above, revealing the modern medical center building with the iconic Mount Sinai logo prominently displayed. Golden hour lighting bathes the building in warm tones. The Hudson River and Manhattan skyline are visible in the background. Medical professionals in scrubs walk purposefully through the main entrance. Subtle digital overlays of AI neural networks and healthcare data visualizations float ethereally around the building, representing the Agentic Laboratory\'s AI-powered innovation. The Mount Sinai cyan and magenta brand colors subtly accent the scene. High-end commercial production quality, shot on RED camera, 4K resolution, cinematic color grading.',
+      prompt: 'A stunning cinematic aerial shot of Mount Sinai West Hospital at 1000 Tenth Avenue, New York City. The camera slowly descends from above, revealing the modern medical center building with the iconic Mount Sinai logo prominently displayed. Golden hour lighting bathes the building in warm tones. The Hudson River and Manhattan skyline are visible in the background. Medical professionals in scrubs walk purposefully through the main entrance. Subtle digital overlays of AI neural networks and healthcare data visualizations float ethereally around the building. Mount Sinai cyan (#06ABEB) and magenta (#DC298D) brand colors accent the scene. Cinematic 4K quality, smooth camera movement.',
       duration: 10,
-      resolution: { width: 1920, height: 1080 }
+      aspect_ratio: '16:9'
     },
     {
       id: 'interior',
       title: 'Interior Innovation Lab',
       description: 'Physician-developer working in the Agentic Laboratory with holographic displays',
-      prompt: 'Inside the Agentic Laboratory at Mount Sinai West Hospital, a physician-developer works at a modern workstation with multiple monitors displaying code, medical charts, and AI dashboards. The room has sleek, futuristic design with Mount Sinai branding (cyan #06ABEB and magenta #DC298D accents). Holographic displays show 3D visualizations of heart biomarkers and clinical data flowing through AI neural networks. Soft, professional lighting. The doctor reviews AI-generated code on one screen while a patient\'s vital signs display on another, showing the intersection of medicine and technology. Through large windows, the Manhattan skyline is visible at dusk. Cinematic depth of field, professional commercial quality, smooth camera movement.',
+      prompt: 'Inside the Agentic Laboratory at Mount Sinai West Hospital, a physician-developer works at a modern workstation with multiple monitors displaying code, medical charts, and AI dashboards. The room has sleek, futuristic design with Mount Sinai branding (cyan #06ABEB and magenta #DC298D accents). Holographic displays show 3D visualizations of heart biomarkers and clinical data flowing through AI neural networks. Soft, professional lighting. The doctor reviews AI-generated code while patient vital signs display nearby. Manhattan skyline visible through windows at dusk. Cinematic depth of field, smooth camera movement.',
       duration: 10,
-      resolution: { width: 1920, height: 1080 }
+      aspect_ratio: '16:9'
     },
     {
       id: 'patient',
       title: 'Patient-Centric Innovation',
       description: 'Elderly patient using HeartVoice Monitor with AI analysis visualization',
-      prompt: 'A heartwarming scene in Mount Sinai West Hospital: An elderly patient speaks into a smartphone for the HeartVoice Monitor app. Subtle digital visualizations show the AI analyzing voice biomarkers for early heart failure detection. The patient\'s physician reviews the data on a tablet showing graphs and AI predictions. The Mount Sinai cyan color (#06ABEB) highlights positive health indicators. Warm, natural hospital lighting. Through the window, you can see 1000 Tenth Avenue and the New York City skyline. The scene emphasizes compassionate care enhanced by AI technology. Shot in documentary style with cinematic polish, authentic medical environment, hopeful tone.',
+      prompt: 'A heartwarming scene in Mount Sinai West Hospital: An elderly patient speaks into a smartphone for the HeartVoice Monitor app. Subtle digital visualizations show the AI analyzing voice biomarkers for early heart failure detection. The patient\'s physician reviews the data on a tablet showing graphs and AI predictions. Mount Sinai cyan (#06ABEB) highlights positive health indicators. Warm, natural hospital lighting. New York City skyline visible through the window. Compassionate care enhanced by AI technology. Documentary style with cinematic polish.',
       duration: 10,
-      resolution: { width: 1920, height: 1080 }
+      aspect_ratio: '16:9'
     },
     {
       id: 'montage',
       title: 'Dynamic Innovation Montage',
       description: 'Fast-paced montage showcasing multiple Agentic Lab applications',
-      prompt: 'A dynamic montage showcasing Mount Sinai West Hospital\'s AI innovation: 1. Aerial establishing shot of the hospital building at 1000 Tenth Avenue, NYC 2. Close-up of Mount Sinai logo with cyan and magenta intersecting lines 3. Physician typing code on laptop in modern lab setting 4. Digital visualizations of voice biomarkers detecting heart failure 5. Interactive ROI calculator dashboard showing $1M+ savings 6. Clinical team collaborating around holographic medical displays 7. Patient monitoring screens with AI-powered alerts 8. Code deployment sequence with green checkmarks 9. Pull back to reveal the full hospital with digital network overlay connecting all innovations. Each scene transitions smoothly with subtle cyan/magenta gradient wipes. Professional healthcare commercial aesthetic, uplifting background music suggested, 4K cinematic quality.',
-      duration: 15,
-      resolution: { width: 1920, height: 1080 }
+      prompt: 'A dynamic montage showcasing Mount Sinai West Hospital AI innovation: Aerial shot of the hospital at 1000 Tenth Avenue NYC, close-up of Mount Sinai logo with cyan and magenta intersecting lines, physician typing code on laptop, digital visualizations of voice biomarkers detecting heart failure, clinical team collaborating around holographic displays, patient monitoring screens with AI alerts, code deployment with green checkmarks. Smooth transitions with cyan/magenta gradient wipes. Professional healthcare commercial aesthetic, cinematic quality.',
+      duration: 10,
+      aspect_ratio: '16:9'
     }
   ];
 
@@ -86,13 +87,13 @@ export function VideoGenerator() {
     try {
       const request: VideoGenerationRequest = {
         prompt: promptToUse,
-        width: preset?.resolution.width || 1920,
-        height: preset?.resolution.height || 1080,
         duration: preset?.duration || 10,
+        aspect_ratio: preset?.aspect_ratio || '16:9',
+        negative_prompt: 'blur, distort, low quality, text overlays, watermarks',
       };
 
-      // Step 1: Start the video generation job
-      const response = await fetch('/api/generate-video', {
+      // Step 1: Start the video generation job (Kling 2.5 API)
+      const response = await fetch('/api/kling-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,12 +107,12 @@ export function VideoGenerator() {
         throw new Error(data.error || 'Failed to start video generation');
       }
 
-      if (!data.success || !data.jobId) {
+      if (!data.id) {
         throw new Error('Invalid response from server');
       }
 
-      const jobId = data.jobId;
-      console.log('Video generation started, job ID:', jobId);
+      const jobId = data.id;
+      console.log('Video generation started (Kling 2.5), job ID:', jobId);
 
       // Step 2: Poll for completion
       const maxAttempts = 120; // 10 minutes max (5 second intervals)
@@ -123,7 +124,7 @@ export function VideoGenerator() {
         attempts++;
 
         try {
-          const statusResponse = await fetch(`/api/check-video-status?id=${jobId}`);
+          const statusResponse = await fetch(`/api/kling-status?id=${jobId}`);
           const statusData = await statusResponse.json();
 
           if (!statusResponse.ok) {
@@ -209,7 +210,7 @@ export function VideoGenerator() {
             AI Video Generator
           </h2>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            Generate cinematic promotional videos powered by OpenAI Sora 2
+            Generate cinematic promotional videos powered by Kling 2.5 Turbo Pro
           </p>
         </motion.div>
 
@@ -248,7 +249,7 @@ export function VideoGenerator() {
                       <div className="font-semibold text-sinai-navy mb-1">{preset.title}</div>
                       <div className="text-sm text-gray-600">{preset.description}</div>
                       <div className="text-xs text-gray-500 mt-2">
-                        {preset.resolution.width}x{preset.resolution.height} • {preset.duration}s
+                        {preset.aspect_ratio} • {preset.duration}s • 1080p
                       </div>
                     </button>
                   ))}
@@ -323,7 +324,7 @@ export function VideoGenerator() {
 
               {isGenerating && (
                 <p className="text-xs text-gray-500 text-center mt-3">
-                  This may take 2-5 minutes. Please be patient...
+                  This typically takes 1-3 minutes with Kling 2.5. Please be patient...
                 </p>
               )}
             </div>
@@ -338,18 +339,18 @@ export function VideoGenerator() {
           >
             {/* About Section */}
             <div className="bg-gradient-to-br from-sinai-cyan/10 to-sinai-magenta/10 rounded-2xl p-8 border-l-4 border-sinai-cyan">
-              <h4 className="text-xl font-bold text-sinai-navy mb-4">Powered by OpenAI Sora 2</h4>
+              <h4 className="text-xl font-bold text-sinai-navy mb-4">Powered by Kling 2.5 Turbo Pro</h4>
               <p className="text-gray-700 mb-4">
                 Generate professional-quality promotional videos showcasing the Agentic Laboratory's AI-powered healthcare innovation at Mount Sinai West Hospital.
               </p>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start">
                   <span className="text-sinai-cyan mr-2">✓</span>
-                  <span>4K cinematic quality video generation</span>
+                  <span>1080p Full HD cinematic quality (superior to 720p)</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-sinai-cyan mr-2">✓</span>
-                  <span>Preset prompts optimized for healthcare</span>
+                  <span>Superior motion physics and camera movement</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-sinai-cyan mr-2">✓</span>
@@ -357,7 +358,7 @@ export function VideoGenerator() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-sinai-cyan mr-2">✓</span>
-                  <span>Professional commercial production quality</span>
+                  <span>8.1/10 visual fidelity benchmark score</span>
                 </li>
               </ul>
             </div>
@@ -372,19 +373,23 @@ export function VideoGenerator() {
                 </div>
                 <div className="flex justify-between">
                   <span>Duration:</span>
-                  <span className="font-semibold">10-15 seconds</span>
+                  <span className="font-semibold">5 or 10 seconds</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Format:</span>
-                  <span className="font-semibold">MP4</span>
+                  <span>Aspect Ratios:</span>
+                  <span className="font-semibold">16:9, 9:16, 1:1</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Frame Rate:</span>
-                  <span className="font-semibold">24-30 fps</span>
+                  <span className="font-semibold">30 fps</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Processing Time:</span>
-                  <span className="font-semibold">2-5 minutes</span>
+                  <span className="font-semibold">1-3 minutes</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Model:</span>
+                  <span className="font-semibold">Kling 2.5 Turbo Pro</span>
                 </div>
               </div>
             </div>
@@ -395,15 +400,15 @@ export function VideoGenerator() {
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start">
                   <span className="mr-2">💡</span>
-                  <span>Use preset prompts for best results with Mount Sinai branding</span>
+                  <span>Kling 2.5 excels at complex camera movements and dynamic scenes</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">🎨</span>
-                  <span>Custom prompts should include specific details about camera angles and lighting</span>
+                  <span>Include specific colors (like Mount Sinai cyan/magenta) for brand consistency</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">⏱️</span>
-                  <span>Generation typically takes 2-5 minutes depending on complexity</span>
+                  <span>Generation typically takes 1-3 minutes (faster than before!)</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">📥</span>
