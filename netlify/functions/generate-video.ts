@@ -2,9 +2,12 @@ import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
 interface VideoGenerationRequest {
   prompt: string;
-  width?: number;
-  height?: number;
   duration?: number;
+  aspect_ratio?: '16:9' | '9:16';
+  resolution?: '720p' | '1080p';
+  reference_images?: string[]; // Base64 encoded images or URLs
+  negative_prompt?: string;
+  generate_audio?: boolean;
 }
 
 interface ReplicatePrediction {
@@ -16,14 +19,53 @@ interface ReplicatePrediction {
 }
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const REPLICATE_API_URL = 'https://api.replicate.com/v1';
-const SORA_MODEL_VERSION = '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3';
+// Google Veo 3.1 model on Replicate
+const VEO_MODEL_VERSION = 'ed5b1767b711dd15d954b162af1e890d27882680f463a85e94f02d604012b972';
 
 /**
- * Creates a video generation prediction with Replicate Sora 2
+ * Creates a video generation prediction with Google Veo 3.1
  */
-async function createPrediction(prompt: string, width: number, height: number, duration: number): Promise<string> {
+async function createPrediction(
+  prompt: string,
+  duration: number,
+  aspect_ratio: string,
+  resolution: string,
+  reference_images?: string[],
+  negative_prompt?: string,
+  generate_audio?: boolean
+): Promise<string> {
+  // Build input parameters for Veo 3.1
+  const input: Record<string, unknown> = {
+    prompt,
+    duration,
+    aspect_ratio,
+    resolution,
+    generate_audio: generate_audio ?? true,
+  };
+
+  // Add reference images if provided (up to 3)
+  // Note: Reference images only work with 16:9 aspect ratio and 8-second duration
+  if (reference_images && reference_images.length > 0) {
+    input.reference_images = reference_images.slice(0, 3); // Max 3 images
+    // Force compatible settings for reference images
+    input.aspect_ratio = '16:9';
+    input.duration = 8;
+    console.log(`[Veo 3.1] Using ${reference_images.length} reference image(s)`);
+  }
+
+  if (negative_prompt) {
+    input.negative_prompt = negative_prompt;
+  }
+
+  console.log(`[Veo 3.1] Creating prediction:`, {
+    prompt: prompt.substring(0, 100) + '...',
+    duration: input.duration,
+    aspect_ratio: input.aspect_ratio,
+    resolution,
+    has_reference_images: !!reference_images?.length,
+  });
+
   const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
     method: 'POST',
     headers: {
@@ -31,15 +73,8 @@ async function createPrediction(prompt: string, width: number, height: number, d
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      version: SORA_MODEL_VERSION,
-      input: {
-        prompt,
-        width,
-        height,
-        num_seconds: duration,
-        quality: width >= 1920 ? 'pro' : 'standard', // Pro for 1080p+, standard for 720p
-        openai_api_key: OPENAI_API_KEY,
-      },
+      version: VEO_MODEL_VERSION,
+      input,
     }),
   });
 
@@ -50,25 +85,6 @@ async function createPrediction(prompt: string, width: number, height: number, d
 
   const data: ReplicatePrediction = await response.json();
   return data.id;
-}
-
-/**
- * Checks the status of a video generation prediction
- */
-async function checkPredictionStatus(predictionId: string): Promise<ReplicatePrediction> {
-  const response = await fetch(`${REPLICATE_API_URL}/predictions/${predictionId}`, {
-    headers: {
-      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to check prediction status: ${response.status} ${error}`);
-  }
-
-  return await response.json();
 }
 
 /**
@@ -107,18 +123,6 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       headers,
       body: JSON.stringify({
         error: 'Replicate API token not configured. Please set REPLICATE_API_TOKEN environment variable.',
-        setup: 'Run: node scripts/setup-video-generator.js'
-      }),
-    };
-  }
-
-  if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your_openai_api_key_here') {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'OpenAI API key not configured. Sora 2 requires an OpenAI API key.',
-        setup: 'Get your key from https://platform.openai.com/api-keys and add it to your .env file as OPENAI_API_KEY=sk-...'
       }),
     };
   }
@@ -135,55 +139,64 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
 
-    // Set defaults
-    const width = body.width || 1280; // 720p default
-    const height = body.height || 720;
-    const duration = body.duration || 5;
+    // Set defaults for Veo 3.1
+    const duration = body.duration || 8; // Veo supports 4, 6, or 8 seconds
+    const aspect_ratio = body.aspect_ratio || '16:9';
+    const resolution = body.resolution || '1080p';
+    const reference_images = body.reference_images;
+    const negative_prompt = body.negative_prompt;
+    const generate_audio = body.generate_audio;
 
-    // Validate dimensions
-    if (width < 128 || width > 1920 || height < 128 || height > 1920) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid dimensions. Width and height must be between 128 and 1920 pixels.' }),
-      };
+    // Validate duration (Veo 3.1 supports 4, 6, or 8 seconds)
+    const validDurations = [4, 6, 8];
+    const finalDuration = validDurations.includes(duration) ? duration : 8;
+    if (!validDurations.includes(duration)) {
+      console.log(`[Veo 3.1] Adjusted duration from ${duration}s to ${finalDuration}s (valid: 4, 6, 8)`);
     }
 
-    // Validate duration
-    if (duration < 1 || duration > 20) {
+    // Validate reference images
+    if (reference_images && reference_images.length > 3) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Invalid duration. Must be between 1 and 20 seconds for Replicate.' }),
+        body: JSON.stringify({
+          error: 'Maximum 3 reference images allowed for Veo 3.1'
+        }),
       };
     }
 
     // Create the video generation prediction
-    console.log(`Creating prediction with prompt: "${body.prompt.substring(0, 50)}..."`);
-    const predictionId = await createPrediction(body.prompt, width, height, duration);
-    console.log(`Prediction created: ${predictionId}`);
+    const predictionId = await createPrediction(
+      body.prompt,
+      finalDuration,
+      aspect_ratio,
+      resolution,
+      reference_images,
+      negative_prompt,
+      generate_audio
+    );
+    console.log(`[Veo 3.1] Prediction created: ${predictionId}`);
 
     // Return immediately with the job ID
-    // Frontend will poll /api/check-video-status?id={predictionId} to get the result
     return {
-      statusCode: 202, // 202 Accepted - request accepted for processing
+      statusCode: 202,
       headers,
       body: JSON.stringify({
         success: true,
         jobId: predictionId,
         status: 'processing',
-        message: 'Video generation started. Use the jobId to check status.',
+        message: 'Video generation started with Veo 3.1. Use the jobId to check status.',
+        model: 'veo-3.1',
       }),
     };
 
   } catch (error) {
-    console.error('Error generating video:', error);
+    console.error('[Veo 3.1] Error generating video:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error: error instanceof Error ? error.message : 'Unknown error occurred',
-        details: error instanceof Error ? error.stack : undefined
       }),
     };
   }
