@@ -5,12 +5,18 @@ interface SoraCreateRequest {
   width?: number;
   height?: number;
   n_seconds?: number;
+  model?: 'sora-2' | 'sora-2-pro';
 }
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const REPLICATE_API_URL = 'https://api.replicate.com/v1';
-const SORA_MODEL_VERSION = '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3';
+
+// Model versions for Sora on Replicate
+const SORA_MODEL_VERSIONS: Record<string, string> = {
+  'sora-2': '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3',
+  'sora-2-pro': '4bdefbd92a923832d1a5e0a40d419ea8cf3e0743abfcdca6e28268877a81b0c4',
+};
 
 /**
  * Sleep helper for retry delays
@@ -27,6 +33,7 @@ async function createSoraVideo(
   width: number,
   height: number,
   n_seconds: number,
+  model: 'sora-2' | 'sora-2-pro' = 'sora-2-pro',
   maxRetries: number = 3
 ): Promise<string> {
   // Replicate Sora-2 API only supports:
@@ -44,8 +51,11 @@ async function createSoraVideo(
   }
   const finalSeconds = seconds <= 6 ? 4 : seconds <= 10 ? 8 : 12;
 
+  const modelVersion = SORA_MODEL_VERSIONS[model] || SORA_MODEL_VERSIONS['sora-2-pro'];
+
   console.log(`[Sora Create] Request params:`, {
     prompt: prompt.substring(0, 100) + '...',
+    model,
     aspect_ratio,
     seconds: finalSeconds,
     requested: { width, height, n_seconds },
@@ -62,7 +72,7 @@ async function createSoraVideo(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: SORA_MODEL_VERSION,
+        version: modelVersion,
         input: {
           prompt,
           aspect_ratio,
@@ -179,6 +189,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     const width = body.width || 1920;
     const height = body.height || 1080;
     const n_seconds = body.n_seconds || 12; // Changed default from 20 to 12
+    const model = body.model || 'sora-2-pro'; // Default to Pro model
 
     // Validate constraints
     if (n_seconds < 1) {
@@ -197,8 +208,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     }
 
     // Create the video generation job
-    console.log(`[Sora] Creating patient education video (${n_seconds}s, ${width}x${height})`);
-    const jobId = await createSoraVideo(body.prompt, width, height, n_seconds);
+    console.log(`[Sora] Creating patient education video (${model}, ${n_seconds}s, ${width}x${height})`);
+    const jobId = await createSoraVideo(body.prompt, width, height, n_seconds, model);
     console.log(`[Sora] Job created: ${jobId}`);
 
     // Return immediately with job ID (async pattern)

@@ -8,6 +8,7 @@ interface GeneratePanelProps {
   prompt: string; // This will be promptPart1
   promptPart2?: string; // New: Part 2 prompt
   ost: OnScreenText;
+  model?: string; // Video model: 'sora-2' or 'sora-2-pro'
   onBack: () => void;
   onReset: () => void;
 }
@@ -115,7 +116,7 @@ function updateDocumentTitle(message: string) {
   document.title = message;
 }
 
-export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onReset }: GeneratePanelProps) {
+export default function GeneratePanel({ prompt, promptPart2, ost, model = 'sora-2-pro', onBack, onReset }: GeneratePanelProps) {
   // Parallel video generation state
   const [currentPhase, setCurrentPhase] = useState<GenerationPhase>(promptPart2 ? 'parallel' : 'single');
   const [part1Job, setPart1Job] = useState<JobState | null>(null);
@@ -165,6 +166,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
         width: 1920,
         height: 1080,
         n_seconds: 12,
+        model: model,
       }),
     });
 
@@ -177,7 +179,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, onBack, onRese
     const job: JobState = { id: data.id, status: data.status || 'queued' };
     saveJobToStorage(phase, data.id, data.status || 'queued');
     return job;
-  }, []);
+  }, [model]);
 
   // Poll job status helper function
   const pollJobStatus = useCallback(async (jobId: string): Promise<StatusResponse> => {

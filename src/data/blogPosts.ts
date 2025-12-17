@@ -23,6 +23,144 @@ export type BlogPost = {
 // Initial blog posts data - can be extended via API
 export const blogPosts: BlogPost[] = [
   {
+    id: '5',
+    slug: 'vibe-ai-healthcare-coding-class-launches',
+    title: 'Introducing the Vibe AI Healthcare Coding Class: Training the Next Generation of Clinician-Developers',
+    subtitle: 'A hands-on program teaching physicians and healthcare professionals to build secure AI applications',
+    excerpt: 'The MSW Agentic Lab launches its inaugural Vibe AI Healthcare Coding Class—an intensive program designed to empower clinicians with the skills to build production-ready, HIPAA-compliant AI applications using modern agentic development techniques.',
+    content: `## A New Era of Clinician-Led Innovation
+
+The future of healthcare software belongs to those who understand both medicine and technology. That's why the Mount Sinai West Agentic Coding Laboratory is proud to announce the launch of our **Vibe AI Healthcare Coding Class**—a comprehensive training program designed specifically for healthcare professionals who want to build the tools they've always wished existed.
+
+## Why This Program Exists
+
+Every day, clinicians encounter workflow inefficiencies, documentation burdens, and communication gaps that slow down patient care. Traditional software development cycles take years and often miss the mark because developers don't fully understand clinical workflows.
+
+**What if clinicians could build their own solutions?**
+
+That's exactly what this program enables. By combining AI-assisted development techniques with healthcare-specific security and compliance training, we're creating a new breed of clinician-developers who can:
+
+- Identify clinical pain points with domain expertise
+- Prototype solutions in days, not months
+- Build HIPAA-compliant applications from day one
+- Deploy and iterate based on real-world feedback
+
+## Program Curriculum
+
+### Module 1: Foundations of Agentic Development (Week 1-2)
+
+Participants learn the fundamentals of AI-augmented coding:
+
+- **Understanding AI coding assistants**: How to effectively prompt and collaborate with AI
+- **Development environment setup**: VS Code, Claude Code, GitHub Copilot integration
+- **Version control basics**: Git workflows for healthcare projects
+- **TypeScript & React fundamentals**: Building modern web interfaces
+
+### Module 2: Healthcare-Specific Security (Week 3-4)
+
+Security isn't optional in healthcare—it's foundational:
+
+- **HIPAA technical safeguards**: Encryption, access controls, audit logging
+- **Secure architecture patterns**: Designing systems that protect PHI by default
+- **Authentication & authorization**: Implementing RBAC for clinical applications
+- **Compliance documentation**: Creating audit-ready security documentation
+
+### Module 3: Building Clinical Applications (Week 5-6)
+
+Hands-on development of real healthcare tools:
+
+- **EHR integration patterns**: Working with FHIR and clinical data standards
+- **Clinical decision support**: Building AI-powered recommendation systems
+- **Voice AI for healthcare**: Creating HIPAA-compliant voice interfaces
+- **Workflow automation**: Streamlining administrative tasks
+
+### Module 4: Deployment & Operations (Week 7-8)
+
+Taking applications from prototype to production:
+
+- **Cloud deployment**: Netlify, Google Cloud, AWS for healthcare
+- **Monitoring & observability**: Tracking application health and usage
+- **Incident response**: Handling security events and outages
+- **Continuous improvement**: Iterating based on user feedback
+
+## Who Should Apply
+
+This program is designed for:
+
+- **Physicians and residents** interested in health tech innovation
+- **Nurses and clinical staff** who want to automate workflows
+- **Healthcare administrators** seeking to build operational tools
+- **Clinical informaticists** looking to expand their technical skills
+- **Medical students** preparing for a technology-enabled future
+
+No prior coding experience is required—just curiosity, clinical expertise, and a willingness to learn.
+
+## What Graduates Will Build
+
+By the end of the program, each participant will have:
+
+1. **A production-ready application** solving a real clinical problem
+2. **A portfolio of projects** demonstrating healthcare AI competency
+3. **Certification** in HIPAA-compliant AI development
+4. **Access to the MSW Agentic Lab community** for ongoing collaboration
+
+### Example Graduate Projects
+
+- **Smart Handoff Tool**: AI-powered patient handoff documentation
+- **Prior Auth Assistant**: Automated insurance authorization workflows
+- **Clinical Trial Matcher**: Patient-trial eligibility screening
+- **Discharge Planning Bot**: Coordinated care transition management
+
+## The Agentic Advantage
+
+What makes this program different from traditional coding bootcamps?
+
+**1. Healthcare-First Curriculum**
+Every example, exercise, and project is grounded in clinical reality. No generic todo apps here—you'll build tools that actually matter for patient care.
+
+**2. AI-Augmented Learning**
+We don't just teach you to code—we teach you to collaborate with AI. This multiplies your productivity and lets you focus on clinical logic rather than syntax.
+
+**3. Security by Design**
+HIPAA compliance isn't an afterthought. From day one, you'll learn to build systems that protect patient data by default.
+
+**4. Clinician Instructors**
+Our instructors are practicing physicians who've built production healthcare software. They understand your challenges because they've lived them.
+
+## Program Details
+
+- **Format**: Hybrid (in-person sessions at Mount Sinai West + virtual components)
+- **Duration**: 8 weeks, part-time (10-15 hours/week)
+- **Cohort Size**: Limited to 20 participants for personalized instruction
+- **Prerequisites**: Active healthcare role or enrollment in health professions program
+
+## Join the Movement
+
+The gap between clinical needs and technical solutions has never been wider—but it doesn't have to stay that way. With the right training, clinicians can become the builders of tomorrow's healthcare technology.
+
+**The best healthcare software will be built by those who understand healthcare best.**
+
+Ready to transform your clinical insights into working applications? The next cohort of the Vibe AI Healthcare Coding Class is forming now.
+
+---
+
+*Interested in learning more? Contact the MSW Agentic Lab team or visit our website for application details.*
+
+**Build the tools you've always wanted. Join the Vibe AI Healthcare Coding Class.**`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=630&fit=crop',
+    tags: ['Education', 'Healthcare AI', 'Coding Class', 'Clinician-Developer', 'Training', 'HIPAA'],
+    category: 'News',
+    status: 'published',
+    publishedAt: '2025-11-18T10:00:00Z',
+    updatedAt: '2025-11-18T10:00:00Z',
+    readingTime: 9,
+    featured: true,
+  },
+  {
     id: '4',
     slug: 'beyond-vibe-coding-agentic-clinician-led-ai',
     title: "Beyond 'Vibe Coding': Why Agentic, Clinician-Led AI Is the Future of Secure Healthcare Software",
@@ -169,12 +307,12 @@ Learn more about our work: [MSW Agentic Lab](https://mswagenticlab.netlify.app)
       name: 'Jeff Bander, MD',
       role: 'Hospitalist & AI Developer',
     },
-    coverImage: '/images/blog/beyond-vibe-coding.jpg',
+    coverImage: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=1200&h=630&fit=crop',
     tags: ['Agentic AI', 'Healthcare', 'Vibe Coding', 'Clinical AI', 'Security', 'HIPAA', 'Software Development'],
     category: 'Healthcare AI',
     status: 'published',
-    publishedAt: '2024-12-14T10:00:00Z',
-    updatedAt: '2024-12-14T10:00:00Z',
+    publishedAt: '2025-12-10T10:00:00Z',
+    updatedAt: '2025-12-10T10:00:00Z',
     readingTime: 10,
     featured: true,
   },
@@ -231,12 +369,12 @@ Building HIPAA-compliant AI agents is challenging but achievable with the right 
       name: 'Jeff Bander, MD',
       role: 'Hospitalist & AI Developer',
     },
-    coverImage: '/images/blog/hipaa-ai-agents.jpg',
+    coverImage: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&h=630&fit=crop',
     tags: ['HIPAA', 'AI', 'Security', 'Healthcare', 'Compliance'],
     category: 'Healthcare AI',
     status: 'published',
-    publishedAt: '2024-12-01T10:00:00Z',
-    updatedAt: '2024-12-01T10:00:00Z',
+    publishedAt: '2025-10-15T10:00:00Z',
+    updatedAt: '2025-10-15T10:00:00Z',
     readingTime: 8,
     featured: true,
   },
@@ -288,12 +426,12 @@ We're expanding voice biomarker analysis to other conditions:
       name: 'Jeff Bander, MD',
       role: 'Hospitalist & AI Developer',
     },
-    coverImage: '/images/blog/voice-biomarkers.jpg',
+    coverImage: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1200&h=630&fit=crop',
     tags: ['Voice AI', 'Heart Failure', 'Biomarkers', 'Early Detection', 'Clinical AI'],
     category: 'Case Study',
     status: 'published',
-    publishedAt: '2024-11-15T10:00:00Z',
-    updatedAt: '2024-11-20T14:30:00Z',
+    publishedAt: '2025-09-20T10:00:00Z',
+    updatedAt: '2025-09-25T14:30:00Z',
     readingTime: 6,
     featured: true,
   },
@@ -351,11 +489,12 @@ Traditional healthcare software development takes 12-24 months and costs hundred
       name: 'Jeff Bander, MD',
       role: 'Hospitalist & AI Developer',
     },
+    coverImage: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=630&fit=crop',
     tags: ['AI Development', 'Healthcare', 'Rapid Prototyping', 'Case Study'],
     category: 'Development',
     status: 'published',
-    publishedAt: '2024-10-20T10:00:00Z',
-    updatedAt: '2024-10-20T10:00:00Z',
+    publishedAt: '2025-08-12T10:00:00Z',
+    updatedAt: '2025-08-12T10:00:00Z',
     readingTime: 7,
     featured: false,
   },

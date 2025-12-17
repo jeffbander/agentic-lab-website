@@ -14,6 +14,7 @@ export default function PatientEducation() {
   const [promptPart2, setPromptPart2] = useState<string | undefined>(undefined);
   const [finalOst, setFinalOst] = useState<OnScreenText | null>(null);
   const [finalPromptPart2, setFinalPromptPart2] = useState<string | undefined>(undefined);
+  const [selectedModel, setSelectedModel] = useState<string>('sora-2-pro');
 
   const handlePreview = (result: SoraPromptResult, part2?: string) => {
     setPromptResult(result);
@@ -21,9 +22,10 @@ export default function PatientEducation() {
     setCurrentStep('preview');
   };
 
-  const handleGenerate = (prompt: string, ost: OnScreenText, part2?: string) => {
+  const handleGenerate = (prompt: string, ost: OnScreenText, part2?: string, model?: string) => {
     setFinalOst(ost);
     setFinalPromptPart2(part2);
+    if (model) setSelectedModel(model);
     setCurrentStep('generate');
   };
 
@@ -160,6 +162,7 @@ export default function PatientEducation() {
                 prompt={promptResult.prompt}
                 promptPart2={finalPromptPart2}
                 ost={finalOst}
+                model={selectedModel}
                 onBack={handleBackToPreview}
                 onReset={handleReset}
               />

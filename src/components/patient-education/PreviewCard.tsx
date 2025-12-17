@@ -6,7 +6,7 @@ import type { SoraPromptResult, OnScreenText } from '../../lib/patientEducation'
 interface PreviewCardProps {
   result: SoraPromptResult;
   promptPart2?: string; // New: Part 2 prompt if 24-second video
-  onGenerate: (prompt: string, ost: OnScreenText, promptPart2?: string) => void;
+  onGenerate: (prompt: string, ost: OnScreenText, promptPart2?: string, model?: string) => void;
   onBack: () => void;
 }
 
@@ -173,7 +173,7 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
   };
 
   const handleGenerate = () => {
-    onGenerate(result.prompt, ost, promptPart2);
+    onGenerate(result.prompt, ost, promptPart2, result.params.model);
   };
 
   // Check if we have an extended 24-second video (8 beats)
@@ -210,7 +210,13 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
 
       {/* Metadata Display */}
       <div className="bg-sinai-cyan-50 border border-sinai-cyan-200 rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Model:</span>
+            <span className="ml-2 font-semibold text-gray-900">
+              {result.params.model === 'sora-2-pro' ? 'Sora 2 Pro' : 'Sora 2'}
+            </span>
+          </div>
           <div>
             <span className="text-gray-600">Language:</span>
             <span className="ml-2 font-semibold text-gray-900">{result.audit.language}</span>

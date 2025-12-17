@@ -19,11 +19,19 @@ Top 3 Points:
 Risks: Dehydration, low blood pressure, genital infections
 Tone: reassuring`;
 
+type SoraModel = 'sora-2' | 'sora-2-pro';
+
+const MODEL_OPTIONS: { value: SoraModel; label: string; description: string }[] = [
+  { value: 'sora-2', label: 'Sora 2', description: 'Standard quality, faster generation' },
+  { value: 'sora-2-pro', label: 'Sora 2 Pro', description: 'Higher quality, more detailed output' },
+];
+
 export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
   const [noteText, setNoteText] = useState('');
   const [showTemplate, setShowTemplate] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<SoraModel>('sora-2-pro');
 
   const handleCopyTemplate = () => {
     navigator.clipboard.writeText(TEMPLATE);
@@ -83,7 +91,7 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
           }),
         },
         params: {
-          model: 'sora-2',
+          model: selectedModel,
           width: 1920,
           height: 1080,
           n_seconds: hasExtendedBeats ? 24 : 12,
@@ -196,6 +204,25 @@ export default function ProviderNoteForm({ onPreview }: ProviderNoteFormProps) {
             <p className="text-sm text-red-800">{error}</p>
           </motion.div>
         )}
+
+        {/* Model Selection */}
+        <div>
+          <label htmlFor="model-select" className="block text-sm font-medium text-gray-700 mb-2">
+            Video Model
+          </label>
+          <select
+            id="model-select"
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value as SoraModel)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sinai-cyan-500 focus:border-transparent bg-white"
+          >
+            {MODEL_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} - {option.description}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Privacy Notice */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
