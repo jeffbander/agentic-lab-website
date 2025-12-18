@@ -23,6 +23,99 @@ export type BlogPost = {
 // Initial blog posts data - can be extended via API
 export const blogPosts: BlogPost[] = [
   {
+    id: '7',
+    slug: 'safety-harness-secure-healthcare-software-autonomous-agents',
+    title: 'The Safety Harness: How We Build Secure Healthcare Software with Autonomous AI Agents',
+    subtitle: 'Beyond the chatbot: long-running agents with safety rails for healthcare development',
+    excerpt: 'At the Cardiology Agentic Laboratory, we are pioneering the use of AI Harnesses—secure, automated frameworks that allow autonomous agents to work on complex, long-term coding tasks while maintaining patient safety and HIPAA compliance.',
+    content: `## Beyond the Chatbot: Long-Running Agents in Healthcare
+
+When most people think of AI in healthcare, they imagine a chatbot answering patient questions or a scribe summarizing clinical notes. These are "short-context" tasks—a single interaction, a single output. But the real revolution in healthcare software isn't happening in the chat window; it's happening in the **harness**.
+
+At the Cardiology Agentic Laboratory, we are pioneering the use of **AI Harnesses**—secure, automated frameworks that allow autonomous agents to work on complex, long-term coding tasks. Just as a climbing harness allows a mountaineer to scale dangerous heights safely, an AI harness allows us to deploy powerful coding agents to build, test, and secure full-scale healthcare applications without risking patient data or system integrity.
+
+## What is an AI Harness?
+
+An AI harness is a structured environment that wraps around an autonomous agent, providing it with:
+
+1. **Persistent Memory:** The ability to remember context across days or weeks of work, bridging the gap between limited context windows.
+2. **Tool Access:** Controlled interfaces to interact with codebases, databases, and testing frameworks.
+3. **Safety Rails:** Hard constraints that prevent the agent from taking dangerous actions (like deleting production data or exposing PHI).
+4. **Feedback Loops:** Automated testing and validation systems that tell the agent immediately if its code works or fails.
+
+In our laboratory, we use harnesses to turn "one-shot" code generation into **iterative, self-correcting engineering**. Instead of asking an AI to "write a script," we task an agent within a harness to "build a HIPAA-compliant patient portal, test it for vulnerabilities, and fix any issues you find."
+
+## The "Initializer" and the "Builder"
+
+Our harness architecture, inspired by recent breakthroughs in agentic engineering, uses two distinct types of agents:
+
+### The Initializer Agent
+
+This agent sets the stage. It reads the high-level clinical requirements (the PRD) and establishes the environment. It defines the "definition of done" by writing a comprehensive list of feature requirements and test cases. For our LEQVIO app, the Initializer defined over 200 specific features, from "user login with MFA" to "calculate next dose date based on renal function."
+
+### The Builder Agent
+
+This agent does the heavy lifting. It works incrementally, picking one feature at a time, writing the code, and—crucially—**testing its own work**. The harness ensures that the Builder cannot move to the next feature until the current one passes all tests. If a test fails, the harness feeds the error message back to the Builder, which then attempts to fix the bug. This loop continues until the feature is complete and verified.
+
+## Automated Red Teaming: Security by Design
+
+The most critical application of our harness technology is **Automated Red Teaming**. In traditional software development, security testing happens at the end of the cycle, often weeks or months after the code is written. In our agentic workflow, security is continuous.
+
+We deploy a specialized "Attacker Agent" within a harness whose sole job is to try to break the software the Builder Agent is creating. This agent uses tools like **OWASP ZAP**, **Burp Suite**, and custom penetration testing scripts to launch attacks against the application:
+
+- **SQL Injection attempts** to steal patient data
+- **Cross-Site Scripting (XSS)** attacks to hijack user sessions
+- **Privilege Escalation** attempts to access admin functions
+
+Because this happens *during* development, vulnerabilities are caught and fixed instantly. The harness effectively "immunizes" the software against common attacks before a single human patient ever uses it.
+
+## The "Intrusion Detection" Harness
+
+Beyond development, we use harnesses for ongoing safety. We deploy "Sentinel Agents" that monitor the application in real-time. Unlike static monitoring rules, these agents understand the *context* of user behavior.
+
+For example, if a user account suddenly starts accessing patient records at a rate of 10 per second, a traditional rule might flag it. But a Sentinel Agent can investigate further: "Is this a scheduled batch job? Is this a known administrator? No? Then lock the account and alert the security team."
+
+## Why This Matters for Healthcare
+
+The stakes in healthcare software are uniquely high. A bug in a photo sharing app is an annoyance; a bug in a medication management platform can be life-threatening. By using AI harnesses, we achieve three critical goals:
+
+### 1. Speed with Safety
+
+We can build software at the speed of AI (weeks instead of years) without sacrificing the rigorous testing required for patient safety.
+
+### 2. Continuous Compliance
+
+The harness enforces HIPAA compliance rules (like audit logging and encryption) automatically. An agent literally *cannot* commit code that violates these rules because the harness will reject it.
+
+### 3. Scalable Expertise
+
+We can encode the security knowledge of world-class cyber-security experts into the harness, ensuring that every line of code—whether written by a junior developer or a senior cardiologist—meets the highest standards of defense.
+
+## The Future: Self-Healing Healthcare Systems
+
+We are moving toward a future where healthcare software is not just built, but **grown** inside these harnesses. Systems that can detect their own bugs, write their own patches, and defend themselves against new threats—all under the watchful supervision of clinical experts.
+
+At the Cardiology Agentic Laboratory, we aren't just writing code. We are building the harnesses that will allow AI to safely build the future of medicine.
+
+---
+
+**References:**
+
+Anthropic. (2025). *Effective harnesses for long-running agents*. [Read more](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)`,
+    author: {
+      name: 'Samantha Zakow',
+      role: 'Cardiology Agentic Laboratory',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&h=630&fit=crop',
+    tags: ['AI Harness', 'Autonomous Agents', 'Security', 'Healthcare AI', 'Red Teaming', 'HIPAA'],
+    category: 'Security',
+    status: 'published',
+    publishedAt: '2026-01-15T10:00:00Z',
+    updatedAt: '2026-01-15T10:00:00Z',
+    readingTime: 7,
+    featured: true,
+  },
+  {
     id: '6',
     slug: 'building-leqvio-ai-cardiologists-writing-software',
     title: 'Building LEQVIO AI: How Cardiologists Are Writing Their Own Software with AI Coding Tools',
