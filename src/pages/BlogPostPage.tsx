@@ -22,27 +22,33 @@ function RelatedPostCard({ post }: { post: BlogPost }) {
   return (
     <Link
       to={`/blog/${post.slug}`}
-      className="group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+      className="group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-sinai-cyan/30 transition-all duration-300"
     >
-      <div className="relative h-32 overflow-hidden">
+      <div className="relative h-36 overflow-hidden">
         {post.coverImage ? (
           <img
             src={post.coverImage}
             alt={post.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-sinai-navy to-sinai-violet flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-white/30" />
           </div>
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
-      <div className="p-4">
-        <span className="text-xs text-sinai-cyan font-medium">{post.category}</span>
-        <h4 className="font-semibold text-gray-900 mt-1 line-clamp-2 group-hover:text-sinai-cyan transition-colors">
+      <div className="p-5">
+        <span className="inline-block px-2.5 py-1 bg-sinai-cyan/10 text-sinai-cyan text-xs font-medium rounded-full">
+          {post.category}
+        </span>
+        <h4 className="font-semibold text-gray-900 mt-3 line-clamp-2 group-hover:text-sinai-cyan transition-colors">
           {post.title}
         </h4>
-        <p className="text-xs text-gray-500 mt-2">{post.readingTime} min read</p>
+        <p className="flex items-center gap-1.5 text-xs text-gray-500 mt-3">
+          <Clock className="w-3.5 h-3.5" />
+          {post.readingTime} min read
+        </p>
       </div>
     </Link>
   );
@@ -211,26 +217,28 @@ export default function BlogPostPage() {
       )}
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid lg:grid-cols-[1fr_280px] gap-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid lg:grid-cols-[1fr_300px] gap-8 lg:gap-16">
           {/* Main Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="prose prose-lg max-w-none prose-headings:text-sinai-navy prose-a:text-sinai-cyan prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-sinai-dark prose-pre:text-gray-100"
+            className="bg-white rounded-2xl shadow-sm p-6 sm:p-8 lg:p-12"
           >
-            <ReactMarkdown>{post.content}</ReactMarkdown>
+            <div className="blog-article max-w-[680px] mx-auto">
+              <ReactMarkdown>{post.content}</ReactMarkdown>
+            </div>
           </motion.div>
 
           {/* Sidebar */}
-          <aside className="space-y-8">
+          <aside className="lg:sticky lg:top-24 lg:self-start space-y-6">
             {/* Share */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white rounded-xl p-6 shadow-md sticky top-24"
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
             >
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Share2 className="w-5 h-5" />
@@ -252,7 +260,7 @@ export default function BlogPostPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-white rounded-xl p-6 shadow-md"
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
             >
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Tag className="w-5 h-5" />
@@ -280,9 +288,12 @@ export default function BlogPostPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="mt-16 pt-12 border-t border-gray-200"
+            className="mt-16 pt-12 border-t-2 border-gray-100"
           >
-            <h2 className="text-2xl font-bold text-sinai-navy mb-8">Related Articles</h2>
+            <h2 className="text-2xl font-bold text-sinai-navy mb-8 flex items-center gap-3">
+              <span className="w-1 h-8 bg-sinai-cyan rounded-full"></span>
+              Related Articles
+            </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
                 <RelatedPostCard key={relatedPost.id} post={relatedPost} />
