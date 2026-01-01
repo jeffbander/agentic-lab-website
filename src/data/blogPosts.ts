@@ -23,6 +23,327 @@ export type BlogPost = {
 // Initial blog posts data - can be extended via API
 export const blogPosts: BlogPost[] = [
   {
+    id: '8',
+    slug: 'ralph-wiggum-sessions-long-running-ai-coding',
+    title: 'Ralph Wiggum Sessions: How We Run AI Coding Marathons to Build Complex Healthcare Apps',
+    subtitle: 'Breaking through context limits with multi-hour autonomous coding sessions',
+    excerpt: "At the Cardiology Agentic Laboratory, we've developed a methodology for running AI coding sessions that span hours—even days—allowing autonomous agents to tackle the kind of complex, interconnected healthcare problems that would be impossible in short interactions.",
+    content: `## "Me Fail English? That's Unpossible!"
+
+Yes, we named our long-running AI coding sessions after Ralph Wiggum from The Simpsons. Why? Because just like Ralph's stream-of-consciousness adventures, these sessions allow AI to wander through complex codebases, make unexpected connections, and ultimately arrive at solutions that seem almost magical in their completeness.
+
+But don't let the playful name fool you—Ralph Wiggum Sessions represent one of the most powerful techniques in our agentic development toolkit.
+
+## The Problem: Context Windows Are Not Enough
+
+Most AI coding interactions follow a simple pattern: ask a question, get an answer, move on. This works fine for simple tasks like "write a function to calculate BMI" or "fix this TypeScript error."
+
+But healthcare software development isn't simple. Consider building a HIPAA-compliant patient management system:
+
+- **Database schema** with 30+ interconnected tables
+- **API endpoints** that enforce role-based access control
+- **Frontend components** that handle complex clinical workflows
+- **Integration layers** connecting to EHRs, insurance systems, and pharmacy networks
+- **Security middleware** implementing encryption, audit logging, and session management
+
+No single AI interaction can hold all of this in context. Even with 200K token context windows, you quickly hit limits when dealing with enterprise-scale healthcare applications.
+
+## Enter the Ralph Wiggum Session
+
+A Ralph Wiggum Session is a structured, multi-hour AI coding marathon where an autonomous agent works continuously on a complex task, maintaining context through a combination of:
+
+1. **Persistent workspace state** - The agent's working memory persists across interactions
+2. **Incremental checkpointing** - Progress is saved at regular intervals
+3. **Test-driven validation** - The agent verifies its work before moving forward
+4. **Error recovery loops** - Failures trigger automatic debugging and retry cycles
+
+### How It Works
+
+We initiate a Ralph Wiggum Session with a comprehensive briefing document:
+
+\`\`\`markdown
+## Session Goal
+Build a complete LEQVIO patient tracking module with:
+- Patient enrollment workflow
+- Insurance verification integration
+- Dose scheduling with reminder system
+- Outcome tracking dashboard
+
+## Constraints
+- Must pass all HIPAA security checks
+- Must integrate with existing authentication
+- Must include comprehensive test coverage
+- Must document all API endpoints
+
+## Definition of Done
+- All unit tests pass
+- All integration tests pass
+- Security scan reports zero vulnerabilities
+- Documentation is complete
+\`\`\`
+
+The agent then works autonomously for hours, checking off requirements one by one.
+
+## Real Results from Our Lab
+
+### LEQVIO Patient Management Platform
+
+**Session Duration:** 14 hours across 3 days
+
+**What the AI Built:**
+- 47 React components
+- 23 API endpoints
+- 12 database migrations
+- 156 unit tests
+- Complete OpenAPI documentation
+
+**Human Review Time:** 4 hours
+
+**Result:** Production-ready module that would have taken a traditional development team 6-8 weeks
+
+### Voice Biomarker Analysis Pipeline
+
+**Session Duration:** 8 hours
+
+**What the AI Built:**
+- Audio processing pipeline with FFT analysis
+- Feature extraction for 12 voice parameters
+- Machine learning inference integration
+- Real-time alerting system
+- Clinician dashboard with trend visualization
+
+**Human Review Time:** 2 hours
+
+**Result:** A working prototype that detected fluid overload in test recordings with 84% accuracy
+
+### IRB Protocol Submission System
+
+**Session Duration:** 22 hours across 5 days
+
+**What the AI Built:**
+- Complete document management system
+- Multi-stage approval workflow
+- Role-based access control for 6 user types
+- PDF generation with digital signatures
+- Email notification system
+- Audit logging for compliance
+
+**Human Review Time:** 6 hours
+
+**Result:** Replaced a $75,000/year enterprise system with a custom solution tailored to our workflow
+
+## The Anatomy of a Successful Session
+
+### Phase 1: Orientation (30-60 minutes)
+
+The agent reads through the existing codebase, understanding:
+- Project structure and conventions
+- Existing patterns and utilities
+- Database schema and relationships
+- Authentication and authorization setup
+
+This orientation phase is critical. We've found that sessions without proper orientation produce code that "works" but doesn't integrate well with the existing system.
+
+### Phase 2: Planning (15-30 minutes)
+
+Before writing any code, the agent creates a detailed implementation plan:
+
+\`\`\`markdown
+## Implementation Plan: Patient Enrollment Module
+
+### Step 1: Database Schema
+- Create patients table with required fields
+- Add foreign key to users table
+- Create enrollment_status enum
+
+### Step 2: API Layer
+- POST /api/patients - Create new patient
+- GET /api/patients/:id - Retrieve patient
+- PATCH /api/patients/:id - Update patient
+- GET /api/patients - List with filtering
+
+### Step 3: Frontend Components
+- PatientEnrollmentForm
+- PatientList
+- PatientDetail
+- EnrollmentStatusBadge
+
+### Step 4: Integration
+- Connect to insurance verification API
+- Implement EHR lookup
+- Add audit logging
+
+### Step 5: Testing
+- Unit tests for each component
+- Integration tests for API
+- E2E tests for critical workflows
+\`\`\`
+
+### Phase 3: Incremental Implementation (Hours)
+
+The agent works through the plan step by step, with each step following a consistent pattern:
+
+1. **Write code** for the current feature
+2. **Write tests** to validate the feature
+3. **Run tests** to verify correctness
+4. **Fix failures** until all tests pass
+5. **Commit** the working code
+6. **Move to next step**
+
+This incremental approach means we never have large amounts of untested code. If something breaks, we know exactly where to look.
+
+### Phase 4: Integration Testing (30-60 minutes)
+
+Once all individual components are complete, the agent runs comprehensive integration tests to ensure everything works together. This often surfaces issues that unit tests miss:
+
+- Race conditions in async operations
+- Permission edge cases
+- Data validation gaps
+- Performance bottlenecks
+
+### Phase 5: Security Hardening (30-60 minutes)
+
+The final phase focuses on security:
+
+- Run static analysis tools (ESLint security rules)
+- Check for common vulnerabilities (OWASP Top 10)
+- Verify all PHI access is logged
+- Ensure proper error handling (no stack traces to users)
+- Validate input sanitization
+
+## Why "Ralph Wiggum"?
+
+The name captures something important about how these sessions work. Ralph Wiggum, despite his apparent randomness, occasionally stumbles into profound insights. Similarly, our AI coding sessions sometimes take unexpected paths—exploring a tangential approach, refactoring code that seemed fine, or adding features we hadn't explicitly requested.
+
+These "happy accidents" often result in better software. The AI, with its tireless attention and ability to hold vast context, notices patterns and opportunities that human developers might miss.
+
+**Example:** During a Ralph Wiggum Session building our medication tracking system, the AI noticed that our date handling was inconsistent across components. Without being asked, it created a shared date utility library and refactored all existing code to use it. This prevented a class of timezone-related bugs we hadn't even considered.
+
+## Guardrails and Safety
+
+Running autonomous AI sessions for hours requires robust safety measures:
+
+### 1. Sandboxed Environment
+
+All Ralph Wiggum Sessions run in isolated development environments with:
+- No access to production databases
+- No ability to deploy to production
+- No access to real patient data
+- Network restrictions to approved endpoints only
+
+### 2. Checkpoint Reviews
+
+Every 2 hours, the session pauses for human review:
+- Check code quality and patterns
+- Verify security practices
+- Ensure alignment with requirements
+- Approve continuation or redirect
+
+### 3. Automated Gatekeepers
+
+Before any code can be merged:
+- All tests must pass
+- Security scan must be clean
+- Type checking must succeed
+- Linting rules must be satisfied
+
+### 4. Kill Switch
+
+Any team member can halt a session at any time. We've rarely needed this, but it's essential for safety.
+
+## The Economics of Ralph Wiggum Sessions
+
+Let's do the math on our LEQVIO platform:
+
+**Traditional Development:**
+- 3 developers × 8 weeks × $150/hour = $144,000
+- Plus project management, testing, deployment
+- **Total: ~$180,000**
+
+**Ralph Wiggum Session:**
+- 14 hours of AI compute: ~$50
+- 4 hours human review: $600
+- Infrastructure and tooling: ~$200
+- **Total: ~$850**
+
+That's a **99.5% cost reduction**—and the AI-generated code often has fewer bugs because every line is tested immediately.
+
+## Getting Started with Your Own Sessions
+
+If you want to run Ralph Wiggum Sessions in your organization:
+
+### 1. Prepare Your Codebase
+
+The AI needs a well-structured project to work with:
+- Clear folder organization
+- Consistent coding patterns
+- Existing test infrastructure
+- Good documentation
+
+### 2. Write Detailed Briefs
+
+The quality of your output depends on the quality of your input. Spend time writing comprehensive session briefs with:
+- Clear objectives
+- Explicit constraints
+- Definition of done
+- Examples of expected patterns
+
+### 3. Set Up Guardrails
+
+Don't run autonomous sessions without safety measures:
+- Isolated environments
+- Automated testing
+- Regular checkpoints
+- Human oversight
+
+### 4. Start Small
+
+Begin with well-scoped tasks before attempting full application builds:
+- Single feature modules
+- Refactoring projects
+- Test generation
+- Documentation
+
+## The Future: Self-Improving Systems
+
+We're working toward a future where Ralph Wiggum Sessions can run continuously, with AI agents that:
+
+- Monitor their own code for bugs and security issues
+- Automatically update dependencies and apply patches
+- Learn from production feedback to improve algorithms
+- Suggest new features based on usage patterns
+
+This isn't science fiction—it's the natural evolution of the techniques we're already using.
+
+## Conclusion
+
+Ralph Wiggum Sessions represent a fundamental shift in how we build healthcare software. By enabling AI to work autonomously over extended periods, we can tackle problems that were previously too complex, too expensive, or too time-consuming.
+
+The key insight is that AI coding assistants aren't just faster developers—they're a different kind of developer. They don't get tired. They don't forget context. They don't cut corners when they're running behind schedule.
+
+At the Cardiology Agentic Laboratory, we're not just using AI to write code—we're using it to reimagine what's possible in healthcare software development.
+
+**Ralph Wiggum would be proud. Or confused. Probably confused.**
+
+---
+
+*"I bent my Wookiee."* — Ralph Wiggum
+
+*"I built a HIPAA-compliant patient management system in 14 hours."* — Also Ralph Wiggum, apparently`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=630&fit=crop',
+    tags: ['Agentic Coding', 'Long-Running Sessions', 'Healthcare AI', 'Autonomous Agents', 'Development', 'Productivity'],
+    category: 'Development',
+    status: 'published',
+    publishedAt: '2026-01-20T10:00:00Z',
+    updatedAt: '2026-01-20T10:00:00Z',
+    readingTime: 12,
+    featured: true,
+  },
+  {
     id: '7',
     slug: 'safety-harness-secure-healthcare-software-autonomous-agents',
     title: 'The Safety Harness: How We Build Secure Healthcare Software with Autonomous AI Agents',
