@@ -12342,6 +12342,1474 @@ Congratulations on completing the Secure Agentic Coding for Healthcare course! Y
 ` }
     ]
   },
+  {
+    id: 11,
+    title: 'Mastering AI Coding Agents for Healthcare',
+    description: 'Advanced techniques for effective AI-assisted healthcare development',
+    lessons: [
+      {
+        id: '11.1',
+        title: 'Introduction to AI Coding Agents',
+        duration: '20 min',
+        content: `# Introduction to AI Coding Agents for Healthcare Development
+
+## What Are AI Coding Agents?
+
+AI coding agents are autonomous AI assistants that can:
+- Write and modify code based on natural language instructions
+- Execute commands, run tests, and interact with your development environment
+- Make implementation decisions while respecting project constraints
+- Iterate on solutions based on errors and feedback
+
+## Popular AI Coding Agents
+
+| Agent | Strengths | Healthcare Considerations |
+|-------|-----------|--------------------------|
+| **Claude Code** | Local-first, security-focused, excellent reasoning | Best for HIPAA compliance, no data leaves your machine |
+| **GitHub Copilot** | Deep IDE integration, code completion | Cloud-based, requires BAA for healthcare |
+| **Cursor** | Full IDE experience, multi-model | Hybrid approach, check data handling |
+| **Codex CLI** | OpenAI integration, strong capabilities | Cloud-based, enterprise agreements needed |
+
+## Why Claude Code for Healthcare?
+
+Claude Code is particularly well-suited for healthcare development:
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────┐
+│                    Claude Code Advantages                    │
+├─────────────────────────────────────────────────────────────┤
+│  🔒 Local-First Architecture                                │
+│     → Code processed locally, PHI never leaves your machine │
+│                                                             │
+│  🏥 HIPAA-Friendly Design                                   │
+│     → Configure to process only specific code sections      │
+│     → Keep sensitive schemas entirely local                 │
+│                                                             │
+│  🧠 Superior Reasoning                                       │
+│     → Opus 4.5 excels at complex healthcare logic           │
+│     → Better intent detection for compliance requirements   │
+│                                                             │
+│  🔧 Extensible & Customizable                               │
+│     → Skills, hooks, and MCP servers for healthcare         │
+│     → CLAUDE.md for project-specific instructions           │
+└─────────────────────────────────────────────────────────────┘
+\`\`\`
+
+## The Agentic Development Paradigm Shift
+
+Traditional coding:
+\`\`\`
+Developer → Writes Code → Tests → Debugs → Repeats
+\`\`\`
+
+Agentic coding:
+\`\`\`
+Developer → Describes Intent → Agent Implements → Developer Reviews → Refines
+\`\`\`
+
+### Key Mindset Changes
+
+1. **From typing to prompting**: Your effectiveness depends on clear communication
+2. **From doing to directing**: Focus on what, let the agent handle how
+3. **From memorizing to understanding**: Deep knowledge matters more than syntax recall
+4. **From solo to pair**: You're always pair programming with an AI partner
+
+## Healthcare-Specific Agentic Patterns
+
+### Pattern 1: Security-First Prompting
+
+\`\`\`typescript
+// When working with healthcare code, always establish context
+// Example prompt structure:
+
+/*
+"I'm working on a HIPAA-compliant patient portal.
+This function handles PHI and must:
+1. Never log patient identifiers
+2. Validate all inputs against injection attacks
+3. Use parameterized queries only
+4. Include audit logging for all access
+
+Please implement a function that retrieves patient allergies..."
+*/
+\`\`\`
+
+### Pattern 2: Compliance Guardrails
+
+\`\`\`typescript
+// Set up your CLAUDE.md to enforce healthcare standards
+const healthcareGuardrails = {
+  alwaysInclude: [
+    'Input validation for all user data',
+    'Parameterized queries for database access',
+    'Audit logging for PHI access',
+    'Error messages without PHI exposure'
+  ],
+  neverDo: [
+    'Log patient identifiers',
+    'Store PHI in browser localStorage',
+    'Send PHI to external AI services',
+    'Use dynamic SQL queries'
+  ]
+};
+\`\`\`
+
+### Pattern 3: Iterative Security Review
+
+\`\`\`
+Prompt → Generate → Review for PHI exposure → Refine → Verify compliance
+           ↑                                              ↓
+           └──────────────── Iterate ←────────────────────┘
+\`\`\`
+
+## Getting Started Checklist
+
+- [ ] Install Claude Code CLI
+- [ ] Set up CLAUDE.md with healthcare-specific instructions
+- [ ] Configure .gitignore for PHI protection
+- [ ] Establish secure development environment
+- [ ] Learn the core commands and shortcuts
+- [ ] Practice with non-PHI code first
+
+## Key Takeaway
+
+AI coding agents transform how we build healthcare software, but they require a new skill set: prompt engineering, context management, and security awareness. The following lessons will teach you to master these skills.
+`
+      },
+      {
+        id: '11.2',
+        title: 'Context Engineering & CLAUDE.md',
+        duration: '25 min',
+        content: `# Context Engineering & CLAUDE.md
+
+## What is Context Engineering?
+
+Context engineering is the practice of **strategically providing information to AI agents** to maximize their effectiveness. In healthcare development, proper context engineering ensures:
+
+- Consistent HIPAA-compliant code generation
+- Awareness of project-specific security requirements
+- Understanding of EHR integration patterns
+- Adherence to organizational coding standards
+
+## The CLAUDE.md File
+
+CLAUDE.md is a special configuration file that Claude Code automatically loads into context at the start of every session.
+
+### File Locations (Priority Order)
+
+\`\`\`
+~/.claude/CLAUDE.md           → Global settings (all projects)
+~/projects/CLAUDE.md          → Parent directory (monorepo root)
+~/projects/my-app/CLAUDE.md   → Project root (recommended)
+~/projects/my-app/src/CLAUDE.md → Subdirectory (loaded on demand)
+\`\`\`
+
+### Healthcare-Optimized CLAUDE.md Template
+
+\`\`\`markdown
+# Healthcare Development Guidelines
+
+## Project Context
+This is a HIPAA-compliant healthcare application that handles PHI.
+All code must adhere to strict security and compliance standards.
+
+## Security Requirements (MANDATORY)
+- NEVER log patient names, DOBs, SSNs, MRNs, or other PHI identifiers
+- ALWAYS use parameterized queries - no string concatenation for SQL
+- ALWAYS validate and sanitize all user inputs
+- ALWAYS include audit logging for PHI access
+- NEVER store PHI in localStorage, sessionStorage, or cookies
+- NEVER send PHI to external AI services or third-party APIs without encryption
+
+## Code Patterns
+
+### Database Access
+// Always use parameterized queries
+const patient = await db.query(
+  'SELECT * FROM patients WHERE id = $1',
+  [patientId]
+);
+
+### PHI Logging
+// Log access without exposing PHI
+logger.audit({
+  action: 'PATIENT_ACCESS',
+  userId: user.id,
+  resourceId: patient.id, // OK: just the ID
+  // NEVER: patientName, dob, ssn, etc.
+});
+
+### Error Handling
+// Generic errors to users, detailed logs internally
+try {
+  // operation
+} catch (error) {
+  logger.error('Operation failed', { errorId: generateId() });
+  throw new Error('An error occurred. Reference: ' + errorId);
+}
+
+## EHR Integration
+- Use SMART on FHIR for Epic/Cerner integration
+- Request minimum necessary scopes
+- Implement token refresh properly
+
+## Testing Requirements
+- All PHI handling code requires unit tests
+- Security tests must pass before merge
+- Use synthetic data only in tests
+
+## Commands
+- npm run dev - Start development server
+- npm run test:security - Run security tests
+- npm run lint:hipaa - Check HIPAA compliance patterns
+\`\`\`
+
+## The Scratchpad Technique
+
+The scratchpad is a powerful pattern for maintaining context across long sessions and when returning to a project.
+
+### Setting Up a Scratchpad
+
+\`\`\`markdown
+<!-- .claude/scratchpad.md -->
+
+# Development Scratchpad
+
+## Current Task
+Implementing patient allergy management API
+
+## Files Modified
+- src/api/allergies.ts (created)
+- src/models/Allergy.ts (created)
+- src/routes/patient.ts (updated)
+
+## Key Decisions
+1. Using FHIR AllergyIntolerance resource format
+2. Audit logging on all CRUD operations
+3. Soft delete with retention policy
+
+## Open Questions
+- [ ] Confirm allergy severity enum values with clinical team
+- [ ] Determine caching strategy for allergy lookups
+
+## Notes for Next Session
+- Need to add integration tests
+- Security review pending for input validation
+\`\`\`
+
+### Using the Scratchpad
+
+Tell Claude to maintain the scratchpad during development:
+
+\`\`\`
+"As you make changes, please update .claude/scratchpad.md with:
+- Files you've modified or created
+- Key decisions and their rationale
+- Any open questions or blockers
+- Notes for the next session"
+\`\`\`
+
+## Subdirectory Context Loading
+
+Claude Code loads CLAUDE.md files on-demand when you work in subdirectories:
+
+\`\`\`
+project/
+├── CLAUDE.md                 # Loaded at start
+├── src/
+│   ├── api/
+│   │   └── CLAUDE.md         # Loaded when working in /api
+│   └── components/
+│       └── CLAUDE.md         # Loaded when working in /components
+└── tests/
+    └── CLAUDE.md             # Loaded when working in /tests
+\`\`\`
+
+### Example: API-Specific Context
+
+\`\`\`markdown
+<!-- src/api/CLAUDE.md -->
+
+# API Development Guidelines
+
+## Endpoint Patterns
+- All endpoints require authentication
+- Use /api/v1/ prefix
+- Rate limiting: 100 req/min default, 20 req/min for AI endpoints
+
+## Response Format
+{
+  "data": { ... },
+  "meta": { "requestId": "...", "timestamp": "..." }
+}
+
+## Error Format
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input",
+    "requestId": "..."
+  }
+}
+
+## Security Checklist for New Endpoints
+- [ ] Authentication required
+- [ ] Authorization checked (RBAC)
+- [ ] Input validated
+- [ ] Output sanitized
+- [ ] Audit logged
+- [ ] Rate limited
+\`\`\`
+
+## Context Window Management
+
+Claude has a finite context window. Manage it wisely:
+
+### Signs You Need Context Management
+
+- Claude starts forgetting earlier instructions
+- Responses become less accurate
+- You see "context compaction" warnings
+
+### Strategies
+
+1. **Proactive Documentation**: Before hitting limits, ask Claude to summarize in the scratchpad
+2. **Fresh Sessions**: Start new sessions for new tasks
+3. **Modular Context**: Use subdirectory CLAUDE.md files
+4. **Reference Files**: Point to documentation rather than pasting content
+
+\`\`\`
+"Before we continue, please document:
+1. What we've accomplished so far
+2. Current state of the implementation
+3. Next steps
+
+Write this to .claude/scratchpad.md so we can resume if needed."
+\`\`\`
+
+## Key Takeaways
+
+1. **CLAUDE.md is your foundation**: Invest time in crafting healthcare-specific guidelines
+2. **Scratchpad maintains continuity**: Essential for complex, multi-session projects
+3. **Subdirectory context adds precision**: Layer context for different parts of your app
+4. **Manage the context window**: Document progress before compaction occurs
+`
+      },
+      {
+        id: '11.3',
+        title: 'Plan Mode & Thinking Levels',
+        duration: '20 min',
+        content: `# Plan Mode & Thinking Levels
+
+## Understanding Plan Mode
+
+Plan Mode is a structured approach where Claude creates and documents a plan before executing changes. This is critical for healthcare development where mistakes can have serious consequences.
+
+### Activating Plan Mode
+
+\`\`\`
+┌─────────────────────────────────────────────────────┐
+│  Keyboard Shortcut: Shift+Tab                       │
+│                                                     │
+│  Cycles between:                                    │
+│  • Plan Mode → Create plan before any changes       │
+│  • Auto Mode → Execute changes directly             │
+└─────────────────────────────────────────────────────┘
+\`\`\`
+
+### When to Use Plan Mode
+
+| Scenario | Use Plan Mode? | Rationale |
+|----------|---------------|-----------|
+| Adding new PHI handling | ✅ Yes | Security implications need review |
+| Modifying authentication | ✅ Yes | Critical security component |
+| EHR integration work | ✅ Yes | Complex, many moving parts |
+| Simple bug fix | ❌ No | Low risk, straightforward |
+| Adding logging | ⚠️ Maybe | Depends on what's being logged |
+| Database schema changes | ✅ Yes | Data integrity concerns |
+
+### Plan Mode Workflow
+
+\`\`\`
+1. Describe the task
+         ↓
+2. Claude generates plan (no changes yet)
+         ↓
+3. You review the plan
+         ↓
+4. Request modifications if needed
+         ↓
+5. Approve the plan
+         ↓
+6. Claude executes the plan
+         ↓
+7. Review the implementation
+\`\`\`
+
+### Healthcare-Specific Planning
+
+When using Plan Mode for healthcare features, ask Claude to include:
+
+\`\`\`
+"Create a plan that includes:
+1. Security considerations and HIPAA compliance
+2. Files that will be modified
+3. PHI handling approach
+4. Audit logging strategy
+5. Testing requirements
+6. Rollback procedure"
+\`\`\`
+
+## The Thinking Hierarchy
+
+Claude Code supports different "thinking levels" that allocate varying amounts of computational budget for complex reasoning.
+
+### Thinking Levels (Ascending)
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────┐
+│  Level          │ Trigger Word    │ Use Case               │
+├─────────────────────────────────────────────────────────────┤
+│  Standard       │ (default)       │ Simple tasks           │
+│  Think          │ "think"         │ Moderate complexity    │
+│  Think Hard     │ "think hard"    │ Complex logic          │
+│  Think Harder   │ "think harder"  │ Very complex problems  │
+│  Ultrathink     │ "ultrathink"    │ Maximum reasoning      │
+└─────────────────────────────────────────────────────────────┘
+\`\`\`
+
+### Using Thinking Levels in Healthcare
+
+#### Standard (Default)
+\`\`\`
+"Add a comment to the validatePatient function"
+→ Simple task, standard thinking sufficient
+\`\`\`
+
+#### Think
+\`\`\`
+"Think about how to refactor the medication service for better testability"
+→ Moderate complexity, some design consideration needed
+\`\`\`
+
+#### Think Hard
+\`\`\`
+"Think hard about the security implications of adding SSO to our patient portal"
+→ Complex security analysis required
+\`\`\`
+
+#### Think Harder
+\`\`\`
+"Think harder about designing a break-the-glass access system that maintains
+audit compliance while allowing emergency access to patient records"
+→ Very complex, multiple competing requirements
+\`\`\`
+
+#### Ultrathink
+\`\`\`
+"Ultrathink: Design a complete HIPAA-compliant architecture for real-time
+patient monitoring with AI-powered anomaly detection, ensuring:
+- PHI is never exposed to the AI model
+- Sub-second alert latency
+- Complete audit trail
+- Graceful degradation
+- Multi-region compliance"
+→ Maximum complexity, architectural decision with many constraints
+\`\`\`
+
+## Combining Plan Mode and Thinking Levels
+
+For critical healthcare features, combine both:
+
+\`\`\`
+[Shift+Tab to enter Plan Mode]
+
+"Ultrathink and create a comprehensive plan for implementing
+a patient consent management system that:
+
+1. Tracks consent for data sharing across providers
+2. Integrates with our FHIR server
+3. Supports granular consent (by data type, provider, time period)
+4. Maintains complete audit history
+5. Allows patients to modify consent in real-time
+6. Handles consent expiration and renewal
+
+Include security analysis, PHI handling, and compliance considerations."
+\`\`\`
+
+## The Opus + Sonnet Workflow
+
+A powerful pattern from experienced Claude Code users:
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────┐
+│  Opus 4.5 (Planning)        │  Sonnet 4 (Execution)        │
+├─────────────────────────────────────────────────────────────┤
+│  • Complex reasoning         │  • Fast implementation        │
+│  • Architecture decisions    │  • Straightforward changes    │
+│  • Security analysis         │  • Code generation            │
+│  • Plan creation             │  • Following established plan │
+│  • Ultrathink tasks          │  • Iterative refinements      │
+└─────────────────────────────────────────────────────────────┘
+\`\`\`
+
+### Workflow Example
+
+\`\`\`bash
+# Step 1: Use Opus to plan (default in Claude Code)
+"Ultrathink and create a detailed plan for adding MFA to our clinician portal"
+
+# Step 2: Review and approve the plan
+
+# Step 3: Switch to Sonnet for execution (faster, cheaper)
+# Use Shift+Tab or model selection
+
+# Step 4: Execute the plan with Sonnet
+"Follow the approved plan to implement MFA step by step"
+
+# Step 5: Switch back to Opus for security review
+"Review the MFA implementation for security vulnerabilities"
+\`\`\`
+
+### Cost-Effectiveness
+
+| Model | Speed | Cost | Best For |
+|-------|-------|------|----------|
+| Opus 4.5 | Slower | Higher | Planning, security review, complex reasoning |
+| Sonnet 4 | Faster | Lower | Implementation, iteration, straightforward tasks |
+
+Using Opus for 20% (planning/review) and Sonnet for 80% (execution) can reduce costs while maintaining quality.
+
+## Key Takeaways
+
+1. **Plan Mode for critical changes**: Always use for security-sensitive healthcare code
+2. **Think levels match complexity**: Use ultrathink for architectural decisions
+3. **Opus for planning, Sonnet for doing**: Optimize for both quality and cost
+4. **Review before execution**: In healthcare, always review the plan before implementation
+`
+      },
+      {
+        id: '11.4',
+        title: 'Sub-agents & Parallel Execution',
+        duration: '25 min',
+        content: `# Sub-agents & Parallel Execution
+
+## What Are Sub-agents?
+
+Sub-agents are separate Claude instances spawned by the main agent to handle specific tasks. Each sub-agent:
+
+- Has its own isolated context window
+- Can run in parallel with other sub-agents
+- Reports results back to the main agent
+- Has access to specialized tools based on its type
+
+## Built-in Sub-agent Types
+
+\`\`\`typescript
+// Claude Code's pre-defined sub-agents
+const subAgentTypes = {
+  Explore: {
+    purpose: 'Fast codebase exploration',
+    tools: ['Glob', 'Grep', 'Read'],
+    useCase: 'Finding files, searching code, understanding structure'
+  },
+  Plan: {
+    purpose: 'Software architecture planning',
+    tools: ['All exploration + planning'],
+    useCase: 'Designing implementation strategies'
+  },
+  'general-purpose': {
+    purpose: 'Complex multi-step tasks',
+    tools: ['All tools'],
+    useCase: 'Research, code search, autonomous task completion'
+  }
+};
+\`\`\`
+
+## When to Use Sub-agents
+
+### Ideal Scenarios
+
+| Scenario | Sub-agent Type | Example |
+|----------|---------------|---------|
+| Codebase exploration | Explore | "Find all files that handle patient data" |
+| Architecture planning | Plan | "Design the EHR integration module" |
+| Multi-file search | Explore (parallel) | "Find authentication patterns across the codebase" |
+| Research task | general-purpose | "Investigate FHIR R4 compliance requirements" |
+
+### Healthcare Examples
+
+\`\`\`
+# Example 1: Finding PHI handling code
+"Use explore sub-agents to find all locations where we:
+1. Store patient data to the database
+2. Send data to external APIs
+3. Log any form of identifiable information"
+
+# Example 2: Security audit
+"Launch parallel sub-agents to:
+1. Find all SQL queries and check for parameterization
+2. Find all API endpoints and verify authentication
+3. Find all logging statements and check for PHI exposure"
+\`\`\`
+
+## The Bootstrap-Repo Pattern
+
+A powerful pattern for understanding large healthcare codebases:
+
+\`\`\`markdown
+<!-- .claude/commands/bootstrap-repo.md -->
+
+# Bootstrap Repository Analysis
+
+Launch 10 parallel explore sub-agents to analyze this codebase:
+
+## Agent 1: Project Structure
+- Identify main directories and their purposes
+- Map the application architecture
+
+## Agent 2: Authentication & Authorization
+- Find authentication mechanisms
+- Identify authorization patterns
+- Locate role-based access control
+
+## Agent 3: PHI Handling
+- Find patient data models
+- Identify PHI storage locations
+- Map data flow for sensitive information
+
+## Agent 4: API Endpoints
+- List all API routes
+- Identify public vs protected endpoints
+- Document request/response patterns
+
+## Agent 5: Database Layer
+- Find database schemas
+- Identify ORM patterns
+- Check for encryption configuration
+
+## Agent 6: External Integrations
+- Find third-party API calls
+- Identify EHR integrations
+- Map data exchange points
+
+## Agent 7: Security Controls
+- Find input validation
+- Identify sanitization functions
+- Locate security middleware
+
+## Agent 8: Testing
+- Find test patterns
+- Identify security tests
+- Check PHI handling in tests
+
+## Agent 9: Configuration
+- Find environment variables
+- Identify secrets management
+- Map deployment configuration
+
+## Agent 10: Compliance
+- Find audit logging
+- Identify retention policies
+- Locate compliance documentation
+
+Compile findings into PROJECT_ANALYSIS.md
+\`\`\`
+
+## Parallel Execution Strategies
+
+### Independent Tasks
+
+When tasks don't depend on each other, run them in parallel:
+
+\`\`\`
+"Run these analyses in parallel:
+1. Find all database models related to patients
+2. Find all API routes that start with /api/patient
+3. Find all components that display patient information"
+\`\`\`
+
+### Sequential Dependencies
+
+When tasks depend on previous results:
+
+\`\`\`
+"First, find all patient-related endpoints.
+Then, for each endpoint, verify it has proper authentication.
+Finally, check that each authenticated endpoint has audit logging."
+\`\`\`
+
+## Healthcare Sub-agent Patterns
+
+### Pattern 1: HIPAA Compliance Scan
+
+\`\`\`
+"Launch parallel sub-agents to perform a HIPAA compliance scan:
+
+Agent 1 - Access Controls:
+- Verify all PHI endpoints require authentication
+- Check for proper authorization on patient data access
+
+Agent 2 - Audit Trail:
+- Verify audit logging exists for PHI operations
+- Check log format includes required fields (who, what, when)
+
+Agent 3 - Encryption:
+- Verify database encryption configuration
+- Check TLS settings for data in transit
+
+Agent 4 - Session Management:
+- Find session timeout configuration
+- Verify automatic logoff implementation
+
+Compile into HIPAA_COMPLIANCE_REPORT.md"
+\`\`\`
+
+### Pattern 2: Security Vulnerability Hunt
+
+\`\`\`
+"Launch parallel sub-agents to find potential vulnerabilities:
+
+Agent 1 - Injection Risks:
+- Find SQL query construction
+- Check for parameterized queries
+- Identify potential injection points
+
+Agent 2 - XSS Risks:
+- Find user input rendering
+- Check for output encoding
+- Identify unsanitized displays
+
+Agent 3 - Authentication Weaknesses:
+- Find password handling
+- Check MFA implementation
+- Identify session vulnerabilities
+
+Agent 4 - PHI Exposure Risks:
+- Find logging of patient data
+- Check error message content
+- Identify debug information exposure
+
+Document all findings with file locations and severity."
+\`\`\`
+
+### Pattern 3: EHR Integration Discovery
+
+\`\`\`
+"Use sub-agents to map our EHR integration:
+
+Agent 1 - FHIR Resources:
+- Find all FHIR resource types we use
+- Map resource to internal models
+- Document transformation logic
+
+Agent 2 - API Connections:
+- Find EHR API endpoints
+- Identify authentication methods
+- Map rate limiting configuration
+
+Agent 3 - Data Synchronization:
+- Find sync mechanisms
+- Identify conflict resolution
+- Document retry logic
+
+Agent 4 - Error Handling:
+- Find EHR error handlers
+- Map fallback behaviors
+- Document alerting mechanisms
+
+Compile into EHR_INTEGRATION_MAP.md"
+\`\`\`
+
+## Managing Sub-agent Results
+
+### Consolidation Pattern
+
+\`\`\`
+"After sub-agents complete, consolidate findings:
+
+1. Merge all findings into a single document
+2. Prioritize by severity (Critical > High > Medium > Low)
+3. Group by category (Security, Compliance, Performance)
+4. Create action items for each finding
+5. Estimate remediation effort for critical items"
+\`\`\`
+
+### Conflict Resolution
+
+When sub-agents return conflicting information:
+
+\`\`\`
+"The sub-agents reported different authentication patterns.
+Please investigate further and determine:
+1. Which pattern is the current standard
+2. Which files use outdated patterns
+3. Create a migration plan to standardize"
+\`\`\`
+
+## Performance Considerations
+
+### Optimal Sub-agent Count
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────┐
+│  Sub-agents  │  Performance        │  Recommendation        │
+├─────────────────────────────────────────────────────────────┤
+│  1-3         │  Stable             │  Default for most tasks│
+│  4-6         │  Good               │  Complex analysis      │
+│  7-10        │  May cause issues   │  Use sparingly         │
+│  10+         │  Unstable           │  Avoid                 │
+└─────────────────────────────────────────────────────────────┘
+\`\`\`
+
+Note: Too many parallel sub-agents can cause UI flickering and resource contention.
+
+## Key Takeaways
+
+1. **Sub-agents for exploration**: Faster than sequential searching
+2. **Parallel for independence**: Run unrelated tasks simultaneously
+3. **Healthcare patterns**: Use for compliance scans and security audits
+4. **Consolidate results**: Always merge and prioritize sub-agent findings
+5. **Mind the limits**: Keep parallel agents to 6 or fewer for stability
+`
+      },
+      {
+        id: '11.5',
+        title: 'Skills, Hooks & MCP Servers',
+        duration: '25 min',
+        content: `# Skills, Hooks & MCP Servers
+
+## Understanding Claude Code's Extension System
+
+Claude Code offers three powerful mechanisms for extending its capabilities:
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────┐
+│  Skills       │ On-demand expertise loaded when relevant   │
+│  Hooks        │ Automated actions triggered by events      │
+│  MCP Servers  │ External tool integrations                 │
+└─────────────────────────────────────────────────────────────┘
+\`\`\`
+
+## Skills
+
+Skills are markdown files containing specialized knowledge that Claude loads "just-in-time" when relevant.
+
+### How Skills Work
+
+\`\`\`
+1. SKILL.md contains metadata about available skills
+2. Claude's system prompt includes skill descriptions
+3. When Claude detects a relevant task, it loads the skill
+4. Skill content becomes part of Claude's context
+5. Claude applies the specialized knowledge
+\`\`\`
+
+### Creating a Healthcare Skill
+
+\`\`\`markdown
+<!-- .claude/skills/fhir-integration/SKILL.md -->
+name: fhir-integration
+description: FHIR R4 integration patterns for healthcare applications
+
+# When to load:
+# - User mentions FHIR, HL7, or healthcare interoperability
+# - Working with patient data exchange
+# - EHR integration tasks
+\`\`\`
+
+\`\`\`markdown
+<!-- .claude/skills/fhir-integration/fhir-patterns.md -->
+
+# FHIR R4 Integration Patterns
+
+## Resource Types We Support
+
+| Resource | Purpose | Example |
+|----------|---------|---------|
+| Patient | Demographics | Name, DOB, identifiers |
+| Observation | Clinical data | Vitals, lab results |
+| AllergyIntolerance | Allergies | Drug allergies, food allergies |
+| Medication | Prescriptions | Active medications |
+| Encounter | Visits | Appointments, admissions |
+
+## Authentication Pattern
+// SMART on FHIR OAuth2 flow
+const smartClient = FHIR.oauth2.ready()
+  .then(client => {
+    // client is authenticated and ready
+    return client.request('Patient/' + client.patient.id);
+  });
+
+## Query Patterns
+// Search with parameters
+const observations = await client.request(
+  'Observation?patient=' + patientId + '&category=vital-signs&_sort=-date&_count=10'
+);
+
+// Include related resources
+const encounter = await client.request(
+  'Encounter/' + encounterId + '?_include=Encounter:patient'
+);
+
+## Error Handling
+try {
+  const result = await fhirClient.request(resource);
+} catch (error) {
+  if (error.status === 401) {
+    // Token expired, refresh
+    await refreshToken();
+  } else if (error.status === 404) {
+    // Resource not found
+    handleNotFound();
+  } else if (error.status === 429) {
+    // Rate limited
+    await backoff();
+  }
+}
+\`\`\`
+
+### Skill vs CLAUDE.md
+
+| Aspect | CLAUDE.md | Skills |
+|--------|-----------|--------|
+| Loading | Always at session start | On-demand when relevant |
+| Purpose | Project-wide context | Specialized domain knowledge |
+| Size | Keep small (context cost) | Can be larger (loaded only when needed) |
+| Examples | Coding standards, security rules | FHIR patterns, compliance checklists |
+
+## Hooks
+
+Hooks are shell commands that execute automatically in response to Claude Code events.
+
+### Hook Events
+
+\`\`\`typescript
+const hookEvents = {
+  'session-start': 'When Claude Code session begins',
+  'session-end': 'When Claude Code session ends',
+  'tool-call': 'Before a tool is executed',
+  'tool-result': 'After a tool returns results',
+  'prompt-submit': 'When user submits a prompt'
+};
+\`\`\`
+
+### Healthcare Hook Examples
+
+#### Pre-Commit PHI Check
+
+\`\`\`json
+// .claude/hooks.json
+{
+  "hooks": {
+    "tool-call": [
+      {
+        "name": "phi-check",
+        "command": "bash .claude/hooks/check-phi.sh",
+        "tools": ["Write", "Edit"],
+        "description": "Check for PHI in code before writing"
+      }
+    ]
+  }
+}
+\`\`\`
+
+\`\`\`bash
+#!/bin/bash
+# .claude/hooks/check-phi.sh
+
+# Check for potential PHI patterns in the content
+if echo "$CLAUDE_CONTENT" | grep -qiE "(ssn|social.security|dob|date.of.birth|mrn|medical.record)"; then
+  echo "WARNING: Potential PHI pattern detected!"
+  echo "Please review the content before proceeding."
+  exit 1
+fi
+
+exit 0
+\`\`\`
+
+#### Security Scan on File Write
+
+\`\`\`json
+{
+  "hooks": {
+    "tool-result": [
+      {
+        "name": "security-lint",
+        "command": "npx semgrep --config=p/security-audit $CLAUDE_FILE",
+        "tools": ["Write", "Edit"],
+        "description": "Run security linting after file changes"
+      }
+    ]
+  }
+}
+\`\`\`
+
+#### Audit Log on Session Start
+
+\`\`\`json
+{
+  "hooks": {
+    "session-start": [
+      {
+        "name": "audit-session",
+        "command": "bash .claude/hooks/log-session.sh",
+        "description": "Log Claude Code session for compliance"
+      }
+    ]
+  }
+}
+\`\`\`
+
+\`\`\`bash
+#!/bin/bash
+# .claude/hooks/log-session.sh
+
+LOG_FILE="$HOME/.claude-audit/sessions.log"
+mkdir -p "$(dirname "$LOG_FILE")"
+
+echo "[$(date -Iseconds)] Session started: $PWD | User: $USER" >> "$LOG_FILE"
+\`\`\`
+
+## MCP Servers (Model Context Protocol)
+
+MCP servers extend Claude's capabilities by providing external tool integrations.
+
+### Healthcare-Relevant MCP Servers
+
+\`\`\`typescript
+const healthcareMCPServers = {
+  'fhir-server': {
+    description: 'Query FHIR servers directly',
+    capabilities: ['Patient lookup', 'Observation queries', 'Resource creation'],
+    security: 'Requires proper OAuth2 token handling'
+  },
+  'playwright': {
+    description: 'Browser automation for testing',
+    capabilities: ['Patient portal testing', 'UI automation', 'Screenshot capture'],
+    security: 'Use synthetic data only'
+  },
+  'database': {
+    description: 'Direct database queries',
+    capabilities: ['Schema inspection', 'Data queries', 'Migration testing'],
+    security: 'Read-only recommended for healthcare'
+  }
+};
+\`\`\`
+
+### Setting Up an MCP Server
+
+\`\`\`json
+// .claude/mcp.json
+{
+  "servers": {
+    "fhir-dev": {
+      "command": "npx",
+      "args": ["@healthcare/fhir-mcp-server"],
+      "env": {
+        "FHIR_SERVER_URL": "http://localhost:8080/fhir",
+        "FHIR_AUTH_TYPE": "none"
+      }
+    },
+    "docs": {
+      "command": "npx",
+      "args": ["@anthropic/mcp-docs-server"],
+      "env": {
+        "DOCS_PATH": "./docs"
+      }
+    }
+  }
+}
+\`\`\`
+
+### Security Considerations for MCP
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────┐
+│  MCP Server Security Checklist                              │
+├─────────────────────────────────────────────────────────────┤
+│  ☐ Never expose production credentials                      │
+│  ☐ Use read-only access where possible                      │
+│  ☐ Limit network access to development servers              │
+│  ☐ Audit MCP server logs for PHI exposure                   │
+│  ☐ Use synthetic data for testing integrations              │
+│  ☐ Review MCP server source code for data handling          │
+└─────────────────────────────────────────────────────────────┘
+\`\`\`
+
+## Building Custom Healthcare Extensions
+
+### Custom HIPAA Compliance Skill
+
+\`\`\`markdown
+<!-- .claude/skills/hipaa-compliance/SKILL.md -->
+name: hipaa-compliance
+description: HIPAA compliance checking and guidance
+
+## When to use:
+- Implementing PHI handling
+- Security review of patient data flows
+- Compliance documentation
+\`\`\`
+
+\`\`\`markdown
+<!-- .claude/skills/hipaa-compliance/checklist.md -->
+
+# HIPAA Technical Safeguards Checklist
+
+## Access Control (§164.312(a)(1))
+- [ ] Unique user identification (Required)
+- [ ] Emergency access procedure (Required)
+- [ ] Automatic logoff (Addressable)
+- [ ] Encryption and decryption (Addressable)
+
+## Audit Controls (§164.312(b))
+- [ ] Audit logs for PHI access (Required)
+- [ ] Log retention for 6+ years (Required)
+- [ ] Tamper-evident logging (Recommended)
+
+## Integrity (§164.312(c)(1))
+- [ ] Data integrity verification (Addressable)
+- [ ] Hash validation for critical data (Recommended)
+
+## Authentication (§164.312(d))
+- [ ] Multi-factor authentication (Required for remote access)
+- [ ] Strong password policies (Required)
+- [ ] Session timeout (Required)
+
+## Transmission Security (§164.312(e)(1))
+- [ ] TLS 1.2+ for all transmissions (Required)
+- [ ] Certificate validation (Required)
+- [ ] End-to-end encryption for PHI (Recommended)
+\`\`\`
+
+### Custom Security Hook
+
+\`\`\`bash
+#!/bin/bash
+# .claude/hooks/security-gate.sh
+
+# Run comprehensive security checks before commit
+
+echo "Running healthcare security checks..."
+
+# Check 1: PHI in code
+if grep -rn "SSN|DOB|MRN" --include="*.ts" --include="*.js" src/; then
+  echo "Potential PHI found in source code"
+  exit 1
+fi
+
+# Check 2: Hardcoded secrets
+if grep -rn "password*=|api_key*=" --include="*.ts" --include="*.js" src/; then
+  echo "Potential hardcoded secrets found"
+  exit 1
+fi
+
+# Check 3: SQL injection
+if grep -rn 'query.*\${' --include="*.ts" --include="*.js" src/; then
+  echo "Potential SQL injection vector found"
+  exit 1
+fi
+
+echo "Security checks passed"
+exit 0
+\`\`\`
+
+## Key Takeaways
+
+1. **Skills for domain expertise**: Create skills for FHIR, HIPAA, and healthcare patterns
+2. **Hooks for automation**: Enforce security checks automatically
+3. **MCP for integration**: Connect to development FHIR servers and tools
+4. **Security first**: Always review extensions for PHI exposure risks
+5. **Layer your defenses**: Combine skills, hooks, and MCP for comprehensive coverage
+`
+      },
+      {
+        id: '11.6',
+        title: 'Healthcare Agentic Workflow Best Practices',
+        duration: '20 min',
+        content: `# Healthcare Agentic Workflow Best Practices
+
+## The Complete Healthcare Development Workflow
+
+Combining all the techniques we've learned into a cohesive workflow:
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────────────┐
+│                Healthcare Agentic Development Workflow               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. SETUP                                                           │
+│     ├── Configure CLAUDE.md with healthcare guidelines              │
+│     ├── Set up security hooks                                       │
+│     ├── Load relevant skills (FHIR, HIPAA)                          │
+│     └── Initialize scratchpad for the task                          │
+│                                                                     │
+│  2. EXPLORE (Sub-agents)                                            │
+│     ├── Understand existing codebase patterns                       │
+│     ├── Identify PHI handling locations                             │
+│     └── Map integration points                                      │
+│                                                                     │
+│  3. PLAN (Opus + Ultrathink)                                        │
+│     ├── Design implementation with security in mind                 │
+│     ├── Document HIPAA compliance approach                          │
+│     ├── Identify risks and mitigations                              │
+│     └── Get plan approved before coding                             │
+│                                                                     │
+│  4. IMPLEMENT (Sonnet)                                              │
+│     ├── Follow the approved plan                                    │
+│     ├── Update scratchpad with progress                             │
+│     ├── Run security hooks after each file change                   │
+│     └── Commit incrementally                                        │
+│                                                                     │
+│  5. REVIEW (Opus)                                                   │
+│     ├── Security review of implementation                           │
+│     ├── HIPAA compliance verification                               │
+│     └── PHI exposure check                                          │
+│                                                                     │
+│  6. DOCUMENT                                                        │
+│     ├── Update scratchpad with final state                          │
+│     ├── Document security decisions                                 │
+│     └── Create compliance evidence                                  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+\`\`\`
+
+## Workflow Example: Patient Allergy Feature
+
+### Step 1: Setup
+
+\`\`\`markdown
+# .claude/scratchpad.md
+
+## Task: Implement Patient Allergy Management
+
+### Requirements
+- CRUD operations for patient allergies
+- FHIR AllergyIntolerance resource compliance
+- Full audit trail for HIPAA
+- Integration with Epic EHR
+
+### Security Considerations
+- PHI fields: patient identifier, allergy substance, reactions
+- Audit: All read/write operations must be logged
+- Access: Only treating providers can modify
+
+### Status: Starting exploration
+\`\`\`
+
+### Step 2: Explore
+
+\`\`\`
+"Launch explore sub-agents to:
+1. Find existing allergy-related code
+2. Identify our FHIR integration patterns
+3. Find our audit logging implementation
+4. Check authentication/authorization patterns
+
+Update scratchpad with findings."
+\`\`\`
+
+### Step 3: Plan
+
+\`\`\`
+[Shift+Tab to Plan Mode]
+
+"Ultrathink and create a detailed plan for implementing patient allergy management:
+
+1. Data Model
+   - FHIR AllergyIntolerance resource mapping
+   - Local database schema
+   - Audit log structure
+
+2. API Endpoints
+   - GET /api/patients/:id/allergies
+   - POST /api/patients/:id/allergies
+   - PUT /api/patients/:id/allergies/:allergyId
+   - DELETE /api/patients/:id/allergies/:allergyId
+
+3. Security Controls
+   - Authentication requirements
+   - Authorization rules
+   - Input validation
+   - Output sanitization
+
+4. Integration
+   - Epic EHR sync strategy
+   - Conflict resolution
+   - Error handling
+
+5. Testing
+   - Unit tests for each endpoint
+   - Security tests
+   - Integration tests with mock FHIR server
+
+Include file locations and estimated complexity."
+\`\`\`
+
+### Step 4: Implement (After Plan Approval)
+
+\`\`\`
+[Switch to Sonnet for faster execution]
+
+"Execute the approved plan, starting with step 1: Data Model.
+
+After each file, update the scratchpad with:
+- File created/modified
+- Key decisions made
+- Any deviations from plan"
+\`\`\`
+
+### Step 5: Review
+
+\`\`\`
+[Switch to Opus]
+
+"Perform a security review of the allergy implementation:
+
+1. Check all database queries for parameterization
+2. Verify audit logging is complete
+3. Confirm no PHI in error messages
+4. Validate input sanitization
+5. Check authorization on all endpoints
+
+Report any issues found."
+\`\`\`
+
+### Step 6: Document
+
+\`\`\`
+"Update the scratchpad with:
+1. Final list of files created/modified
+2. Security measures implemented
+3. Testing status
+4. Any remaining work
+5. Notes for future maintainers"
+\`\`\`
+
+## Common Pitfalls and Solutions
+
+### Pitfall 1: Context Window Exhaustion
+
+\`\`\`
+Symptom: Claude forgets earlier instructions, responses degrade
+
+Solution:
+1. Document progress to scratchpad before context fills
+2. Start new sessions for new features
+3. Use subdirectory CLAUDE.md for focused context
+4. Ask Claude to summarize before compaction
+\`\`\`
+
+### Pitfall 2: Security Gaps in Generated Code
+
+\`\`\`
+Symptom: Missing input validation, logging, or access control
+
+Solution:
+1. Include security checklist in CLAUDE.md
+2. Use hooks to run security linting
+3. Always do Opus security review
+4. Establish patterns Claude can reference
+\`\`\`
+
+### Pitfall 3: Inconsistent Patterns
+
+\`\`\`
+Symptom: New code doesn't match existing patterns
+
+Solution:
+1. Use explore sub-agents to find existing patterns first
+2. Reference specific files as examples
+3. Include pattern examples in CLAUDE.md
+4. Document patterns in skills
+\`\`\`
+
+### Pitfall 4: PHI Leakage
+
+\`\`\`
+Symptom: Patient data appears in logs, errors, or external calls
+
+Solution:
+1. Explicit PHI warnings in CLAUDE.md
+2. PHI detection hooks
+3. Output filtering patterns
+4. Regular security reviews
+\`\`\`
+
+## Efficiency Tips
+
+### Tip 1: Template Common Tasks
+
+\`\`\`markdown
+<!-- .claude/commands/new-api-endpoint.md -->
+
+# Create New Healthcare API Endpoint
+
+Create a new HIPAA-compliant API endpoint with:
+- Authentication required
+- Role-based authorization
+- Input validation
+- Output sanitization
+- Audit logging
+- Error handling without PHI
+
+Arguments:
+- resource: The resource type (e.g., "Patient", "Allergy")
+- operations: CRUD operations needed
+- roles: Authorized roles
+\`\`\`
+
+### Tip 2: Batch Related Changes
+
+\`\`\`
+"Implement all allergy CRUD endpoints together, including:
+- Route definitions
+- Controller functions
+- Service layer
+- Database queries
+- Audit logging
+- Input validation
+
+This ensures consistency across related code."
+\`\`\`
+
+### Tip 3: Progressive Refinement
+
+\`\`\`
+Round 1: "Create the basic endpoint structure"
+Round 2: "Add input validation"
+Round 3: "Add audit logging"
+Round 4: "Add error handling"
+Round 5: "Security review and fixes"
+
+Each round builds on the previous, maintaining focus.
+\`\`\`
+
+## Success Metrics
+
+Track these to measure your agentic coding effectiveness:
+
+| Metric | Target | How to Measure |
+|--------|--------|----------------|
+| Security review issues | < 2 per feature | Opus review findings |
+| Context window resets | < 1 per day | New session starts |
+| Plan accuracy | > 90% | Implementation matches plan |
+| PHI incidents | 0 | Hook violations, security scans |
+| First-time quality | > 80% | Changes without rework |
+
+## Key Takeaways
+
+1. **Follow the workflow**: Setup - Explore - Plan - Implement - Review - Document
+2. **Use the right model**: Opus for thinking, Sonnet for doing
+3. **Maintain context**: Scratchpad and CLAUDE.md are essential
+4. **Automate security**: Hooks catch what humans miss
+5. **Document everything**: Future you will thank present you
+6. **Iterate and improve**: Refine your workflow based on what works
+`
+      }
+    ]
+  },
 ];
 
 // HIPAA Reference Data
