@@ -13810,6 +13810,146 @@ Track these to measure your agentic coding effectiveness:
       }
     ]
   },
+  {
+    id: 11,
+    title: 'Mastering AI Coding Agents for Healthcare',
+    description: 'Advanced techniques for using Claude Code, MCP, and agentic development in clinical settings',
+    lessons: [
+      {
+        id: '11.1',
+        title: 'The 2026 Agentic AI Landscape',
+        duration: '20 min',
+        content: `# The 2026 Agentic AI Landscape
+
+## Market Transformation
+
+2026 marks a decisive inflection point. The industry is transitioning from pilots to enterprise-scale deployment.
+
+### Key Statistics
+- Healthcare Agentic AI: $0.8B (2025) → $38.4B (2035) at 45.6% CAGR
+- 85% of healthcare organizations adopting agentic AI
+- 40% of enterprise apps will include AI agents by end of 2026
+
+### What Changed?
+1. **FHIR Adoption** - Standardized APIs for EHR integration
+2. **Model Context Protocol** - Universal tool connection standard
+3. **Enterprise AI Platforms** - HIPAA-compliant infrastructure
+
+### Case Study: Metro Health
+- Wait times: 85% reduction (52→8 min)
+- Denial rates: 11.2%→2.4%
+- Annual savings: $2.8M
+- ROI: 6 months`
+      },
+      {
+        id: '11.2',
+        title: 'AI Coding Tools Comparison',
+        duration: '25 min',
+        content: `# AI Coding Tools for Healthcare
+
+## Comparison
+
+| Tool | HIPAA | MCP | Best For |
+|------|-------|-----|----------|
+| Claude Code | ✅ | ✅ | Agentic development |
+| Windsurf | ✅ | ❌ | PHI handling |
+| Cursor | ❌ | ❌ | Non-PHI work |
+| Copilot | ⚠️ | ❌ | Enterprise IDE |
+
+## Recommendations
+- **PHI work**: Windsurf or Claude for Healthcare
+- **EHR Integration**: Claude Code (MCP + FHIR)
+- **Frontend**: Cursor or Claude Code`
+      },
+      {
+        id: '11.3',
+        title: 'Model Context Protocol (MCP)',
+        duration: '30 min',
+        content: `# Model Context Protocol
+
+## Overview
+Open standard by Anthropic (Nov 2024) for AI integration with external tools.
+
+## FHIR MCP Server Features
+- Full FHIR R4 operations
+- LOINC/ICD-10 validation
+- Natural language patient queries
+
+## Healthcare MCP Resources
+- FDA drug information
+- PubMed literature search
+- Clinical trials data
+- ICD-10 code lookup
+
+## Best Practices
+1. Start read-only
+2. Validate terminology
+3. Rate limit APIs
+4. Scope to patients
+5. Audit everything`
+      },
+      {
+        id: '11.4',
+        title: 'Human-in-the-Loop Patterns',
+        duration: '20 min',
+        content: `# Human-in-the-Loop Patterns
+
+## Pattern 1: Approval Gates
+- Critical → Physician approval required
+- Moderate → Override with documentation
+- Low-risk → Informational only
+
+## Pattern 2: Confidence Thresholds
+- Above 95% → Auto-approve with logging
+- 80-95% → Queue for review
+- Below 80% → Reject
+
+## Pattern 3: Escalation Chains
+Nurse → Attending → Dept Head → Admin
+With timeouts at each level.`
+      },
+      {
+        id: '11.5',
+        title: 'AI Agent Security',
+        duration: '25 min',
+        content: `# AI Agent Security
+
+## Threat Categories
+1. Prompt Injection - Input sanitization
+2. Privilege Escalation - Permission enforcement
+3. Data Exfiltration - Output PHI scanning
+4. Context Poisoning - Integrity validation
+
+## Security Checklist
+- Input sanitization
+- Permission enforcement
+- Output scanning
+- Behavioral monitoring
+- Audit logging
+- Rate limiting
+- Session isolation`
+      },
+      {
+        id: '11.6',
+        title: 'NIST AI RMF',
+        duration: '20 min',
+        content: `# NIST AI RMF for Healthcare
+
+## Four Functions
+1. GOVERN - Policies and oversight
+2. MAP - System inventory
+3. MEASURE - Risk metrics
+4. MANAGE - Treatment plans
+
+## CSF + AI RMF Integration
+- Identify → Inventory AI systems
+- Protect → AI-specific controls
+- Detect → Monitor anomalies
+- Respond → Handle incidents
+- Recover → Restore with lessons`
+      }
+    ]
+  },
 ];
 
 // HIPAA Reference Data

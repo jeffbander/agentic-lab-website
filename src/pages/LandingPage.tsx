@@ -13,6 +13,7 @@ const VoiceBiomarkerFlow = lazy(() => import('../components/biomarkers/VoiceBiom
 const ClinicalImpactDashboard = lazy(() => import('../components/charts/ClinicalImpactDashboard').then(m => ({ default: m.ClinicalImpactDashboard })));
 const ROICalculator = lazy(() => import('../components/calculator/ROICalculator').then(m => ({ default: m.ROICalculator })));
 const VideoGenerator = lazy(() => import('../components/sections/VideoGenerator').then(m => ({ default: m.VideoGenerator })));
+const GitHubProjectsSection = lazy(() => import('../components/github/GitHubProjectsSection').then(m => ({ default: m.GitHubProjectsSection })));
 const Contact = lazy(() => import('../components/sections/Contact').then(m => ({ default: m.Contact })));
 
 function SectionErrorFallback({ section }: { section: string }) {
@@ -76,6 +77,11 @@ export default function LandingPage() {
       <Suspense fallback={<Loading message="Loading video generator..." />}>
         <ErrorBoundary fallback={<SectionErrorFallback section="Video Generator" />}>
           <VideoGenerator />
+        </ErrorBoundary>
+      </Suspense>
+      <Suspense fallback={<Loading message="Loading GitHub projects..." />}>
+        <ErrorBoundary fallback={<SectionErrorFallback section="GitHub Projects" />}>
+          <GitHubProjectsSection />
         </ErrorBoundary>
       </Suspense>
       <Suspense fallback={<Loading message="Loading contact form..." />}>
