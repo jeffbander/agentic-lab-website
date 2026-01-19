@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, Copy, Info, Zap } from 'lucide-react';
+import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, Copy, Info, Zap, BookmarkPlus, Check, LogIn } from 'lucide-react';
 import type { OnScreenText } from '../../lib/patientEducation';
 import { concatenateVideos, preloadFFmpeg, type VideoStitcherProgress } from '../../lib/ffmpegVideoStitcher';
+import { useAuth } from '../../contexts/AuthContext';
+import { saveUserVideo } from '../../lib/auth';
 
 interface GeneratePanelProps {
   prompt: string; // This will be promptPart1
@@ -127,6 +129,8 @@ function updateDocumentTitle(message: string) {
 
 export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2.5', onBack, onReset }: GeneratePanelProps) {
   const modelDisplayName = MODEL_DISPLAY_NAMES[model] || model;
+  const { user, isAuthenticated, showAuthModal } = useAuth();
+
   // Parallel video generation state
   const [currentPhase, setCurrentPhase] = useState<GenerationPhase>(promptPart2 ? 'parallel' : 'single');
   const [part1Job, setPart1Job] = useState<JobState | null>(null);
@@ -136,6 +140,10 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string | null>(null);
   const hasCreatedJobs = useRef(false);
+
+  // Save to library state
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // UX improvements
   const [, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
@@ -409,6 +417,48 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
     window.location.reload();
   };
 
+  const handleSaveToLibrary = () => {
+    if (!user || !isAuthenticated) {
+      showAuthModal('login');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Create a title from the OST
+      const title = ost.beat2?.slice(0, 50) || 'Patient Education Video';
+
+      // Generate unique ID for the video
+      const videoId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+
+      saveUserVideo({
+        id: videoId,
+        userId: user.userId,
+        createdAt: new Date().toISOString(),
+        title,
+        jobId: part1Job?.id || '',
+        jobId2: part2Job?.id,
+        status: 'completed',
+        videoUrl: stitchedVideoUrl || undefined,
+        part1Url: part1Job?.videoUrl,
+        part2Url: part2Job?.videoUrl,
+        prompt,
+        promptPart2,
+        ost,
+        model,
+        duration: promptPart2 ? 24 : 12,
+      });
+
+      setIsSaved(true);
+    } catch (err) {
+      console.error('Failed to save video:', err);
+      setError('Failed to save video to library');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Get the current job ID for display
   const currentJobId = part1Job?.id || part2Job?.id;
 
@@ -656,19 +706,53 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
                     </video>
                   </div>
 
-                  {/* Download Button */}
-                  <button
-                    onClick={() => {
-                      const a = document.createElement('a');
-                      a.href = stitchedVideoUrl;
-                      a.download = 'mount-sinai-patient-education-24s.webm';
-                      a.click();
-                    }}
-                    className="w-full py-3 px-6 bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 text-white font-semibold rounded-lg hover:from-sinai-cyan-700 hover:to-sinai-magenta-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-5 h-5" />
-                    <span>Download 24s Stitched Video</span>
-                  </button>
+                  {/* Download and Save Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = stitchedVideoUrl;
+                        a.download = 'mount-sinai-patient-education-24s.webm';
+                        a.click();
+                      }}
+                      className="flex-1 py-3 px-6 bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 text-white font-semibold rounded-lg hover:from-sinai-cyan-700 hover:to-sinai-magenta-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <Download className="w-5 h-5" />
+                      <span>Download 24s Video</span>
+                    </button>
+
+                    {/* Save to Library Button */}
+                    {isSaved ? (
+                      <button
+                        disabled
+                        className="py-3 px-6 bg-green-100 text-green-700 font-semibold rounded-lg flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-5 h-5" />
+                        Saved!
+                      </button>
+                    ) : isAuthenticated ? (
+                      <button
+                        onClick={handleSaveToLibrary}
+                        disabled={isSaving}
+                        className="py-3 px-6 bg-sinai-navy hover:bg-sinai-navy/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <BookmarkPlus className="w-5 h-5" />
+                        )}
+                        <span>{isSaving ? 'Saving...' : 'Save to Library'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => showAuthModal('login')}
+                        className="py-3 px-6 border-2 border-sinai-cyan-600 text-sinai-cyan-700 font-semibold rounded-lg hover:bg-sinai-cyan-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <LogIn className="w-5 h-5" />
+                        <span>Sign In to Save</span>
+                      </button>
+                    )}
+                  </div>
 
                   {/* Optional: Show individual parts as fallback */}
                   {part1Job?.videoUrl && part2Job?.videoUrl && (
@@ -773,15 +857,49 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
                     </video>
                   </div>
 
-                  {/* Download Button */}
-                  <button
-                    onClick={() => part1Job?.videoUrl && handleDownload(part1Job.videoUrl)}
-                    className="w-full py-3 px-6 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors flex items-center justify-center gap-2"
-                    style={{ color: '#ffffff' }}
-                  >
-                    <Download className="w-5 h-5" style={{ color: '#ffffff' }} />
-                    <span style={{ color: '#ffffff' }}>Download Video</span>
-                  </button>
+                  {/* Download and Save Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => part1Job?.videoUrl && handleDownload(part1Job.videoUrl)}
+                      className="flex-1 py-3 px-6 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors flex items-center justify-center gap-2"
+                      style={{ color: '#ffffff' }}
+                    >
+                      <Download className="w-5 h-5" style={{ color: '#ffffff' }} />
+                      <span style={{ color: '#ffffff' }}>Download Video</span>
+                    </button>
+
+                    {/* Save to Library Button */}
+                    {isSaved ? (
+                      <button
+                        disabled
+                        className="py-3 px-6 bg-green-100 text-green-700 font-semibold rounded-lg flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-5 h-5" />
+                        Saved!
+                      </button>
+                    ) : isAuthenticated ? (
+                      <button
+                        onClick={handleSaveToLibrary}
+                        disabled={isSaving}
+                        className="py-3 px-6 bg-sinai-navy hover:bg-sinai-navy/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <BookmarkPlus className="w-5 h-5" />
+                        )}
+                        <span>{isSaving ? 'Saving...' : 'Save to Library'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => showAuthModal('login')}
+                        className="py-3 px-6 border-2 border-sinai-cyan-600 text-sinai-cyan-700 font-semibold rounded-lg hover:bg-sinai-cyan-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <LogIn className="w-5 h-5" />
+                        <span>Sign In to Save</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </motion.div>

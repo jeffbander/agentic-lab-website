@@ -1,11 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Github } from 'lucide-react';
+import { Menu, X, Github, User, LogOut, Video, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const { user, isAuthenticated, logout, showAuthModal } = useAuth();
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navLinks = [
     { name: 'Overview', href: '#overview', isHash: true },
@@ -96,6 +111,65 @@ export function Navigation() {
             >
               <Github className="w-5 h-5" />
             </motion.a>
+
+            {/* User Menu / Sign In */}
+            {isAuthenticated ? (
+              <div className="relative" ref={userMenuRef}>
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-sinai-cyan-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-sinai-cyan-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
+                    {user?.displayName}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </motion.button>
+
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50"
+                    >
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Video className="w-4 h-4" />
+                        My Videos
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={() => showAuthModal('login')}
+                className="px-4 py-2 bg-sinai-cyan-600 hover:bg-sinai-cyan-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Sign In
+              </motion.button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -169,6 +243,48 @@ export function Navigation() {
                 <Github className="w-5 h-5" />
                 <span>GitHub</span>
               </a>
+
+              {/* Mobile User Menu / Sign In */}
+              <div className="border-t border-gray-200 pt-3 mt-3">
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-3 py-2 text-gray-900 font-medium">
+                      <div className="w-8 h-8 bg-sinai-cyan-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-sinai-cyan-600" />
+                      </div>
+                      <span>{user?.displayName}</span>
+                    </div>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center space-x-2 py-2 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors"
+                    >
+                      <Video className="w-5 h-5" />
+                      <span>My Videos</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center space-x-2 py-2 text-gray-700 hover:text-red-600 font-medium transition-colors w-full"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      showAuthModal('login');
+                      setIsOpen(false);
+                    }}
+                    className="w-full py-2 bg-sinai-cyan-600 hover:bg-sinai-cyan-700 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
