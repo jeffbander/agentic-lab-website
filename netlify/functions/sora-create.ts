@@ -205,12 +205,12 @@ async function createVideoJob(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     // Use model identifier format (owner/model) instead of version hash
+    // Don't use 'Prefer: wait' - Netlify functions timeout after 10s
     const response = await fetch(`${REPLICATE_API_URL}/models/${modelVersion}/predictions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
         'Content-Type': 'application/json',
-        'Prefer': 'wait',
       },
       body: JSON.stringify({
         input,
