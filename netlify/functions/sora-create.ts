@@ -1,21 +1,97 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
+// Supported video generation models
+type VideoModel = 'sora-2' | 'sora-2-pro' | 'wan-2.5' | 'hailuo-2.3' | 'kling-2.5';
+
 interface SoraCreateRequest {
   prompt: string;
   width?: number;
   height?: number;
   n_seconds?: number;
-  model?: 'sora-2' | 'sora-2-pro';
+  model?: VideoModel;
 }
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const REPLICATE_API_URL = 'https://api.replicate.com/v1';
 
-// Model versions for Sora on Replicate
-const SORA_MODEL_VERSIONS: Record<string, string> = {
+// Model versions for video generation on Replicate
+// Updated Jan 2026 with newer models for patient education
+const VIDEO_MODEL_VERSIONS: Record<string, string> = {
+  // OpenAI Sora models (via Replicate)
   'sora-2': '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3',
   'sora-2-pro': '4bdefbd92a923832d1a5e0a40d419ea8cf3e0743abfcdca6e28268877a81b0c4',
+  // Alibaba Wan 2.5 - Great for audio sync, lip-sync, multi-language, budget-friendly
+  'wan-2.5': '4e22e64c604706aa4ac1929a7ae146ea033f39bb228e896da79d91b7a39e8d32',
+  // MiniMax Hailuo 2.3 - Excellent for realistic human motion, medical content
+  'hailuo-2.3': '23a02633b5a44780345a59d4d43f8bd510efa239c56f08f29639ff24fa6615e1',
+  // Kling 2.5 Turbo Pro - Cinematic quality, smooth motion
+  'kling-2.5': '18f41bfca7f1997ce37b04b407152c385c9159095681a6f5a4ff47718bc25a57',
+};
+
+// Model-specific configuration
+interface ModelConfig {
+  requiresOpenAIKey: boolean;
+  supportedDurations: number[];
+  supportedResolutions: { width: number; height: number; label: string }[];
+  maxDuration: number;
+  usesAspectRatio: boolean;
+}
+
+const MODEL_CONFIGS: Record<string, ModelConfig> = {
+  'sora-2': {
+    requiresOpenAIKey: true,
+    supportedDurations: [4, 8, 12],
+    supportedResolutions: [
+      { width: 1280, height: 720, label: 'landscape' },
+      { width: 720, height: 1280, label: 'portrait' },
+    ],
+    maxDuration: 12,
+    usesAspectRatio: true,
+  },
+  'sora-2-pro': {
+    requiresOpenAIKey: true,
+    supportedDurations: [4, 8, 12],
+    supportedResolutions: [
+      { width: 1280, height: 720, label: 'landscape' },
+      { width: 720, height: 1280, label: 'portrait' },
+    ],
+    maxDuration: 12,
+    usesAspectRatio: true,
+  },
+  'wan-2.5': {
+    requiresOpenAIKey: false,
+    supportedDurations: [5, 10],
+    supportedResolutions: [
+      { width: 1280, height: 720, label: '720p' },
+      { width: 1920, height: 1080, label: '1080p' },
+      { width: 720, height: 1280, label: 'portrait-720p' },
+      { width: 1080, height: 1920, label: 'portrait-1080p' },
+    ],
+    maxDuration: 10,
+    usesAspectRatio: false,
+  },
+  'hailuo-2.3': {
+    requiresOpenAIKey: false,
+    supportedDurations: [6, 10], // 10s only at 768p
+    supportedResolutions: [
+      { width: 1365, height: 768, label: '768p' },
+      { width: 1920, height: 1080, label: '1080p' }, // 1080p only supports 6s
+    ],
+    maxDuration: 10,
+    usesAspectRatio: false,
+  },
+  'kling-2.5': {
+    requiresOpenAIKey: false,
+    supportedDurations: [5, 10],
+    supportedResolutions: [
+      { width: 1280, height: 720, label: '16:9' },
+      { width: 720, height: 1280, label: '9:16' },
+      { width: 1080, height: 1080, label: '1:1' },
+    ],
+    maxDuration: 10,
+    usesAspectRatio: true,
+  },
 };
 
 /**
@@ -26,40 +102,103 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Creates a Sora video generation prediction with retry logic for rate limits
+ * Build input parameters for different video models
  */
-async function createSoraVideo(
+function buildModelInput(
+  model: VideoModel,
+  prompt: string,
+  width: number,
+  height: number,
+  duration: number
+): Record<string, unknown> {
+  const config = MODEL_CONFIGS[model];
+
+  switch (model) {
+    case 'sora-2':
+    case 'sora-2-pro': {
+      // Sora uses aspect_ratio and seconds
+      const aspect_ratio = width > height ? 'landscape' : 'portrait';
+      const validSeconds = duration <= 6 ? 4 : duration <= 10 ? 8 : 12;
+      return {
+        prompt,
+        aspect_ratio,
+        seconds: validSeconds,
+        openai_api_key: OPENAI_API_KEY,
+      };
+    }
+
+    case 'wan-2.5': {
+      // Wan 2.5 uses size string and duration
+      const size = `${width}x${height}`;
+      const validDuration = duration <= 7 ? 5 : 10;
+      return {
+        prompt,
+        size,
+        duration: validDuration,
+        enable_prompt_expansion: true,
+      };
+    }
+
+    case 'hailuo-2.3': {
+      // Hailuo uses resolution string and duration
+      // 1080p only supports 6s, 768p supports 6 or 10s
+      const is1080p = width >= 1920 || height >= 1080;
+      const resolution = is1080p ? '1080p' : '768p';
+      const validDuration = is1080p ? 6 : (duration <= 8 ? 6 : 10);
+      return {
+        prompt,
+        resolution,
+        duration: validDuration,
+        prompt_optimizer: true,
+      };
+    }
+
+    case 'kling-2.5': {
+      // Kling uses aspect_ratio
+      let aspect_ratio = '16:9';
+      if (width < height) {
+        aspect_ratio = '9:16';
+      } else if (width === height) {
+        aspect_ratio = '1:1';
+      }
+      const validDuration = duration <= 7 ? 5 : 10;
+      return {
+        prompt,
+        aspect_ratio,
+        duration: validDuration,
+      };
+    }
+
+    default:
+      throw new Error(`Unknown model: ${model}`);
+  }
+}
+
+/**
+ * Creates a video generation prediction with retry logic for rate limits
+ * Supports multiple models: Sora 2, Wan 2.5, Hailuo 2.3, Kling 2.5
+ */
+async function createVideoJob(
   prompt: string,
   width: number,
   height: number,
   n_seconds: number,
-  model: 'sora-2' | 'sora-2-pro' = 'sora-2-pro',
+  model: VideoModel = 'sora-2-pro',
   maxRetries: number = 3
 ): Promise<string> {
-  // Replicate Sora-2 API only supports:
-  // - aspect_ratio: "portrait" (720x1280) or "landscape" (1280x720)
-  // - seconds: 4, 8, or 12 (max 12 seconds!)
-
-  const aspect_ratio = width > height ? 'landscape' : 'portrait';
-
-  // Clamp to maximum supported duration (12 seconds)
-  const seconds = Math.min(Math.max(4, Math.round(n_seconds / 4) * 4), 12);
-  if (seconds === 4 || seconds % 4 !== 0) {
-    // Round to nearest valid value: 4, 8, or 12
-    const validSeconds = seconds <= 6 ? 4 : seconds <= 10 ? 8 : 12;
-    console.log(`[Sora Create] Adjusted duration from ${n_seconds}s to ${validSeconds}s (Replicate limit)`);
+  const config = MODEL_CONFIGS[model];
+  if (!config) {
+    throw new Error(`Unknown model: ${model}. Supported: ${Object.keys(MODEL_CONFIGS).join(', ')}`);
   }
-  const finalSeconds = seconds <= 6 ? 4 : seconds <= 10 ? 8 : 12;
 
-  const modelVersion = SORA_MODEL_VERSIONS[model] || SORA_MODEL_VERSIONS['sora-2-pro'];
+  // Build model-specific input
+  const input = buildModelInput(model, prompt, width, height, n_seconds);
+  const modelVersion = VIDEO_MODEL_VERSIONS[model];
 
-  console.log(`[Sora Create] Request params:`, {
+  console.log(`[Video Create] Request params:`, {
     prompt: prompt.substring(0, 100) + '...',
     model,
-    aspect_ratio,
-    seconds: finalSeconds,
-    requested: { width, height, n_seconds },
-    actual: { width: aspect_ratio === 'landscape' ? 1280 : 720, height: aspect_ratio === 'landscape' ? 720 : 1280 }
+    input: { ...input, prompt: '(truncated)' },
   });
 
   let lastError: Error | null = null;
@@ -73,17 +212,13 @@ async function createSoraVideo(
       },
       body: JSON.stringify({
         version: modelVersion,
-        input: {
-          prompt,
-          aspect_ratio,
-          seconds: finalSeconds,
-          openai_api_key: OPENAI_API_KEY,
-        },
+        input,
       }),
     });
 
     if (response.ok) {
       const data = await response.json();
+      console.log(`[Video Create] Job created: ${data.id} (model: ${model})`);
       return data.id;
     }
 
@@ -102,7 +237,7 @@ async function createSoraVideo(
         // Use default retry_after
       }
 
-      console.log(`[Sora Create] Rate limited (attempt ${attempt}/${maxRetries}). Retrying in ${retryAfter}s...`);
+      console.log(`[Video Create] Rate limited (attempt ${attempt}/${maxRetries}). Retrying in ${retryAfter}s...`);
 
       if (attempt < maxRetries) {
         await sleep(retryAfter * 1000);
@@ -110,7 +245,7 @@ async function createSoraVideo(
       }
     }
 
-    lastError = new Error(`Failed to create Sora video: ${response.status} ${errorText}`);
+    lastError = new Error(`Failed to create video (${model}): ${response.status} ${errorText}`);
 
     // For non-429 errors, don't retry
     if (response.status !== 429) {
@@ -118,12 +253,18 @@ async function createSoraVideo(
     }
   }
 
-  throw lastError || new Error('Failed to create Sora video after retries');
+  throw lastError || new Error(`Failed to create video after ${maxRetries} retries`);
 }
 
 /**
- * Netlify Function Handler - Create Sora Video
- * POST /api/sora/create
+ * Netlify Function Handler - Create Video
+ * POST /api/sora-create
+ *
+ * Supports multiple models for patient education videos:
+ * - sora-2, sora-2-pro: OpenAI Sora (high quality, 4/8/12s)
+ * - wan-2.5: Alibaba Wan (audio sync, lip-sync, budget-friendly, 5/10s)
+ * - hailuo-2.3: MiniMax Hailuo (realistic human motion, 6/10s)
+ * - kling-2.5: Kling (cinematic quality, smooth motion, 5/10s)
  */
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   // Enable CORS
@@ -162,16 +303,6 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     };
   }
 
-  if (!OPENAI_API_KEY) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'OpenAI API key not configured.',
-      }),
-    };
-  }
-
   try {
     const body: SoraCreateRequest = JSON.parse(event.body || '{}');
 
@@ -185,13 +316,36 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     }
 
     // Set defaults for patient education videos
-    // NOTE: Replicate Sora-2 API limits: max 12 seconds, only 720p or 1280x720
     const width = body.width || 1920;
     const height = body.height || 1080;
-    const n_seconds = body.n_seconds || 12; // Changed default from 20 to 12
-    const model = body.model || 'sora-2-pro'; // Default to Pro model
+    const n_seconds = body.n_seconds || 12;
+    const model = (body.model || 'wan-2.5') as VideoModel; // Default to Wan 2.5 (best value)
 
-    // Validate constraints
+    // Validate model
+    const validModels = Object.keys(VIDEO_MODEL_VERSIONS);
+    if (!validModels.includes(model)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: `Invalid model: ${model}. Supported: ${validModels.join(', ')}`,
+        }),
+      };
+    }
+
+    // Check if OpenAI key is needed for Sora models
+    const config = MODEL_CONFIGS[model];
+    if (config.requiresOpenAIKey && !OPENAI_API_KEY) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: `OpenAI API key required for ${model}. Try wan-2.5 or hailuo-2.3 instead.`,
+        }),
+      };
+    }
+
+    // Validate duration
     if (n_seconds < 1) {
       return {
         statusCode: 400,
@@ -202,15 +356,15 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
 
-    // Warn if requesting more than 12 seconds (will be clamped)
-    if (n_seconds > 12) {
-      console.log(`[Sora] WARNING: Requested ${n_seconds}s but Replicate Sora-2 max is 12s. Will clamp to 12s.`);
+    // Log model-specific info
+    const maxDuration = config.maxDuration;
+    if (n_seconds > maxDuration) {
+      console.log(`[Video] NOTE: Requested ${n_seconds}s but ${model} max is ${maxDuration}s. Will clamp.`);
     }
 
     // Create the video generation job
-    console.log(`[Sora] Creating patient education video (${model}, ${n_seconds}s, ${width}x${height})`);
-    const jobId = await createSoraVideo(body.prompt, width, height, n_seconds, model);
-    console.log(`[Sora] Job created: ${jobId}`);
+    console.log(`[Video] Creating patient education video (${model}, ${n_seconds}s, ${width}x${height})`);
+    const jobId = await createVideoJob(body.prompt, width, height, n_seconds, model);
 
     // Return immediately with job ID (async pattern)
     return {
@@ -219,12 +373,13 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       body: JSON.stringify({
         id: jobId,
         status: 'queued',
-        message: 'Video generation job created. Poll /api/sora/status for updates.',
+        model: model,
+        message: `Video generation started with ${model}. Poll /api/sora-status for updates.`,
       }),
     };
 
   } catch (error) {
-    console.error('[Sora] Error creating video:', error);
+    console.error('[Video] Error creating video:', error);
     return {
       statusCode: 500,
       headers,

@@ -1,7 +1,62 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Check, X, Play, AlertCircle } from 'lucide-react';
+import { Edit2, Check, X, Play, AlertCircle, ChevronDown, Sparkles, Zap, Film, DollarSign } from 'lucide-react';
 import type { SoraPromptResult, OnScreenText } from '../../lib/patientEducation';
+
+// Video model options for patient education
+type VideoModelOption = {
+  id: string;
+  name: string;
+  description: string;
+  badge?: string;
+  badgeColor?: string;
+  features: string[];
+  durations: string;
+  pricing: string;
+};
+
+const VIDEO_MODELS: VideoModelOption[] = [
+  {
+    id: 'wan-2.5',
+    name: 'Wan 2.5',
+    description: 'Best for patient education with audio sync',
+    badge: 'Recommended',
+    badgeColor: 'bg-green-500',
+    features: ['Audio/lip sync', 'Multi-language', 'Budget-friendly', 'Up to 1080p'],
+    durations: '5s or 10s',
+    pricing: '$0.10-0.15/sec',
+  },
+  {
+    id: 'hailuo-2.3',
+    name: 'Hailuo 2.3',
+    description: 'Excellent for realistic human motion',
+    badge: 'Medical',
+    badgeColor: 'bg-blue-500',
+    features: ['Realistic motion', 'Cinematic VFX', 'Anatomical demos', '768p-1080p'],
+    durations: '6s or 10s',
+    pricing: '$0.28-0.56/video',
+  },
+  {
+    id: 'kling-2.5',
+    name: 'Kling 2.5',
+    description: 'Cinematic quality with smooth motion',
+    badge: 'Premium',
+    badgeColor: 'bg-purple-500',
+    features: ['Cinematic depth', 'Smooth motion', 'Prompt adherence', 'Multiple ratios'],
+    durations: '5s or 10s',
+    pricing: '$0.07/sec',
+  },
+  {
+    id: 'sora-2-pro',
+    name: 'Sora 2 Pro',
+    description: 'OpenAI highest quality (requires API key)',
+    badge: 'High Quality',
+    badgeColor: 'bg-orange-500',
+    features: ['Best realism', 'Physics accurate', 'Narrative depth', '720p'],
+    durations: '4s, 8s, or 12s',
+    pricing: 'Higher cost',
+  },
+];
 
 interface PreviewCardProps {
   result: SoraPromptResult;
@@ -164,6 +219,8 @@ function BeatCard({ beatNumber, title, text, timeRange, onEdit }: BeatCardProps)
 
 export default function PreviewCard({ result, promptPart2, onGenerate, onBack }: PreviewCardProps) {
   const [ost, setOst] = useState<OnScreenText>(result.ost);
+  const [selectedModel, setSelectedModel] = useState<string>('wan-2.5'); // Default to Wan 2.5 (best for patient education)
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   const handleBeatEdit = (beat: keyof OnScreenText, newText: string) => {
     setOst(prev => ({
@@ -173,8 +230,10 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
   };
 
   const handleGenerate = () => {
-    onGenerate(result.prompt, ost, promptPart2, result.params.model);
+    onGenerate(result.prompt, ost, promptPart2, selectedModel);
   };
+
+  const selectedModelInfo = VIDEO_MODELS.find(m => m.id === selectedModel) || VIDEO_MODELS[0];
 
   // Check if we have an extended 24-second video (8 beats)
   const hasExtendedBeats = !!ost.beat5;
@@ -208,15 +267,103 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
         </p>
       </div>
 
+      {/* Model Selection */}
+      <div className="bg-gradient-to-r from-sinai-cyan-50 to-sinai-magenta-50 border border-sinai-cyan-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+            <Film className="w-5 h-5 text-sinai-cyan-600" />
+            Video Generation Model
+          </h3>
+          <span className="text-xs text-gray-500">Choose based on your needs</span>
+        </div>
+
+        {/* Model Dropdown */}
+        <div className="relative mb-4">
+          <button
+            onClick={() => setShowModelDropdown(!showModelDropdown)}
+            className="w-full flex items-center justify-between bg-white border-2 border-sinai-cyan-300 rounded-lg px-4 py-3 hover:border-sinai-cyan-500 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-start">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900">{selectedModelInfo.name}</span>
+                  {selectedModelInfo.badge && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full text-white ${selectedModelInfo.badgeColor}`}>
+                      {selectedModelInfo.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm text-gray-600">{selectedModelInfo.description}</span>
+              </div>
+            </div>
+            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {showModelDropdown && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+              >
+                {VIDEO_MODELS.map((model) => (
+                  <button
+                    key={model.id}
+                    onClick={() => {
+                      setSelectedModel(model.id);
+                      setShowModelDropdown(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                      selectedModel === model.id ? 'bg-sinai-cyan-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900">{model.name}</span>
+                          {model.badge && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full text-white ${model.badgeColor}`}>
+                              {model.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">{model.description}</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {model.features.slice(0, 3).map((feature, i) => (
+                            <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-right text-xs text-gray-500">
+                        <div>{model.durations}</div>
+                        <div className="text-sinai-cyan-600">{model.pricing}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Selected Model Features */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+          {selectedModelInfo.features.map((feature, i) => (
+            <div key={i} className="flex items-center gap-1 text-gray-700">
+              <Sparkles className="w-3 h-3 text-sinai-cyan-500" />
+              {feature}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Metadata Display */}
-      <div className="bg-sinai-cyan-50 border border-sinai-cyan-200 rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Model:</span>
-            <span className="ml-2 font-semibold text-gray-900">
-              {result.params.model === 'sora-2-pro' ? 'Sora 2 Pro' : 'Sora 2'}
-            </span>
-          </div>
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="text-gray-600">Language:</span>
             <span className="ml-2 font-semibold text-gray-900">{result.audit.language}</span>

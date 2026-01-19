@@ -16,6 +16,15 @@ interface GeneratePanelProps {
 type JobStatus = 'queued' | 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
 type GenerationPhase = 'parallel' | 'single' | 'stitching' | 'completed';
 
+// Model display names for UI
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  'sora-2': 'Sora 2',
+  'sora-2-pro': 'Sora 2 Pro',
+  'wan-2.5': 'Wan 2.5',
+  'hailuo-2.3': 'Hailuo 2.3',
+  'kling-2.5': 'Kling 2.5',
+};
+
 interface StatusResponse {
   id: string;
   status: JobStatus;
@@ -116,7 +125,8 @@ function updateDocumentTitle(message: string) {
   document.title = message;
 }
 
-export default function GeneratePanel({ prompt, promptPart2, ost, model = 'sora-2-pro', onBack, onReset }: GeneratePanelProps) {
+export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2.5', onBack, onReset }: GeneratePanelProps) {
+  const modelDisplayName = MODEL_DISPLAY_NAMES[model] || model;
   // Parallel video generation state
   const [currentPhase, setCurrentPhase] = useState<GenerationPhase>(promptPart2 ? 'parallel' : 'single');
   const [part1Job, setPart1Job] = useState<JobState | null>(null);
@@ -414,6 +424,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'sora-
         <h2 className="text-2xl font-bold text-gray-900">Generate Mount Sinai Patient Education Video</h2>
         <p className="text-gray-600 mt-1">
           {promptPart2 ? 'Creating 24-second video (Part 1 + Part 2)' : 'Creating 12-second video with 4-beat storyboard'}
+          <span className="ml-2 text-sinai-cyan-600 font-medium">using {modelDisplayName}</span>
         </p>
         {currentPhase === 'parallel' && (
           <div className="mt-2 flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded-full w-fit">
