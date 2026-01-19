@@ -14,7 +14,7 @@ export default function PatientEducation() {
   const [promptPart2, setPromptPart2] = useState<string | undefined>(undefined);
   const [finalOst, setFinalOst] = useState<OnScreenText | null>(null);
   const [finalPromptPart2, setFinalPromptPart2] = useState<string | undefined>(undefined);
-  const [selectedModel, setSelectedModel] = useState<string>('sora-2-pro');
+  const [selectedModel, setSelectedModel] = useState<string>('wan-2.5');
 
   const handlePreview = (result: SoraPromptResult, part2?: string) => {
     setPromptResult(result);
@@ -181,7 +181,7 @@ export default function PatientEducation() {
             All videos are HIPAA-compliant with automatic PHI redaction and safety disclaimers.
           </p>
           <p className="mt-1">
-            Powered by OpenAI Sora 2 • Typical generation time: 1.5-2 minutes
+            Powered by Wan 2.5, Hailuo 2.3, Kling 2.5 & Sora 2 • Typical generation time: 1-2 minutes
           </p>
         </motion.div>
       </div>
