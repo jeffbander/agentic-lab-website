@@ -23,6 +23,601 @@ export type BlogPost = {
 // Initial blog posts data - can be extended via API
 export const blogPosts: BlogPost[] = [
   {
+    id: '10',
+    slug: '2026-agentic-ai-healthcare-landscape',
+    title: 'The 2026 Agentic AI Healthcare Landscape: From Pilots to Production',
+    subtitle: 'Market trends, adoption rates, and what the end of the "pilot era" means for healthcare AI',
+    excerpt: 'With the agentic AI healthcare market projected to reach $38.4 billion by 2035 and 85% of healthcare organizations now adopting AI agents, 2026 marks the decisive transition from experiments to enterprise-scale deployment.',
+    content: `## The End of the Pilot Era
+
+2026 is not just another year for healthcare AI—it marks a fundamental inflection point. After years of proof-of-concepts and limited pilots, the industry is decisively transitioning to enterprise-scale deployment of agentic AI systems.
+
+According to recent industry analyses, 85% of healthcare organizations have now adopted or are actively exploring agentic AI solutions. Gartner predicts that 40% of enterprise applications will embed AI agents by the end of 2026, up from less than 5% in 2025. This isn't incremental growth—it's a transformation.
+
+## Market Growth Projections
+
+The numbers tell a compelling story:
+
+| Metric | 2025 | 2035 (Projected) | CAGR |
+|--------|------|------------------|------|
+| Agentic AI in Healthcare | $0.80-0.90B | $38.4B | 45.6% |
+| Global Agentic AI Market | $28B (2024) | $127B (2029) | 35% |
+
+The $20 billion opportunity identified in the 2024 CAQH Index—focused on automating routine healthcare transactions—is just the beginning. Real-world deployments are already demonstrating remarkable returns.
+
+## What Changed?
+
+### From Chatbots to Agents
+
+The first wave of healthcare AI focused on chatbots and simple automation. These were valuable but limited—they could answer questions or summarize notes, but they couldn't take meaningful action.
+
+Agentic AI is different. These systems can:
+
+- **Orchestrate multi-step workflows** across departments
+- **Make decisions** within defined guardrails
+- **Learn and adapt** from feedback loops
+- **Integrate deeply** with existing clinical systems
+
+### Infrastructure Maturity
+
+Three infrastructure developments enabled this shift:
+
+1. **FHIR Adoption**: Standardized APIs now allow AI systems to read and write clinical data consistently across EHR vendors.
+
+2. **Model Context Protocol (MCP)**: Anthropic's open standard (adopted by OpenAI and Google DeepMind) provides a universal way for AI agents to connect with external tools and data sources.
+
+3. **Enterprise AI Platforms**: Microsoft, Google, and Amazon now offer healthcare-specific AI infrastructure with built-in HIPAA compliance.
+
+## Real-World Impact
+
+### Metro Health System Case Study
+
+One of the most documented deployments shows what's possible:
+
+- **Patient wait times**: Decreased 85% (52 minutes → under 8 minutes)
+- **Denial rates**: Dropped from 11.2% to 2.4%
+- **Annual savings**: $2.8 million in administrative costs
+- **ROI timeline**: Full return within 6 months
+
+### Stanford and Oxford Deployments
+
+Major academic medical centers are leading the charge:
+
+- **Stanford Health Care** is using Microsoft's healthcare agent orchestrator to build AI agents for tumor board preparation
+- **Oxford University Hospitals NHS** built three TrustedMDT agents that summarize patient charts, determine cancer staging, and draft treatment plans
+
+## The New Operating Model
+
+### Workflow-Embedded Agents
+
+The winning pattern emerging in 2026 is AI agents embedded in specific clinical workflows, not standalone tools. These agents:
+
+- Operate within well-defined boundaries
+- Have clear human "escape hatches"
+- Maintain full audit trails
+- Integrate with existing EHR systems
+
+### Human-in-the-Loop as Default
+
+Despite advances in autonomous capability, successful deployments maintain human oversight. As one industry expert noted: "AI Agents will be copilots embedded in well-defined workflows, with clear guardrails and human escape hatches."
+
+### Accountability and Governance
+
+2025 was about wiring AI into healthcare infrastructure. 2026 is about accountability—proving that systems change outcomes and can be governed, audited, and trusted at scale.
+
+## Implications for Healthcare Organizations
+
+### For Health Systems
+
+1. **Move beyond pilots**: If you're still in "exploration mode," you're falling behind.
+2. **Focus on workflows**: Identify high-value, repetitive workflows where AI agents can have immediate impact.
+3. **Build governance frameworks**: NIST AI RMF and ISO 42001 provide starting points.
+
+### For Developers
+
+1. **Learn MCP**: The Model Context Protocol is becoming essential infrastructure for healthcare AI.
+2. **Master FHIR**: EHR integration is non-negotiable for production deployment.
+3. **Prioritize security**: HIPAA compliance isn't optional—it's foundational.
+
+### For Clinicians
+
+1. **Embrace augmentation**: AI agents amplify clinical expertise, they don't replace it.
+2. **Provide feedback**: Your domain knowledge shapes how these systems evolve.
+3. **Lead innovation**: Clinician-led development produces better outcomes than pure technical approaches.
+
+## Looking Ahead
+
+Industry predictions for 2027-2028 suggest:
+
+- **Specialty practices** will double AI usage
+- **Ambient listening** becomes standard for clinical documentation
+- **30%+ of healthcare organizations** transition to autonomous revenue cycle management
+
+The future of healthcare AI isn't a distant vision—it's arriving now. Organizations that move decisively in 2026 will define the standards for the decade ahead.
+
+---
+
+**References:**
+
+- Microsoft Industry Blogs: Agentic AI in Healthcare (November 2025)
+- BCG Publications: AI Agents Transform Healthcare (2026)
+- Chief Healthcare Executive: 26 Leaders Predictions for 2026
+- TATEEDA: Agentic AI in Healthcare Trends
+- Gartner: Enterprise AI Agent Predictions`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&h=630&fit=crop',
+    tags: ['Agentic AI', 'Healthcare', 'Market Trends', '2026 Predictions', 'Enterprise AI', 'Digital Health'],
+    category: 'Healthcare AI',
+    status: 'published',
+    publishedAt: '2026-01-19T10:00:00Z',
+    updatedAt: '2026-01-19T10:00:00Z',
+    readingTime: 12,
+    featured: true,
+  },
+  {
+    id: '9',
+    slug: 'claude-code-cursor-windsurf-hipaa-comparison',
+    title: 'Claude Code vs. Cursor vs. Windsurf: Choosing AI Coding Tools for HIPAA-Compliant Development',
+    subtitle: 'A practical guide to selecting the right AI coding assistant for healthcare software',
+    excerpt: 'Not all AI coding tools are created equal when it comes to healthcare. This comparison examines Claude Code, Cursor, and Windsurf through the lens of HIPAA compliance, security certifications, and real-world healthcare development needs.',
+    content: `## The Stakes Are Higher in Healthcare
+
+When you're building software that handles Protected Health Information (PHI), choosing the wrong AI coding tool isn't just an inconvenience—it's a compliance risk. This guide cuts through the marketing to give you practical recommendations based on actual healthcare development requirements.
+
+## The Contenders
+
+### Claude Code (Anthropic)
+
+**What it is**: Anthropic's agentic AI coding assistant that runs in your terminal, capable of reading entire codebases, understanding dependencies, and executing multi-step development plans.
+
+**Key Features**:
+- Agentic approach with multi-file editing
+- Model Context Protocol (MCP) support for external integrations
+- 200K token context window
+- Claude for Healthcare offering (launched January 2026)
+- Lower hallucination rates compared to alternatives
+
+**Healthcare Readiness**: ⭐⭐⭐⭐⭐
+- HIPAA-ready infrastructure through Claude for Healthcare
+- Native integrations with CMS, ICD-10, PubMed
+- FHIR development agent skills
+- BAA available for enterprise customers
+
+### Windsurf (Codeium)
+
+**What it is**: An AI-powered IDE built for enterprise development with extensive compliance certifications.
+
+**Key Features**:
+- Full IDE experience (not just an extension)
+- "Cascade" agentic workflow automation
+- Hybrid deployment options (cloud + on-premises)
+- Extensive compliance certifications
+
+**Healthcare Readiness**: ⭐⭐⭐⭐⭐
+- **HIPAA compliant** with BAA
+- **FedRAMP authorized**
+- **SOC 2 Type II certified**
+- **ITAR compliant**
+- On-premises deployment for maximum control
+
+### Cursor
+
+**What it is**: A VS Code fork with deeply integrated AI capabilities for rapid code generation.
+
+**Key Features**:
+- Fast prototyping and code generation
+- Familiar VS Code interface
+- Good for frontend development
+- Quick iteration cycles
+
+**Healthcare Readiness**: ⭐⭐⭐
+- SOC 2 certified only
+- **No HIPAA compliance**
+- **Not recommended for PHI handling**
+- Best for non-sensitive development work
+
+### GitHub Copilot
+
+**What it is**: Microsoft/GitHub's AI pair programmer, deeply integrated with the GitHub ecosystem.
+
+**Key Features**:
+- Excellent IDE integration
+- Enterprise-friendly licensing
+- Copilot Workspace for multi-file changes
+- Strong ecosystem support
+
+**Healthcare Readiness**: ⭐⭐⭐⭐
+- SOC 2 certified
+- Enterprise agreements available
+- Azure integration for HIPAA
+- Requires careful configuration for healthcare use
+
+## Comparison Matrix
+
+| Capability | Claude Code | Windsurf | Cursor | GitHub Copilot |
+|------------|-------------|----------|--------|----------------|
+| HIPAA Compliant | ✅ (Healthcare tier) | ✅ | ❌ | ⚠️ (via Azure) |
+| BAA Available | ✅ | ✅ | ❌ | ⚠️ |
+| SOC 2 | ✅ | ✅ | ✅ | ✅ |
+| FedRAMP | ❌ | ✅ | ❌ | ⚠️ |
+| On-Prem Option | ❌ | ✅ | ❌ | ⚠️ |
+| MCP Support | ✅ | ❌ | ❌ | ❌ |
+| FHIR Integration | ✅ | ❌ | ❌ | ❌ |
+| Context Window | 200K | ~100K | ~100K | ~8K |
+| Agentic Capability | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+
+## Recommendations by Use Case
+
+### For HIPAA-Regulated Development (PHI Handling)
+
+**Primary Recommendation: Windsurf Hybrid**
+
+When your code or development environment will touch PHI, Windsurf's comprehensive compliance certifications make it the safest choice. The on-premises deployment option gives you maximum control over sensitive data.
+
+**Alternative: Claude Code with Claude for Healthcare**
+
+If you need advanced agentic capabilities and FHIR integration, Claude for Healthcare provides HIPAA-ready infrastructure with specialized healthcare features.
+
+### For Frontend/Non-PHI Development
+
+**Recommendation: Cursor or Claude Code**
+
+For UI components, marketing sites, or any development that doesn't involve PHI, you have more flexibility. Cursor excels at rapid prototyping, while Claude Code offers better reasoning for complex logic.
+
+### For EHR Integration Projects
+
+**Recommendation: Claude Code**
+
+The Model Context Protocol (MCP) and FHIR agent skills make Claude Code uniquely suited for EHR integration work. The FHIR MCP Server can eliminate weeks of learning curve and prevent hallucination of medical codes.
+
+### For Mixed Development Teams
+
+**Recommendation: Windsurf + Claude Code**
+
+Use Windsurf for any work touching PHI, and Claude Code for architecture decisions, documentation, and complex problem-solving.
+
+## Practical Implementation
+
+### Setting Up for HIPAA Compliance
+
+1. **Verify BAA**: Before any PHI touches your development environment, ensure you have a signed Business Associate Agreement.
+
+2. **Isolate Environments**: Keep PHI-handling development separate from general development.
+
+3. **Audit Access**: Maintain logs of who accesses what data and when.
+
+4. **Train Your Team**: Ensure developers understand what constitutes PHI and how to handle it.
+
+### Configuration Best Practices
+
+**For Claude Code with MCP**:
+\`\`\`json
+{
+  "mcpServers": {
+    "fhir": {
+      "command": "npx",
+      "args": ["@anthropic/fhir-mcp-server"],
+      "env": {
+        "FHIR_BASE_URL": "https://your-fhir-server.com",
+        "AUDIT_LOG": "true"
+      }
+    }
+  }
+}
+\`\`\`
+
+**For Windsurf Enterprise**:
+- Enable hybrid mode for sensitive projects
+- Configure SSO integration
+- Set up compliance reporting
+
+## The Bottom Line
+
+Healthcare software development requires a different calculus than general-purpose coding. The convenience of any tool must be weighed against compliance risk, security certifications, and audit requirements.
+
+**If you're touching PHI**: Start with Windsurf or Claude for Healthcare. The compliance certifications aren't optional—they're essential.
+
+**If you're building clinical logic**: Claude Code's reasoning capabilities and FHIR support make it ideal for complex healthcare workflows.
+
+**If you're doing rapid prototyping of non-sensitive features**: Cursor remains excellent for fast iteration on UI components.
+
+The best healthcare development teams use multiple tools strategically, choosing the right one for each task based on the data sensitivity and compliance requirements involved.
+
+---
+
+**Note**: Compliance landscapes change rapidly. Always verify current certifications and obtain legal/compliance review before making tool selections for PHI-handling development.`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&h=630&fit=crop',
+    tags: ['Claude Code', 'Cursor', 'Windsurf', 'HIPAA', 'AI Coding', 'Development Tools', 'Comparison'],
+    category: 'Development',
+    status: 'published',
+    publishedAt: '2026-01-18T10:00:00Z',
+    updatedAt: '2026-01-18T10:00:00Z',
+    readingTime: 15,
+    featured: true,
+  },
+  {
+    id: '8',
+    slug: 'model-context-protocol-mcp-healthcare-fhir',
+    title: 'Model Context Protocol (MCP) for Healthcare: Building FHIR-Native AI Agents',
+    subtitle: 'How Anthropic\'s open standard is revolutionizing healthcare AI integration',
+    excerpt: 'The Model Context Protocol provides a universal way for AI agents to connect with healthcare data sources, EHR systems, and clinical tools. Learn how to build FHIR-native AI agents using MCP.',
+    content: `## What is the Model Context Protocol?
+
+In November 2024, Anthropic introduced the Model Context Protocol (MCP)—an open standard that fundamentally changes how AI systems integrate with external tools and data sources. Within months, OpenAI and Google DeepMind adopted the standard, signaling its importance for the future of AI development.
+
+For healthcare developers, MCP solves a critical problem: how do you give AI agents access to clinical data sources without reinventing integration patterns for every project?
+
+## Why MCP Matters for Healthcare
+
+### The Integration Problem
+
+Before MCP, connecting an AI agent to healthcare data meant:
+
+1. Writing custom API wrappers for each data source
+2. Managing authentication and authorization manually
+3. Handling rate limiting and error recovery
+4. Building prompt templates for each integration
+5. Testing extensively to prevent hallucination of medical codes
+
+This meant weeks of work before an AI agent could even begin to be useful.
+
+### The MCP Solution
+
+MCP provides a standardized interface where:
+
+- **Data sources** expose their capabilities through a consistent protocol
+- **AI agents** discover and use these capabilities without custom integration code
+- **Security** is built into the protocol with explicit scoping and audit trails
+- **Hallucination** is reduced because the AI receives real data rather than guessing
+
+## FHIR MCP Server
+
+The FHIR MCP Server (developed by Momentum and the open-source community) is a game-changer for healthcare AI development.
+
+### Capabilities
+
+\`\`\`
+┌─────────────────────────────────────────────────────────┐
+│                   FHIR MCP Server                        │
+├─────────────────────────────────────────────────────────┤
+│  Resources     │  Patient, Observation, Condition,      │
+│                │  MedicationRequest, Encounter, etc.    │
+├─────────────────────────────────────────────────────────┤
+│  Validation    │  Automatic LOINC code validation       │
+│                │  ICD-10 terminology checking           │
+├─────────────────────────────────────────────────────────┤
+│  Search        │  Semantic search across medical docs   │
+│                │  Natural language patient queries      │
+├─────────────────────────────────────────────────────────┤
+│  Operations    │  Full CRUD on FHIR resources          │
+│                │  Batch operations supported            │
+└─────────────────────────────────────────────────────────┘
+\`\`\`
+
+### What This Enables
+
+Doctors can now query patient histories conversationally:
+
+> "Show me all A1C results for patients with Type 2 Diabetes who are on Metformin and had an A1C > 8 in the last 6 months"
+
+Instead of writing complex FHIR queries, the AI agent uses the MCP server to:
+1. Parse the natural language request
+2. Construct valid FHIR queries
+3. Validate against real terminology servers
+4. Return properly formatted results
+
+## Healthcare MCP Server
+
+Beyond FHIR, the open-source Healthcare MCP Server provides access to essential medical knowledge sources:
+
+| Resource | What It Provides |
+|----------|------------------|
+| FDA Drug Info | Drug interactions, side effects, labels |
+| PubMed | Medical literature search |
+| medRxiv | Preprint research |
+| Clinical Trials | Active trials and eligibility |
+| ICD-10 | Diagnosis code lookup |
+| DICOM Metadata | Medical imaging context |
+| Medical Calculators | Clinical scoring tools |
+
+## Building a Healthcare AI Agent with MCP
+
+### Step 1: Configure MCP Servers
+
+\`\`\`json
+{
+  "mcpServers": {
+    "fhir": {
+      "command": "npx",
+      "args": ["@momentum/fhir-mcp-server"],
+      "env": {
+        "FHIR_BASE_URL": "https://your-epic-fhir.com/api/FHIR/R4",
+        "CLIENT_ID": "your-smart-app-client-id",
+        "AUDIT_ENABLED": "true"
+      }
+    },
+    "healthcare": {
+      "command": "npx",
+      "args": ["healthcare-mcp-server"],
+      "env": {
+        "PUBMED_API_KEY": "your-key"
+      }
+    }
+  }
+}
+\`\`\`
+
+### Step 2: Define Agent Capabilities
+
+\`\`\`typescript
+const healthcareAgent = {
+  name: "Clinical Assistant",
+  description: "Helps clinicians with patient queries and research",
+  tools: [
+    "fhir:searchPatients",
+    "fhir:getObservations",
+    "fhir:getMedications",
+    "healthcare:searchPubMed",
+    "healthcare:checkDrugInteractions",
+    "healthcare:lookupICD10"
+  ],
+  guardrails: {
+    maxPatientsPerQuery: 100,
+    requireAuditLog: true,
+    phiAccessLevel: "read-only"
+  }
+};
+\`\`\`
+
+### Step 3: Implement Human-in-the-Loop
+
+\`\`\`typescript
+async function processQuery(query: string, clinicianId: string) {
+  // Log the query
+  await auditLog.write({
+    action: 'query',
+    user: clinicianId,
+    query: query,
+    timestamp: new Date()
+  });
+
+  // Get AI response with MCP tools
+  const response = await agent.process(query, {
+    mcpServers: ['fhir', 'healthcare'],
+    requireConfirmation: ['fhir:createResource', 'fhir:updateResource']
+  });
+
+  // For write operations, require human confirmation
+  if (response.requiresConfirmation) {
+    return {
+      type: 'confirmation_required',
+      action: response.pendingAction,
+      reasoning: response.reasoning
+    };
+  }
+
+  return response;
+}
+\`\`\`
+
+## Security Considerations
+
+### Explicit Scoping
+
+MCP enforces explicit data access scoping:
+
+\`\`\`typescript
+const scopedServer = createFHIRMCPServer({
+  resources: ['Patient', 'Observation'], // Only these resources
+  operations: ['read', 'search'],         // No write operations
+  patientFilter: 'care-team-member',      // Only patients in care
+  auditAll: true
+});
+\`\`\`
+
+### Audit Trails
+
+Every MCP operation can be logged:
+
+\`\`\`
+[2026-01-19 10:23:45] FHIR.searchPatients
+  User: dr.smith@hospital.org
+  Query: {gender: 'female', birthdate: 'ge1950'}
+  Results: 47 patients
+  Context: "Finding elderly female patients for screening program"
+\`\`\`
+
+### Reproducible Contexts
+
+MCP contexts can be saved and replayed for debugging and compliance:
+
+\`\`\`typescript
+const context = await mcp.saveContext(sessionId);
+// Later: replay exactly what the AI saw
+const replay = await mcp.replayContext(context);
+\`\`\`
+
+## Best Practices
+
+### 1. Start with Read-Only Access
+
+Begin with search and read operations before enabling writes. This limits risk while you learn the patterns.
+
+### 2. Validate Against Terminology Servers
+
+Use the automatic LOINC and ICD-10 validation to prevent hallucinated codes:
+
+\`\`\`typescript
+const observation = await fhir.createObservation({
+  code: userProvidedCode,
+  validateTerminology: true  // Fails if code is invalid
+});
+\`\`\`
+
+### 3. Implement Rate Limiting
+
+Protect backend systems from excessive queries:
+
+\`\`\`typescript
+const rateLimitedServer = createFHIRMCPServer({
+  rateLimit: {
+    requestsPerMinute: 100,
+    burstLimit: 20
+  }
+});
+\`\`\`
+
+### 4. Use Patient-Scoped Queries
+
+When possible, scope queries to specific patients:
+
+\`\`\`typescript
+// Good: scoped to patient
+const meds = await fhir.getMedications({ patient: patientId });
+
+// Avoid: broad queries
+const allMeds = await fhir.searchMedications({}); // Dangerous
+\`\`\`
+
+## The Future: SMART on FHIR + MCP
+
+The next evolution combines SMART on FHIR authentication with MCP:
+
+1. **User launches app** in EHR context
+2. **SMART authentication** provides patient-scoped token
+3. **MCP server** automatically limits access to that patient
+4. **AI agent** operates within the security boundary
+
+This pattern is already in development and will become the standard for production healthcare AI agents.
+
+---
+
+**Resources:**
+
+- [Healthcare MCP Server on GitHub](https://github.com/Cicatriiz/healthcare-mcp-public)
+- [Momentum FHIR MCP Documentation](https://www.themomentum.ai/blog/introducing-fhir-mcp-server-natural-language-interface-for-healthcare-data)
+- [Anthropic MCP Specification](https://modelcontextprotocol.io)`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&h=630&fit=crop',
+    tags: ['MCP', 'FHIR', 'Healthcare AI', 'EHR Integration', 'Tutorial', 'Anthropic'],
+    category: 'Tutorial',
+    status: 'published',
+    publishedAt: '2026-01-17T10:00:00Z',
+    updatedAt: '2026-01-17T10:00:00Z',
+    readingTime: 10,
+    featured: true,
+  },
+  {
     id: '7',
     slug: 'safety-harness-secure-healthcare-software-autonomous-agents',
     title: 'The Safety Harness: How We Build Secure Healthcare Software with Autonomous AI Agents',
