@@ -6,7 +6,7 @@ import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
  *
  * Simple redirect to Replicate CDN URL (videos are publicly accessible)
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

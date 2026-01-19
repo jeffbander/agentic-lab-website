@@ -179,8 +179,8 @@ async function fetchGitHubRepos(username: string): Promise<GitHubRepo[]> {
   const repos = await response.json();
 
   const mappedRepos: GitHubRepo[] = repos
-    .filter((repo: any) => !repo.archived && !repo.fork)
-    .map((repo: any) => {
+    .filter((repo: Record<string, unknown>) => !repo.archived && !repo.fork)
+    .map((repo: Record<string, unknown>) => {
       const metadata = repoMetadata[repo.name];
       return {
         name: repo.name,

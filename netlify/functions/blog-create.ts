@@ -37,7 +37,7 @@ function calculateReadingTime(content: string): number {
   return Math.ceil(wordCount / wordsPerMinute);
 }
 
-function validateRequest(data: any): { valid: boolean; errors: string[] } {
+function validateRequest(data: CreateBlogPostRequest & Record<string, unknown>): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (!data.title || typeof data.title !== 'string') {
@@ -74,7 +74,7 @@ function validateRequest(data: any): { valid: boolean; errors: string[] } {
  *   - Authorization: Bearer <BLOG_ADMIN_KEY>
  * Body: CreateBlogPostRequest
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',

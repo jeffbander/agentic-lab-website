@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Copy, Info, Zap } from 'lucide-react';
+import { Loader2, Download, RefreshCw, CheckCircle2, XCircle, Copy, Info, Zap } from 'lucide-react';
 import type { OnScreenText } from '../../lib/patientEducation';
 import { concatenateVideos, preloadFFmpeg, type VideoStitcherProgress } from '../../lib/ffmpegVideoStitcher';
 
@@ -138,7 +138,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
   const hasCreatedJobs = useRef(false);
 
   // UX improvements
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [canLeave, setCanLeave] = useState(false);
 
   // Video stitching state
@@ -218,14 +218,12 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
           const job1Promise = createVideoJob(prompt, 'part1');
 
           // Start Part 2 after 2 second delay to avoid rate limiting
-          const job2Promise = new Promise<JobState>(async (resolve, reject) => {
-            await new Promise(r => setTimeout(r, 2000)); // 2 second stagger
-            try {
-              const job = await createVideoJob(promptPart2, 'part2');
-              resolve(job);
-            } catch (err) {
-              reject(err);
-            }
+          const job2Promise = new Promise<JobState>((resolve, reject) => {
+            setTimeout(() => {
+              createVideoJob(promptPart2, 'part2')
+                .then(resolve)
+                .catch(reject);
+            }, 2000); // 2 second stagger
           });
 
           // Wait for both to complete (they run in parallel after the stagger)

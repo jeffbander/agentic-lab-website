@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Github, ExternalLink, Clock, RefreshCw, Filter, Code2, Globe } from 'lucide-react';
+import { Github, ExternalLink, Clock, RefreshCw, Filter, Globe } from 'lucide-react';
 
 interface GitHubRepo {
   name: string;

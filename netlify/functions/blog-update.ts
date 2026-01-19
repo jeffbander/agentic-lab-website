@@ -41,7 +41,7 @@ function calculateReadingTime(content: string): number {
  *   - Authorization: Bearer <BLOG_ADMIN_KEY>
  * Body: UpdateBlogPostRequest
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -105,7 +105,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
 
     // Build the update object
     const now = new Date().toISOString();
-    const updates: Record<string, any> = {
+    const updates: Record<string, unknown> = {
       updatedAt: now,
     };
 

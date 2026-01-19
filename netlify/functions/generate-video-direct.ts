@@ -13,7 +13,7 @@ const OPENAI_API_URL = 'https://api.openai.com/v1';
 /**
  * Creates a video generation request directly with OpenAI Sora 2
  */
-async function createVideoGeneration(prompt: string, width: number, height: number, duration: number): Promise<any> {
+async function createVideoGeneration(prompt: string, width: number, height: number, duration: number): Promise<unknown> {
   const response = await fetch(`${OPENAI_API_URL}/video/generations`, {
     method: 'POST',
     headers: {
@@ -39,7 +39,7 @@ async function createVideoGeneration(prompt: string, width: number, height: numb
 /**
  * Netlify Function Handler
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

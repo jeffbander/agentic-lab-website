@@ -5,7 +5,7 @@ import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
  * GET /api/blog-get?slug=<slug>
  * GET /api/blog-get?id=<id>
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',

@@ -9,7 +9,7 @@ const BLOG_ADMIN_KEY = process.env.BLOG_ADMIN_KEY;
  * Headers:
  *   - Authorization: Bearer <BLOG_ADMIN_KEY>
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',

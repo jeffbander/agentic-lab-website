@@ -6,7 +6,7 @@ import type { BlogPost } from '../../src/data/blogPosts';
 
 // Simple in-memory storage simulation (in production, use a database)
 // This will be populated from the static data or through API calls
-let blogPostsStore: BlogPost[] = [];
+const blogPostsStore: BlogPost[] = [];
 
 // Initialize with static data if needed
 async function initializeStore() {
@@ -29,7 +29,7 @@ async function initializeStore() {
  *   - limit: number of posts to return
  *   - offset: pagination offset
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',

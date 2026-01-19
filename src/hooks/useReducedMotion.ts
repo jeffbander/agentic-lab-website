@@ -34,7 +34,7 @@ export function useReducedMotion(): boolean {
  * Get animation props that respect reduced motion preferences
  * Returns empty object if user prefers reduced motion, otherwise returns the animation props
  */
-export function getMotionProps<T extends Record<string, any>>(
+export function getMotionProps<T extends Record<string, unknown>>(
   animationProps: T,
   reducedMotion: boolean
 ): T | Record<string, never> {

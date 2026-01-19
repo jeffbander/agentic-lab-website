@@ -6,7 +6,7 @@ type FlowStep = {
   id: number;
   title: string;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   color: string;
   details: string[];
   metrics?: { label: string; value: string }[];

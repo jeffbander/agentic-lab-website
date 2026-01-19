@@ -9585,8 +9585,8 @@ jobs:
     steps:
       - name: Verify Deployment Window
         run: |
-          HOUR=\$(date +%H)
-          if [ \$HOUR -lt 2 ] || [ \$HOUR -gt 5 ]; then
+          HOUR=$(date +%H)
+          if [ $HOUR -lt 2 ] || [ $HOUR -gt 5 ]; then
             echo "Deployment outside maintenance window requires override"
             exit 1
           fi
@@ -9594,7 +9594,7 @@ jobs:
       - name: Deploy to Production
         run: |
           # Deployment with audit logging
-          echo "Deploying \${{ github.sha }} at \$(date -u)" >> deployment-log.txt
+          echo "Deploying \${{ github.sha }} at $(date -u)" >> deployment-log.txt
           # Actual deployment commands here
 \`\`\`
 
@@ -10728,7 +10728,7 @@ jobs:
       - name: Upload Compliance Evidence
         run: |
           aws s3 cp compliance-report.json \\
-            s3://compliance-evidence/\$(date +%Y/%m/%d)/report-\$(date +%H%M).json
+            s3://compliance-evidence/$(date +%Y/%m/%d)/report-$(date +%H%M).json
 
       - name: Alert on Violations
         if: failure()

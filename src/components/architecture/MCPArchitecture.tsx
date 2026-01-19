@@ -257,7 +257,15 @@ const riskScore = await aiAgent.analyze({
   );
 }
 
-function CustomNode({ data }: { data: any }) {
+interface CustomNodeData {
+  label: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  color: string;
+  description: string;
+}
+
+function CustomNode({ data }: { data: CustomNodeData }) {
   const Icon = data.icon;
 
   return (

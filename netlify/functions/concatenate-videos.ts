@@ -15,7 +15,7 @@ interface ConcatenateRequest {
  * Netlify Functions have a 10-second timeout, which may not be enough for video processing.
  * Background functions have a 15-minute timeout but are only available on Pro plans.
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

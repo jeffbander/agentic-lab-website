@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Eye, Video } from 'lucide-react';
+import { FileText, Eye, Video } from 'lucide-react';
 import ProviderNoteForm from '../components/patient-education/ProviderNoteForm';
 import PreviewCard from '../components/patient-education/PreviewCard';
 import GeneratePanel from '../components/patient-education/GeneratePanel';

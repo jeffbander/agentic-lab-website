@@ -1,6 +1,6 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
-interface ClinicalNote {
+interface _ClinicalNote {
   patient?: string;
   okToShowName?: boolean;
   language?: 'English' | 'Spanish';
@@ -152,7 +152,7 @@ IMPORTANT: Beat 1 should always be "Mount Sinai Health System" to introduce the 
 /**
  * Build two complete Sora prompts for 24-second video (Part 1 + Part 2)
  */
-function buildTwoPartSoraPrompts(script: any): { part1: string; part2: string } {
+function buildTwoPartSoraPrompts(script: ScriptOutput): { part1: string; part2: string } {
   const firstName = script.firstName || '';
 
   // Mount Sinai brand colors
@@ -225,7 +225,7 @@ Pacing: calm and clear. Avoid promise/cure language; use "helps" or "may help."`
  * Netlify Function Handler - Generate Patient Education Script
  * POST /api/generate-patient-script
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

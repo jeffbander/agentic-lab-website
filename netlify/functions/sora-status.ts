@@ -37,7 +37,7 @@ async function checkSoraStatus(jobId: string): Promise<ReplicatePrediction> {
  * Netlify Function Handler - Check Sora Video Status
  * GET /api/sora/status?id=job_123
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

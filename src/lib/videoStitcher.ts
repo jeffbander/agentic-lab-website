@@ -17,8 +17,9 @@ export async function concatenateVideos(
   video2Url: string,
   onProgress?: (progress: VideoStitcherProgress) => void
 ): Promise<Blob> {
-  return new Promise(async (resolve, reject) => {
-    try {
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
       // Stage 1: Load both videos
       onProgress?.({ stage: 'loading', progress: 10, message: 'Loading video files...' });
 
@@ -204,9 +205,10 @@ export async function concatenateVideos(
         };
       };
 
-    } catch (error) {
-      reject(error);
-    }
+      } catch (error) {
+        reject(error);
+      }
+    })();
   });
 }
 

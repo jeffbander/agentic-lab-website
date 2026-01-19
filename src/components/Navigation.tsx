@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Github } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { MountSinaiLogo } from './MountSinaiLogo';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);

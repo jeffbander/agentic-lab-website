@@ -6,7 +6,6 @@ import {
   Trash2,
   Eye,
   Save,
-  X,
   FileText,
   Calendar,
   Tag,
@@ -406,7 +405,7 @@ export default function BlogAdminPage() {
         if (response.ok) {
           console.log('Post also saved to backend API');
         }
-      } catch (error) {
+      } catch {
         console.log('Backend API not available, post saved locally only');
       }
 

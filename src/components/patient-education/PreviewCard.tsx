@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Check, X, Play, AlertCircle, ChevronDown, Sparkles, Zap, Film, DollarSign } from 'lucide-react';
+import { Edit2, Check, X, Play, AlertCircle, ChevronDown, Sparkles, Film } from 'lucide-react';
 import type { SoraPromptResult, OnScreenText } from '../../lib/patientEducation';
 
 // Video model options for patient education

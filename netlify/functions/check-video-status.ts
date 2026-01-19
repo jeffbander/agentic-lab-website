@@ -33,7 +33,7 @@ async function checkPredictionStatus(predictionId: string): Promise<ReplicatePre
 /**
  * Netlify Function Handler - Check Video Generation Status
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

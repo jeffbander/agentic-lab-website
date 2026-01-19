@@ -111,7 +111,6 @@ function buildModelInput(
   height: number,
   duration: number
 ): Record<string, unknown> {
-  const config = MODEL_CONFIGS[model];
 
   switch (model) {
     case 'sora-2':
@@ -266,7 +265,7 @@ async function createVideoJob(
  * - hailuo-2.3: MiniMax Hailuo (realistic human motion, 6/10s)
  * - kling-2.5: Kling (cinematic quality, smooth motion, 5/10s)
  */
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',

@@ -242,7 +242,7 @@ function getConditionIcons(conditions?: string): string {
 /**
  * Generate caption chips based on condition and treatment
  */
-function generateChips(conditions?: string, treatment?: string): { chip2: string; chip3: string } {
+function generateChips(conditions?: string, _treatment?: string): { chip2: string; chip3: string } {
   const chips: string[] = [];
 
   if (conditions?.toLowerCase().includes('diabetes')) {

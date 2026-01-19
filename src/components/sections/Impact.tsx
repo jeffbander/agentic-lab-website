@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, DollarSign, Clock, Heart, Users, Award, Target, Zap } from 'lucide-react';
+import { DollarSign, Clock, Heart, Users, Award, Target, Zap } from 'lucide-react';
 
 export function Impact() {
   const clinicalImpacts = [
