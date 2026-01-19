@@ -16,17 +16,17 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const REPLICATE_API_URL = 'https://api.replicate.com/v1';
 
 // Model versions for video generation on Replicate
-// Updated Jan 2026 with newer models for patient education
+// Updated Jan 2026 with correct model identifiers
 const VIDEO_MODEL_VERSIONS: Record<string, string> = {
-  // OpenAI Sora models (via Replicate)
-  'sora-2': '299f052ab4dd6c750621f8e2ce48e26edcde381ab041d61a7ec57785cef5b0d3',
-  'sora-2-pro': '4bdefbd92a923832d1a5e0a40d419ea8cf3e0743abfcdca6e28268877a81b0c4',
-  // Alibaba Wan 2.5 - Great for audio sync, lip-sync, multi-language, budget-friendly
-  'wan-2.5': '4e22e64c604706aa4ac1929a7ae146ea033f39bb228e896da79d91b7a39e8d32',
-  // MiniMax Hailuo 2.3 - Excellent for realistic human motion, medical content
-  'hailuo-2.3': '23a02633b5a44780345a59d4d43f8bd510efa239c56f08f29639ff24fa6615e1',
-  // Kling 2.5 Turbo Pro - Cinematic quality, smooth motion
-  'kling-2.5': '18f41bfca7f1997ce37b04b407152c385c9159095681a6f5a4ff47718bc25a57',
+  // OpenAI Sora models (via Replicate) - NOTE: May need OpenAI API key
+  'sora-2': 'openai/sora-2',
+  'sora-2-pro': 'openai/sora-2-pro',
+  // Alibaba Wan 2.5 T2V Fast - Great for audio sync, lip-sync, multi-language, budget-friendly
+  'wan-2.5': 'wan-video/wan-2.5-t2v-fast',
+  // MiniMax Hailuo - Excellent for realistic human motion, medical content
+  'hailuo-2.3': 'minimax/video-01',
+  // Kling 2.5 - Cinematic quality, smooth motion
+  'kling-2.5': 'kwaai/kling-v1.6-pro',
 };
 
 // Model-specific configuration
@@ -127,8 +127,9 @@ function buildModelInput(
     }
 
     case 'wan-2.5': {
-      // Wan 2.5 uses size string and duration
-      const size = `${width}x${height}`;
+      // Wan 2.5 uses size string (with * separator) and duration
+      // Valid sizes: 1280*720, 720*1280, 1920*1080, 1080*1920
+      const size = `${width}*${height}`;
       const validDuration = duration <= 7 ? 5 : 10;
       return {
         prompt,
@@ -203,14 +204,15 @@ async function createVideoJob(
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const response = await fetch(`${REPLICATE_API_URL}/predictions`, {
+    // Use model identifier format (owner/model) instead of version hash
+    const response = await fetch(`${REPLICATE_API_URL}/models/${modelVersion}/predictions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
         'Content-Type': 'application/json',
+        'Prefer': 'wait',
       },
       body: JSON.stringify({
-        version: modelVersion,
         input,
       }),
     });
