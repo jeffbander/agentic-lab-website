@@ -1,7 +1,7 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
 // Supported video generation models
-type VideoModel = 'sora-2' | 'sora-2-pro' | 'wan-2.5' | 'hailuo-2.3' | 'kling-2.5';
+type VideoModel = 'sora-2' | 'sora-2-pro' | 'wan-2.5' | 'hailuo-2.3' | 'kling-2.5' | 'veo-3.1-fast';
 
 interface SoraCreateRequest {
   prompt: string;
@@ -21,6 +21,8 @@ const VIDEO_MODEL_VERSIONS: Record<string, string> = {
   // OpenAI Sora models (via Replicate) - NOTE: May need OpenAI API key
   'sora-2': 'openai/sora-2',
   'sora-2-pro': 'openai/sora-2-pro',
+  // Google Veo 3.1 Fast - State-of-the-art quality, context-aware audio
+  'veo-3.1-fast': 'google/veo-3.1-fast',
   // Alibaba Wan 2.5 T2V Fast - Great for audio sync, lip-sync, multi-language, budget-friendly
   'wan-2.5': 'wan-video/wan-2.5-t2v-fast',
   // MiniMax Hailuo - Excellent for realistic human motion, medical content
@@ -91,6 +93,16 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
     ],
     maxDuration: 10,
     usesAspectRatio: true,
+  },
+  'veo-3.1-fast': {
+    requiresOpenAIKey: false,
+    supportedDurations: [5, 8],
+    supportedResolutions: [
+      { width: 1280, height: 720, label: '720p' },
+      { width: 1920, height: 1080, label: '1080p' },
+    ],
+    maxDuration: 8,
+    usesAspectRatio: false,
   },
 };
 
@@ -165,6 +177,19 @@ function buildModelInput(
       return {
         prompt,
         aspect_ratio,
+        duration: validDuration,
+      };
+    }
+
+    case 'veo-3.1-fast': {
+      // Veo 3.1 Fast uses width/height and duration
+      const validWidth = width >= 1920 ? 1920 : 1280;
+      const validHeight = height >= 1080 ? 1080 : 720;
+      const validDuration = duration <= 6 ? 5 : 8;
+      return {
+        prompt,
+        width: validWidth,
+        height: validHeight,
         duration: validDuration,
       };
     }

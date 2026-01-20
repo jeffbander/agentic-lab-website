@@ -17,24 +17,34 @@ type VideoModelOption = {
 
 const VIDEO_MODELS: VideoModelOption[] = [
   {
-    id: 'wan-2.5',
-    name: 'Wan 2.5',
-    description: 'Best for patient education with audio sync',
-    badge: 'Recommended',
-    badgeColor: 'bg-green-500',
-    features: ['Audio/lip sync', 'Multi-language', 'Budget-friendly', 'Up to 1080p'],
-    durations: '5s or 10s',
-    pricing: '$0.10-0.15/sec',
+    id: 'sora-2',
+    name: 'Sora 2',
+    description: 'OpenAI proven performer - reliable quality',
+    badge: 'Proven',
+    badgeColor: 'bg-blue-600',
+    features: ['Reliable', 'Physics accurate', 'Good realism', '720p'],
+    durations: '4s, 8s, or 12s',
+    pricing: 'Moderate cost',
   },
   {
-    id: 'hailuo-2.3',
-    name: 'Hailuo 2.3',
-    description: 'Excellent for realistic human motion',
-    badge: 'Medical',
-    badgeColor: 'bg-blue-500',
-    features: ['Realistic motion', 'Cinematic VFX', 'Anatomical demos', '768p-1080p'],
-    durations: '6s or 10s',
-    pricing: '$0.28-0.56/video',
+    id: 'sora-2-pro',
+    name: 'Sora 2 Pro',
+    description: 'OpenAI highest quality (requires API key)',
+    badge: 'High Quality',
+    badgeColor: 'bg-orange-500',
+    features: ['Best realism', 'Physics accurate', 'Narrative depth', '720p'],
+    durations: '4s, 8s, or 12s',
+    pricing: 'Higher cost',
+  },
+  {
+    id: 'veo-3.1-fast',
+    name: 'Veo 3.1 Fast',
+    description: 'Google state-of-the-art video generation',
+    badge: 'Premium',
+    badgeColor: 'bg-indigo-600',
+    features: ['Best realism', 'Context-aware audio', 'Smooth motion', '1080p'],
+    durations: '5s or 8s',
+    pricing: 'Higher cost',
   },
   {
     id: 'kling-2.5',
@@ -47,14 +57,24 @@ const VIDEO_MODELS: VideoModelOption[] = [
     pricing: '$0.07/sec',
   },
   {
-    id: 'sora-2-pro',
-    name: 'Sora 2 Pro',
-    description: 'OpenAI highest quality (requires API key)',
-    badge: 'High Quality',
-    badgeColor: 'bg-orange-500',
-    features: ['Best realism', 'Physics accurate', 'Narrative depth', '720p'],
-    durations: '4s, 8s, or 12s',
-    pricing: 'Higher cost',
+    id: 'hailuo-2.3',
+    name: 'Hailuo 2.3',
+    description: 'Excellent for realistic human motion',
+    badge: 'Medical',
+    badgeColor: 'bg-blue-500',
+    features: ['Realistic motion', 'Cinematic VFX', 'Anatomical demos', '768p-1080p'],
+    durations: '6s or 10s',
+    pricing: '$0.28-0.56/video',
+  },
+  {
+    id: 'wan-2.5',
+    name: 'Wan 2.5',
+    description: 'Budget-friendly with multi-language support',
+    badge: 'Budget',
+    badgeColor: 'bg-green-500',
+    features: ['Audio/lip sync', 'Multi-language', 'Budget-friendly', 'Up to 1080p'],
+    durations: '5s or 10s',
+    pricing: '$0.10-0.15/sec',
   },
 ];
 
@@ -219,7 +239,7 @@ function BeatCard({ beatNumber, title, text, timeRange, onEdit }: BeatCardProps)
 
 export default function PreviewCard({ result, promptPart2, onGenerate, onBack }: PreviewCardProps) {
   const [ost, setOst] = useState<OnScreenText>(result.ost);
-  const [selectedModel, setSelectedModel] = useState<string>('wan-2.5'); // Default to Wan 2.5 (best for patient education)
+  const [selectedModel, setSelectedModel] = useState<string>('sora-2'); // Default to Sora 2 (proven performer)
   const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   const handleBeatEdit = (beat: keyof OnScreenText, newText: string) => {
