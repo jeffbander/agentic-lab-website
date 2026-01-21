@@ -165,7 +165,16 @@ ${mountSinaiBranding}
 
 Visual style: clean medical animation with simple 3D icons (heart, kidneys, blood vessels, BP cuff, pill bottle), high-contrast captions, hospital-bright soft lighting with Mount Sinai brand colors (cyan #06ABEB, magenta #DC298D).
 Camera: gentle dolly-in; cross-dissolves between four scenes; steady exposure; 24 fps; 1920×1080.
-Audio: soft neutral music; friendly voiceover that speaks the same lines as the on-screen text. IMPORTANT: In Beat 4 (9-12s), the voiceover should complete the sentence naturally but trail off/fade out smoothly around 10-11 seconds, ending 1-2 seconds before the video ends at 12s. This creates a natural pause for the transition to Part 2.
+
+CRITICAL AUDIO/TIMING REQUIREMENTS FOR SEAMLESS PART 1 → PART 2 TRANSITION:
+- Soft neutral background music throughout that maintains consistent volume
+- Friendly voiceover that speaks the same lines as the on-screen text
+- Beat 4 (9-12s) MUST have the voiceover complete ALL words by 10.5 seconds
+- From 10.5s to 12s: Music continues softly, voiceover is silent (natural pause)
+- The last 1.5 seconds should feel like a "breath" or pause, NOT a cutoff
+- Do NOT end mid-sentence or mid-word
+- The visual should hold on the final frame smoothly, not freeze awkwardly
+
 Respect privacy; no identifiable faces.
 
 Beat 1 (0–3s) — Mount Sinai Health System Logo
@@ -181,10 +190,11 @@ On-screen text: "${script.beat3Text}"
 Visual: focused icon narrative showing how conditions affect the body (e.g., heart rhythm, blood pressure).
 Small caption chips: ${script.chip2}
 
-Beat 4 (9–12s) — Recent Test Results
+Beat 4 (9–12s) — Recent Test Results (END WITH PAUSE)
 On-screen text: "${script.beat4Text}"
 Visual: simple display of recent test results with medical icons and trending indicators.
 Small caption chips showing metrics.
+TIMING: Voiceover completes by 10.5s. Final 1.5s is a natural pause with soft music only.
 
 Caption rules: max ~48 characters per line, up to 2 lines per beat; high contrast; large, readable sans-serif.
 Pacing: calm and clear. Avoid promise/cure language; use "helps" or "may help."`;
@@ -194,13 +204,25 @@ ${firstName ? `Continue personalizing with the first name "${firstName}".` : 'Co
 
 Visual style: clean medical animation with simple 3D icons (pills, treatment pathways, calendar, checklist), high-contrast captions, hospital-bright soft lighting with Mount Sinai brand colors (cyan #06ABEB, magenta #DC298D).
 Camera: gentle dolly-in; cross-dissolves between four scenes; steady exposure; 24 fps; 1920×1080.
-Audio: soft neutral music continues; friendly voiceover that speaks the same lines as the on-screen text. IMPORTANT: The voiceover should begin at the very start (0s) with a new sentence or phrase that flows naturally as if continuing a conversation. The audio in Beat 1 should start immediately, picking up seamlessly from Part 1. In Beat 4 (9-12s), the voiceover should complete naturally and end 1-2 seconds before the video ends at 12s to avoid an abrupt cutoff.
+
+CRITICAL AUDIO/TIMING REQUIREMENTS FOR SEAMLESS CONTINUATION FROM PART 1:
+- Soft neutral background music that matches Part 1's style and volume
+- Friendly voiceover that speaks the same lines as the on-screen text
+- Beat 1 (0-3s): Voiceover should begin around 0.3-0.5 seconds (NOT instant at 0s)
+  This small pause allows for smooth crossfade transition from Part 1
+- The first word should feel like a natural continuation, not an abrupt start
+- Beat 4 (9-12s): Voiceover MUST complete ALL words by 10 seconds
+- From 10s to 12s: Show end card with soft music only, creating a proper conclusion
+- The ending should feel complete and conclusive, NOT like it was cut off
+- Do NOT end mid-sentence or mid-word
+
 Respect privacy; no identifiable faces.
 
-Beat 1 (0–3s) — Current Medications
+Beat 1 (0–3s) — Current Medications (GENTLE START)
 On-screen text: "${script.beat5Text}"
 Visual: pill bottles and medication icons with simple labels; no brand logos.
 Small caption chips: ${script.chip3}
+TIMING: Brief 0.3-0.5s visual fade-in, then voiceover begins naturally.
 
 Beat 2 (3–6s) — Treatment Options Discussed
 On-screen text: "${script.beat6Text}"
@@ -210,10 +232,11 @@ Beat 3 (6–9s) — Next Steps & Monitoring
 On-screen text: "${script.beat7Text}"
 Visual: calendar icons, checklist, monitoring devices (BP cuff, glucose meter).
 
-Beat 4 (9–12s) — Safety & Call to Action
+Beat 4 (9–12s) — Safety & Call to Action (CONCLUSIVE ENDING)
 On-screen text: "${script.beat8Text}"
 Footer banner, small text: "Possible risks: ${script.twoCommonRisks}. Not medical advice."
 End card: "Talk with your Mount Sinai clinician" with subtle Mount Sinai branding.
+TIMING: Voiceover completes by 10s. Final 2s shows end card with soft music fade-out for proper conclusion.
 
 Caption rules: max ~48 characters per line, up to 2 lines per beat; high contrast; large, readable sans-serif.
 Pacing: calm and clear. Avoid promise/cure language; use "helps" or "may help."`;

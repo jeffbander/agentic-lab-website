@@ -106,7 +106,20 @@ async function initFFmpeg(onProgress?: (progress: VideoStitcherProgress) => void
 }
 
 /**
- * Concatenate two videos using FFmpeg with proper audio handling
+ * Crossfade configuration for smooth transitions
+ */
+const CROSSFADE_CONFIG = {
+  // Duration of crossfade between Part 1 and Part 2 (in seconds)
+  transitionDuration: 0.8,
+  // Duration of fade-out at the end of the video (in seconds)
+  fadeOutDuration: 1.0,
+  // Duration of each video part (in seconds)
+  partDuration: 12,
+};
+
+/**
+ * Concatenate two videos using FFmpeg with crossfade transitions
+ * This creates a smooth, professional transition between the two parts
  */
 export async function concatenateVideosWithFFmpeg(
   video1Url: string,
@@ -131,39 +144,56 @@ export async function concatenateVideosWithFFmpeg(
     await ffmpeg.writeFile('video1.mp4', video1Data);
     await ffmpeg.writeFile('video2.mp4', video2Data);
 
-    onProgress?.({ stage: 'processing', progress: 40, message: 'Merging videos with audio...' });
+    onProgress?.({ stage: 'processing', progress: 40, message: 'Adding crossfade transitions...' });
 
-    // Stage 4: Create concat list file
-    const concatList = 'file video1.mp4\nfile video2.mp4\n';
-    await ffmpeg.writeFile('concat_list.txt', concatList);
+    // Stage 4: Use xfade filter for smooth video transition and acrossfade for audio
+    // The offset is when the crossfade starts (Part 1 duration minus crossfade duration)
+    const xfadeOffset = CROSSFADE_CONFIG.partDuration - CROSSFADE_CONFIG.transitionDuration;
+    const totalDuration = (CROSSFADE_CONFIG.partDuration * 2) - CROSSFADE_CONFIG.transitionDuration;
+    const fadeOutStart = totalDuration - CROSSFADE_CONFIG.fadeOutDuration;
 
-    // Stage 5: Run FFmpeg concat command
-    // Using concat demuxer for lossless concatenation with audio
-    // -c copy means no re-encoding (fast and lossless)
+    // Build the filter complex for:
+    // 1. Crossfade transition between videos (xfade)
+    // 2. Audio crossfade (acrossfade)
+    // 3. Final fade-out at the end (fade filter)
+    // 4. Audio fade-out at the end (afade filter)
+    const filterComplex = [
+      // Video crossfade between part 1 and part 2, then fade out at the end
+      `[0:v][1:v]xfade=transition=fade:duration=${CROSSFADE_CONFIG.transitionDuration}:offset=${xfadeOffset},fade=t=out:st=${fadeOutStart}:d=${CROSSFADE_CONFIG.fadeOutDuration}[outv]`,
+      // Audio crossfade between part 1 and part 2, then fade out at the end
+      `[0:a][1:a]acrossfade=d=${CROSSFADE_CONFIG.transitionDuration}:c1=tri:c2=tri,afade=t=out:st=${fadeOutStart}:d=${CROSSFADE_CONFIG.fadeOutDuration}[outa]`,
+    ].join(';');
+
     await ffmpeg.exec([
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', 'concat_list.txt',
-      '-c', 'copy',
+      '-i', 'video1.mp4',
+      '-i', 'video2.mp4',
+      '-filter_complex', filterComplex,
+      '-map', '[outv]',
+      '-map', '[outa]',
+      '-c:v', 'libx264',
+      '-preset', 'fast',
+      '-crf', '23',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-movflags', '+faststart',
       'output.mp4'
     ]);
 
-    onProgress?.({ stage: 'processing', progress: 90, message: 'Reading merged video...' });
+    onProgress?.({ stage: 'processing', progress: 90, message: 'Finalizing seamless video...' });
 
-    // Stage 6: Read the output file
+    // Stage 5: Read the output file
     const data = await ffmpeg.readFile('output.mp4');
 
-    // Stage 7: Clean up virtual filesystem
+    // Stage 6: Clean up virtual filesystem
     try {
       await ffmpeg.deleteFile('video1.mp4');
       await ffmpeg.deleteFile('video2.mp4');
-      await ffmpeg.deleteFile('concat_list.txt');
       await ffmpeg.deleteFile('output.mp4');
     } catch (cleanupError) {
       console.warn('Cleanup warning:', cleanupError);
     }
 
-    onProgress?.({ stage: 'complete', progress: 100, message: 'Videos merged successfully!' });
+    onProgress?.({ stage: 'complete', progress: 100, message: 'Seamless video created!' });
 
     // Convert to Blob - handle FFmpeg FileData type (Uint8Array or string)
     // Use slice() to create a new ArrayBuffer owned by the Uint8Array
@@ -174,7 +204,7 @@ export async function concatenateVideosWithFFmpeg(
     return blob;
 
   } catch (error) {
-    console.error('FFmpeg concatenation error:', error);
+    console.error('FFmpeg crossfade error:', error);
     throw new Error(
       error instanceof Error
         ? `Video merge failed: ${error.message}`
@@ -184,10 +214,10 @@ export async function concatenateVideosWithFFmpeg(
 }
 
 /**
- * Alternative: Re-encode videos for better compatibility
- * Use this if the concat demuxer fails due to incompatible formats
+ * Simple concatenation without crossfade (fallback for videos without audio or incompatible formats)
+ * This version adds fade-out at the end but no crossfade between parts
  */
-export async function concatenateVideosWithReencode(
+export async function concatenateVideosSimple(
   video1Url: string,
   video2Url: string,
   onProgress?: (progress: VideoStitcherProgress) => void
@@ -207,19 +237,25 @@ export async function concatenateVideosWithReencode(
     await ffmpeg.writeFile('video1.mp4', video1Data);
     await ffmpeg.writeFile('video2.mp4', video2Data);
 
-    onProgress?.({ stage: 'processing', progress: 40, message: 'Re-encoding and merging videos...' });
+    onProgress?.({ stage: 'processing', progress: 40, message: 'Merging videos with fade-out...' });
 
     // Create concat list
     const concatList = 'file video1.mp4\nfile video2.mp4\n';
     await ffmpeg.writeFile('concat_list.txt', concatList);
 
-    // Re-encode with H.264 video and AAC audio for maximum compatibility
+    // Calculate fade-out timing
+    const totalDuration = CROSSFADE_CONFIG.partDuration * 2;
+    const fadeOutStart = totalDuration - CROSSFADE_CONFIG.fadeOutDuration;
+
+    // Re-encode with H.264 video and AAC audio, adding fade-out at the end
     await ffmpeg.exec([
       '-f', 'concat',
       '-safe', '0',
       '-i', 'concat_list.txt',
+      '-vf', `fade=t=out:st=${fadeOutStart}:d=${CROSSFADE_CONFIG.fadeOutDuration}`,
+      '-af', `afade=t=out:st=${fadeOutStart}:d=${CROSSFADE_CONFIG.fadeOutDuration}`,
       '-c:v', 'libx264',
-      '-preset', 'medium',
+      '-preset', 'fast',
       '-crf', '23',
       '-c:a', 'aac',
       '-b:a', '128k',
@@ -227,7 +263,7 @@ export async function concatenateVideosWithReencode(
       'output.mp4'
     ]);
 
-    onProgress?.({ stage: 'processing', progress: 90, message: 'Reading merged video...' });
+    onProgress?.({ stage: 'processing', progress: 90, message: 'Finalizing video...' });
 
     const data = await ffmpeg.readFile('output.mp4');
 
@@ -241,7 +277,7 @@ export async function concatenateVideosWithReencode(
       console.warn('Cleanup warning:', cleanupError);
     }
 
-    onProgress?.({ stage: 'complete', progress: 100, message: 'Videos merged successfully!' });
+    onProgress?.({ stage: 'complete', progress: 100, message: 'Video created with fade-out!' });
 
     // Convert to Blob - handle FFmpeg FileData type (Uint8Array or string)
     // Use slice() to create a new ArrayBuffer owned by the Uint8Array
@@ -252,7 +288,7 @@ export async function concatenateVideosWithReencode(
     return blob;
 
   } catch (error) {
-    console.error('FFmpeg re-encode error:', error);
+    console.error('FFmpeg simple concat error:', error);
     throw new Error(
       error instanceof Error
         ? `Video merge failed: ${error.message}`
@@ -263,7 +299,7 @@ export async function concatenateVideosWithReencode(
 
 /**
  * Main concatenation function with automatic fallback
- * Tries fast concat first, falls back to re-encode if needed
+ * Tries crossfade transition first, falls back to simple concat if xfade fails
  */
 export async function concatenateVideos(
   video1Url: string,
@@ -271,13 +307,13 @@ export async function concatenateVideos(
   onProgress?: (progress: VideoStitcherProgress) => void
 ): Promise<Blob> {
   try {
-    // Try fast lossless concat first
+    // Try crossfade transition first (preferred for smooth, professional result)
     return await concatenateVideosWithFFmpeg(video1Url, video2Url, onProgress);
   } catch (error) {
-    console.warn('Fast concat failed, falling back to re-encode:', error);
-    onProgress?.({ stage: 'processing', progress: 35, message: 'Retrying with re-encoding...' });
+    console.warn('Crossfade transition failed, falling back to simple concat:', error);
+    onProgress?.({ stage: 'processing', progress: 35, message: 'Retrying with simple merge...' });
 
-    // Fall back to re-encode
-    return await concatenateVideosWithReencode(video1Url, video2Url, onProgress);
+    // Fall back to simple concatenation with fade-out only
+    return await concatenateVideosSimple(video1Url, video2Url, onProgress);
   }
 }
