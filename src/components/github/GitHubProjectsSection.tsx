@@ -103,7 +103,7 @@ export function GitHubProjectsSection() {
     : repos.filter(repo => repo.category === selectedCategory);
 
   return (
-    <section id="github-projects" className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section id="projects" className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div

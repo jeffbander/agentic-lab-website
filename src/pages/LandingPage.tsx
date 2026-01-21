@@ -5,7 +5,6 @@ import { Loading } from '../components/Loading';
 
 // Lazy load heavy components for better initial load performance
 const Overview = lazy(() => import('../components/sections/Overview').then(m => ({ default: m.Overview })));
-const ProjectsSection = lazy(() => import('../components/projects/ProjectsSection').then(m => ({ default: m.ProjectsSection })));
 const Approach = lazy(() => import('../components/sections/Approach').then(m => ({ default: m.Approach })));
 const WorkflowDiagram = lazy(() => import('../components/diagrams/WorkflowDiagram').then(m => ({ default: m.WorkflowDiagram })));
 const MCPArchitecture = lazy(() => import('../components/architecture/MCPArchitecture').then(m => ({ default: m.MCPArchitecture })));
@@ -41,7 +40,7 @@ export default function LandingPage() {
       </Suspense>
       <Suspense fallback={<Loading message="Loading projects..." />}>
         <ErrorBoundary fallback={<SectionErrorFallback section="Projects" />}>
-          <ProjectsSection />
+          <GitHubProjectsSection />
         </ErrorBoundary>
       </Suspense>
       <Suspense fallback={<Loading message="Loading approach..." />}>
@@ -73,11 +72,6 @@ export default function LandingPage() {
       <Suspense fallback={<Loading message="Loading video generator..." />}>
         <ErrorBoundary fallback={<SectionErrorFallback section="Video Generator" />}>
           <VideoGenerator />
-        </ErrorBoundary>
-      </Suspense>
-      <Suspense fallback={<Loading message="Loading GitHub projects..." />}>
-        <ErrorBoundary fallback={<SectionErrorFallback section="GitHub Projects" />}>
-          <GitHubProjectsSection />
         </ErrorBoundary>
       </Suspense>
       <Suspense fallback={<Loading message="Loading contact form..." />}>
