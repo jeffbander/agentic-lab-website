@@ -10,7 +10,7 @@ const Approach = lazy(() => import('../components/sections/Approach').then(m => 
 const WorkflowDiagram = lazy(() => import('../components/diagrams/WorkflowDiagram').then(m => ({ default: m.WorkflowDiagram })));
 const MCPArchitecture = lazy(() => import('../components/architecture/MCPArchitecture').then(m => ({ default: m.MCPArchitecture })));
 const VoiceBiomarkerFlow = lazy(() => import('../components/biomarkers/VoiceBiomarkerFlow').then(m => ({ default: m.VoiceBiomarkerFlow })));
-const ClinicalImpactDashboard = lazy(() => import('../components/charts/ClinicalImpactDashboard').then(m => ({ default: m.ClinicalImpactDashboard })));
+// Removed ClinicalImpactDashboard to streamline business content - focusing more on coding
 const ROICalculator = lazy(() => import('../components/calculator/ROICalculator').then(m => ({ default: m.ROICalculator })));
 const VideoGenerator = lazy(() => import('../components/sections/VideoGenerator').then(m => ({ default: m.VideoGenerator })));
 const GitHubProjectsSection = lazy(() => import('../components/github/GitHubProjectsSection').then(m => ({ default: m.GitHubProjectsSection })));
@@ -64,11 +64,7 @@ export default function LandingPage() {
           <VoiceBiomarkerFlow />
         </ErrorBoundary>
       </Suspense>
-      <Suspense fallback={<Loading message="Loading clinical impact dashboard..." />}>
-        <ErrorBoundary fallback={<SectionErrorFallback section="Clinical Impact" />}>
-          <ClinicalImpactDashboard />
-        </ErrorBoundary>
-      </Suspense>
+      {/* ClinicalImpactDashboard removed - streamlined to focus on coding, keeping ROI Calculator */}
       <Suspense fallback={<Loading message="Loading ROI calculator..." />}>
         <ErrorBoundary fallback={<SectionErrorFallback section="ROI Calculator" />}>
           <ROICalculator />

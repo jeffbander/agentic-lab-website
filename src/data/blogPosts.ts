@@ -23,6 +23,491 @@ export type BlogPost = {
 // Initial blog posts data - can be extended via API
 export const blogPosts: BlogPost[] = [
   {
+    id: '11',
+    slug: 'modern-ai-coding-architecture-skills-harness-ralph-hooks',
+    title: 'Modern AI Coding Architecture: Skills, Harness, Ralph & Hooks for Healthcare',
+    subtitle: 'The 2026 stack for building secure, autonomous healthcare applications with Claude Code',
+    excerpt: 'Move beyond MCP basics. Learn about Agent Skills, AI Harnesses, the Ralph autonomous development loop, and lifecycle hooks—the modern architecture stack enabling clinicians to build production healthcare software.',
+    content: `## The Evolution of AI-Assisted Healthcare Development
+
+In 2024, Anthropic introduced the Model Context Protocol (MCP)—an open standard for connecting AI agents to external data sources. By 2026, the landscape has evolved dramatically. While MCP remains foundational for FHIR integration and EHR connectivity, a new stack of technologies has emerged that transforms how we build secure healthcare software.
+
+This guide covers the four pillars of modern agentic healthcare development:
+
+1. **Agent Skills** — Reusable, portable capabilities for specialized tasks
+2. **AI Harness** — The infrastructure that wraps and controls AI agents
+3. **Ralph Loop** — Autonomous development with intelligent exit detection
+4. **Lifecycle Hooks** — Deterministic control over probabilistic AI behavior
+
+## 1. Agent Skills: Progressive Disclosure for Healthcare AI
+
+### What Are Skills?
+
+Skills are folders containing instructions, scripts, and resources that Claude can load when needed. Unlike static prompts or RAG systems, skills are **model-invoked**—the AI decides when to use them based on context.
+
+At their simplest, a skill is a directory containing a \`SKILL.md\` file with YAML frontmatter:
+
+\`\`\`markdown
+---
+name: fhir-patient-query
+description: Query and analyze FHIR patient resources with proper validation
+tools:
+  - read_file
+  - write_file
+  - execute_command
+---
+
+# FHIR Patient Query Skill
+
+## When to Use
+Use this skill when the user needs to:
+- Query patient demographics from FHIR servers
+- Validate LOINC/ICD-10 codes
+- Generate FHIR-compliant resources
+
+## Workflow
+1. Authenticate with FHIR server using SMART on FHIR
+2. Construct query with proper parameters
+3. Validate response against FHIR R4 schema
+4. Return structured data with audit logging
+\`\`\`
+
+### Progressive Disclosure Design
+
+Skills use a token-efficient architecture:
+
+1. **Startup**: Agent loads only names and descriptions (few dozen tokens each)
+2. **Detection**: When a task matches a skill description, the full content loads
+3. **Execution**: Skill instructions guide the agent's behavior
+4. **Cleanup**: Skill context released after task completion
+
+This means you can have hundreds of healthcare skills available without bloating context windows.
+
+### Healthcare Skills in Production
+
+Anthropic and the community have released skills for:
+
+| Skill | Healthcare Use Case |
+|-------|---------------------|
+| **Excel/Spreadsheet** | Generate patient reports with formulas |
+| **PDF Generation** | Create fillable consent forms |
+| **FHIR Development** | Build HL7 FHIR-compliant resources |
+| **Clinical Trial Protocol** | Generate IRB-ready protocols |
+| **Bioinformatics** | Allotrope instrument data conversion |
+
+### Installing Healthcare Skills
+
+\`\`\`bash
+# Register the healthcare skills marketplace
+claude plugin add healthcare-skills
+
+# Or manually install to ~/.claude/skills/
+git clone https://github.com/anthropics/skills
+cp -r skills/healthcare ~/.claude/skills/
+\`\`\`
+
+### Creating Custom Clinical Skills
+
+For your organization's specific workflows:
+
+\`\`\`markdown
+---
+name: prior-auth-generator
+description: Generate prior authorization requests for injectable medications
+version: 1.0.0
+author: MSW Agentic Lab
+---
+
+# Prior Authorization Generator
+
+## Context
+This skill generates prior authorization requests for LEQVIO,
+Repatha, and other PCSK9 inhibitors.
+
+## Required Inputs
+- Patient demographics (MRN, DOB, insurance)
+- Current LDL-C level
+- Prior statin therapy history
+- Contraindications documentation
+
+## Output Format
+Generate PDF following CMS-1500 format with:
+- CPT codes: 96372 (injection), J3490 (drug)
+- ICD-10: E78.01 (familial hypercholesterolemia)
+- Supporting clinical documentation
+\`\`\`
+
+## 2. AI Harness: The Infrastructure Layer
+
+### What Is an AI Harness?
+
+An AI harness is the software infrastructure that wraps around an LLM, handling everything *except* the model itself:
+
+- **Tool management**: Which tools the agent can access
+- **Context handling**: Managing conversation history and memory
+- **Orchestration**: Coordinating multi-step workflows
+- **Safety rails**: Preventing dangerous or unauthorized actions
+- **Resource limits**: Rate limiting, token budgets, timeouts
+
+As one industry expert noted: "Orchestration is the brain of the operation, harness is the hands and infrastructure."
+
+### Claude Code's Harness Architecture
+
+Claude Code's harness is specifically optimized for Claude models. It's heavily engineered to know:
+
+- **Which sub-agent to spawn** for different task types
+- **What command/tool call/skill to run** at each step
+- **What to run asynchronously** vs. sequentially
+- **When to pause for human review** vs. proceed autonomously
+
+This is why Claude Code often outperforms generic coding assistants—the harness and model are co-designed.
+
+### Healthcare Harness Requirements
+
+For HIPAA-compliant development, your harness must implement:
+
+\`\`\`typescript
+interface HealthcareHarness {
+  // Security
+  phiAccessControl: RBACConfig;
+  auditLogger: HIPAACompliantLogger;
+  encryptionProvider: AES256Provider;
+
+  // Safety Rails
+  codeReviewRequired: boolean;
+  maxAutonomousChanges: number;
+  bannedOperations: string[]; // e.g., 'DELETE FROM patients'
+
+  // Compliance
+  baaSigned: boolean;
+  dataResidency: 'us-east' | 'us-west' | 'hipaa-region';
+  retentionPolicy: RetentionConfig;
+}
+\`\`\`
+
+### Harness vs. Orchestration
+
+| Concern | Harness | Orchestration |
+|---------|---------|---------------|
+| Tool execution | ✓ | |
+| Context management | ✓ | |
+| Multi-agent coordination | | ✓ |
+| Safety constraints | ✓ | |
+| Workflow sequencing | | ✓ |
+| Resource limits | ✓ | |
+
+Modern healthcare AI systems need both—a robust harness for each agent, coordinated by an orchestration layer.
+
+## 3. Ralph: Autonomous Development Loops
+
+### The Problem with One-Shot Generation
+
+Traditional AI coding is "one-shot": you prompt, AI generates, you manually review and iterate. This works for simple tasks but fails for complex healthcare applications requiring:
+
+- Multiple interconnected features
+- Comprehensive test coverage
+- Security hardening
+- Edge case handling
+
+### Enter Ralph
+
+[Ralph](https://github.com/frankbria/ralph-claude-code) is an open-source framework by Frank Bria that enables **autonomous development loops** with intelligent exit detection.
+
+Instead of:
+1. Prompt → Generate → Review → Prompt → Generate → Review...
+
+Ralph enables:
+1. Prompt → Generate → Test → Fix → Generate → Test → ✓ Done
+
+### How Ralph Works
+
+\`\`\`bash
+# Install Ralph
+git clone https://github.com/frankbria/ralph-claude-code
+cd ralph-claude-code && ./install.sh
+
+# Run autonomous development
+ralph "Build a HIPAA-compliant patient intake form with validation"
+\`\`\`
+
+Ralph's key innovations:
+
+1. **Intelligent Exit Detection**: Uses multiple signals to know when to stop
+   - \`MAX_CONSECUTIVE_TEST_LOOPS=3\`
+   - \`MAX_CONSECUTIVE_DONE_SIGNALS=2\`
+   - Checklist completion in \`@fix_plan.md\`
+
+2. **Session Continuity**: \`--continue\` flag preserves context across iterations
+
+3. **Circuit Breakers**: Protects against runaway costs and API rate limits
+
+4. **PRD Import**: Converts requirements documents into executable task plans
+
+### Ralph Results
+
+In testing with Claude Opus 4.5:
+
+| Approach | Result |
+|----------|--------|
+| Standard Claude Code | Working but bare-bones paint tool |
+| Ralph Loop | Production-ready application with features, edge cases, polish |
+
+For healthcare development, Ralph has demonstrated **$49,700+ savings** per project by reducing manual iteration cycles.
+
+### Ralph for Healthcare Workflows
+
+\`\`\`bash
+# Example: Build complete prior auth system
+ralph --spec prior-auth-prd.md \\
+      --tests "all auth flows pass, HIPAA logging enabled" \\
+      --exit-on "100% test coverage, security scan clean"
+\`\`\`
+
+## 4. Lifecycle Hooks: Deterministic Control
+
+### The Challenge of Probabilistic AI
+
+LLMs are inherently probabilistic—they might format code differently, skip tests, or make different architectural choices across runs. In healthcare, this unpredictability is dangerous.
+
+**Hooks** solve this by providing deterministic control points in the agent lifecycle.
+
+### The 8 Hook Events
+
+Claude Code 2.1.0 provides eight lifecycle hooks:
+
+| Event | Fires When | Healthcare Use Case |
+|-------|------------|---------------------|
+| \`UserPromptSubmit\` | User submits prompt | PHI detection, input sanitization |
+| \`PreToolUse\` | Before any tool runs | Block dangerous operations |
+| \`PostToolUse\` | After tool completes | Audit logging, validation |
+| \`Notification\` | Agent needs user input | Compliance checkpoints |
+| \`Stop\` | Agent finishes responding | Final security scan |
+| \`SubagentStop\` | Sub-agent completes | Aggregate sub-agent results |
+| \`PreCompact\` | Before context compaction | Preserve critical clinical context |
+| \`SessionStart\` | New/resumed session | Load patient context, verify auth |
+
+### Implementing Healthcare Hooks
+
+\`\`\`json
+// .claude/settings.json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "./scripts/validate-no-phi-in-command.sh"
+      },
+      {
+        "matcher": "Write",
+        "command": "./scripts/scan-for-hardcoded-secrets.sh"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "command": "./scripts/hipaa-audit-log.sh"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "./scripts/security-scan-changes.sh"
+      }
+    ]
+  }
+}
+\`\`\`
+
+### Hook Scripts for Healthcare
+
+**PHI Detection Hook** (\`validate-no-phi-in-command.sh\`):
+
+\`\`\`bash
+#!/bin/bash
+# Block commands that might expose PHI
+
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+
+# Check for PHI patterns
+if echo "$COMMAND" | grep -qiE '(ssn|social.?security|mrn|patient.?id|dob|birth.?date)'; then
+  echo '{"decision": "block", "reason": "Potential PHI in command"}'
+  exit 0
+fi
+
+echo '{"decision": "allow"}'
+\`\`\`
+
+**HIPAA Audit Log Hook** (\`hipaa-audit-log.sh\`):
+
+\`\`\`bash
+#!/bin/bash
+# Log all tool usage for HIPAA compliance
+
+INPUT=$(cat)
+TOOL=$(echo "$INPUT" | jq -r '.tool_name')
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+USER=$(whoami)
+
+echo "{
+  \\"timestamp\\": \\"$TIMESTAMP\\",
+  \\"user\\": \\"$USER\\",
+  \\"tool\\": \\"$TOOL\\",
+  \\"session\\": \\"$CLAUDE_SESSION_ID\\"
+}" >> /var/log/hipaa-audit/claude-code.jsonl
+\`\`\`
+
+### Sub-Agent Hooks
+
+When spawning sub-agents for parallel tasks, hooks ensure coordination:
+
+\`\`\`typescript
+// Hooks can be defined per sub-agent
+const securityAuditor = {
+  name: "security-auditor",
+  hooks: {
+    PreToolUse: [{
+      matcher: "Bash",
+      command: "./allow-only-security-tools.sh"
+    }],
+    Stop: [{
+      command: "./aggregate-security-findings.sh"
+    }]
+  }
+};
+\`\`\`
+
+## 5. Putting It All Together: The Modern Healthcare Stack
+
+### Architecture Diagram
+
+\`\`\`
+┌─────────────────────────────────────────────────────────────────┐
+│                      HEALTHCARE AI STACK                         │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │   Skills    │  │    Ralph    │  │    Lifecycle Hooks      │  │
+│  │ ─────────── │  │ ─────────── │  │ ─────────────────────── │  │
+│  │ • FHIR      │  │ • Auto loop │  │ • PreToolUse (security) │  │
+│  │ • Clinical  │  │ • Exit      │  │ • PostToolUse (audit)   │  │
+│  │ • Prior Auth│  │   detection │  │ • Stop (compliance)     │  │
+│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
+│         │                │                      │                │
+│         └────────────────┼──────────────────────┘                │
+│                          ▼                                       │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                    AI HARNESS                              │  │
+│  │  • Tool management    • Safety rails    • Context mgmt    │  │
+│  │  • PHI access control • Rate limiting   • Sub-agents      │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                          │                                       │
+│                          ▼                                       │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                 CLAUDE CODE + MCP                          │  │
+│  │  • FHIR MCP Server    • Healthcare MCP    • EHR APIs      │  │
+│  └───────────────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────────┤
+│                    SECURITY & COMPLIANCE                         │
+│  HIPAA • HSCC 2026 Guidelines • NIST AI RMF • Zero Trust        │
+└─────────────────────────────────────────────────────────────────┘
+\`\`\`
+
+### Implementation Checklist
+
+**Phase 1: Foundation**
+- [ ] Install Claude Code with healthcare-optimized harness
+- [ ] Configure HIPAA-compliant audit logging hooks
+- [ ] Set up MCP servers for FHIR/EHR integration
+
+**Phase 2: Skills**
+- [ ] Install community healthcare skills
+- [ ] Create custom skills for organization-specific workflows
+- [ ] Test skill invocation with clinical scenarios
+
+**Phase 3: Automation**
+- [ ] Integrate Ralph for autonomous development loops
+- [ ] Configure exit conditions based on test coverage and security scans
+- [ ] Set up PRD-to-code pipelines
+
+**Phase 4: Governance**
+- [ ] Implement PreToolUse hooks for PHI protection
+- [ ] Configure PostToolUse hooks for audit logging
+- [ ] Establish human-in-the-loop checkpoints for clinical decisions
+
+## 6. Security Considerations for 2026
+
+### HSCC AI Cybersecurity Guidance
+
+The Health Sector Coordinating Council's 2026 guidance outlines five workstreams:
+
+1. **Education**: Training clinicians and developers on AI risks
+2. **Cyber Operations**: Incident response for AI systems
+3. **Governance**: Accountability frameworks for autonomous agents
+4. **Secure-by-Design**: Building security into AI development
+5. **Third-Party AI Risk**: Vetting AI vendors and tools
+
+### Key Deliverables Coming Q1-Q2 2026
+
+- AI Cyber Resilience and Incident Recovery Playbook
+- AI-Driven Clinical Workflow Threat Intelligence Playbook
+- Cybersecurity Operations for AI Systems Playbook
+
+### Zero Trust for Agentic AI
+
+For autonomous agents in healthcare:
+
+\`\`\`typescript
+const zeroTrustConfig = {
+  // Never trust, always verify
+  verifyEveryToolCall: true,
+  verifyEveryDataAccess: true,
+
+  // Least privilege
+  defaultPermissions: 'none',
+  explicitGrants: ['read:patient', 'write:audit-log'],
+
+  // Assume breach
+  immutableAuditLogs: true,
+  sessionIsolation: true,
+  automaticRevocation: '15m'
+};
+\`\`\`
+
+## Conclusion: The 2026 Healthcare AI Developer
+
+The modern healthcare AI developer doesn't just prompt LLMs—they architect systems:
+
+- **Skills** provide reusable, portable capabilities
+- **Harnesses** ensure safe, controlled execution
+- **Ralph** enables autonomous iteration without manual oversight
+- **Hooks** guarantee deterministic behavior at critical points
+
+This stack transforms AI coding from an experiment into enterprise-grade healthcare software development.
+
+At the MSW Agentic Lab, we're using these tools to build the next generation of clinical applications—and training clinicians to do the same.
+
+---
+
+**Resources:**
+
+- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills)
+- [Ralph for Claude Code](https://github.com/frankbria/ralph-claude-code)
+- [Anthropic Agent Skills Announcement](https://www.anthropic.com/news/skills)
+- [HSCC AI Cybersecurity Guidance Preview](https://healthsectorcouncil.org)
+- [Claude Code Hooks Mastery](https://github.com/disler/claude-code-hooks-mastery)`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Hospitalist & AI Developer',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=1200&h=630&fit=crop',
+    tags: ['Skills', 'AI Harness', 'Ralph', 'Hooks', 'Claude Code', 'Healthcare AI', 'Security', 'Architecture'],
+    category: 'Tutorial',
+    status: 'published',
+    publishedAt: '2026-01-21T10:00:00Z',
+    updatedAt: '2026-01-21T10:00:00Z',
+    readingTime: 18,
+    featured: true,
+  },
+  {
     id: '10',
     slug: '2026-agentic-ai-healthcare-landscape',
     title: 'The 2026 Agentic AI Healthcare Landscape: From Pilots to Production',
@@ -597,24 +1082,60 @@ The next evolution combines SMART on FHIR authentication with MCP:
 
 This pattern is already in development and will become the standard for production healthcare AI agents.
 
+## 2026 Update: MCP + Agent Skills
+
+Since the original publication of this guide, Anthropic has released **Agent Skills**—a new layer that sits on top of MCP and provides reusable, model-invoked capabilities.
+
+### Skills as MCP Wrappers
+
+Skills can encapsulate complex MCP operations into simple, reusable packages. For example, a FHIR Patient Summary skill:
+
+- Queries demographics via MCP FHIR server
+- Fetches recent encounters (last 6 months)
+- Gets active medications and conditions
+- Checks for drug interactions via Healthcare MCP
+- Formats as clinical summary with sections
+
+### Benefits of Skills + MCP
+
+| Concern | MCP Alone | MCP + Skills |
+|---------|-----------|--------------|
+| Code reuse | Manual | Automatic |
+| Context efficiency | Full prompts | Progressive disclosure |
+| Standardization | Per-project | Portable across projects |
+| Model invocation | Explicit | Automatic based on context |
+
+### Healthcare Skills Available
+
+The community has built several healthcare-specific skills that leverage MCP:
+
+- **fhir-patient-query**: Natural language to FHIR queries
+- **clinical-trial-matcher**: Patient eligibility screening
+- **prior-auth-generator**: Insurance authorization documents
+- **care-gap-analyzer**: Quality measure identification
+
+For a comprehensive guide to the modern healthcare AI stack including Skills, Harness, Ralph, and Hooks, see our updated tutorial: [Modern AI Coding Architecture](/blog/modern-ai-coding-architecture-skills-harness-ralph-hooks).
+
 ---
 
 **Resources:**
 
 - [Healthcare MCP Server on GitHub](https://github.com/Cicatriiz/healthcare-mcp-public)
 - [Momentum FHIR MCP Documentation](https://www.themomentum.ai/blog/introducing-fhir-mcp-server-natural-language-interface-for-healthcare-data)
-- [Anthropic MCP Specification](https://modelcontextprotocol.io)`,
+- [Anthropic MCP Specification](https://modelcontextprotocol.io)
+- [Anthropic Agent Skills](https://www.anthropic.com/news/skills)
+- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills)`,
     author: {
       name: 'Jeff Bander, MD',
       role: 'Hospitalist & AI Developer',
     },
     coverImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&h=630&fit=crop',
-    tags: ['MCP', 'FHIR', 'Healthcare AI', 'EHR Integration', 'Tutorial', 'Anthropic'],
+    tags: ['MCP', 'FHIR', 'Healthcare AI', 'EHR Integration', 'Tutorial', 'Anthropic', 'Skills'],
     category: 'Tutorial',
     status: 'published',
     publishedAt: '2026-01-17T10:00:00Z',
-    updatedAt: '2026-01-17T10:00:00Z',
-    readingTime: 10,
+    updatedAt: '2026-01-21T10:00:00Z',
+    readingTime: 12,
     featured: true,
   },
   {
@@ -692,22 +1213,57 @@ We are moving toward a future where healthcare software is not just built, but *
 
 At the Cardiology Agentic Laboratory, we aren't just writing code. We are building the harnesses that will allow AI to safely build the future of medicine.
 
+## 2026 Update: Lifecycle Hooks and Sub-Agents
+
+Since this article was published, Claude Code 2.1.0 has introduced **lifecycle hooks**—a powerful way to inject deterministic control into the probabilistic AI harness.
+
+### The 8 Hook Events
+
+| Event | Healthcare Use Case |
+|-------|---------------------|
+| \`UserPromptSubmit\` | PHI detection in prompts |
+| \`PreToolUse\` | Block dangerous operations |
+| \`PostToolUse\` | HIPAA audit logging |
+| \`Notification\` | Compliance checkpoints |
+| \`Stop\` | Final security scan |
+| \`SubagentStop\` | Aggregate findings |
+| \`PreCompact\` | Preserve clinical context |
+| \`SessionStart\` | Verify authentication |
+
+### Sub-Agents in the Harness
+
+Modern harnesses now support **sub-agents**—specialized Claude instances that run with their own system prompts and tool permissions:
+
+- **Security Auditor**: Only has access to scanning tools
+- **Test Writer**: Can read code but only write test files
+- **Documentation Agent**: Read-only access, writes to /docs
+
+Each sub-agent operates within the parent harness's safety rails, but with further restrictions appropriate to its role.
+
+### Ralph: Autonomous Loops
+
+For complex healthcare projects, we now use **Ralph**—an autonomous development framework that wraps our harness with intelligent exit detection. Instead of manual iteration, Ralph continues building and testing until the project meets our definition of done.
+
+For the complete modern stack including Skills, Hooks, and Ralph, see: [Modern AI Coding Architecture](/blog/modern-ai-coding-architecture-skills-harness-ralph-hooks).
+
 ---
 
 **References:**
 
-Anthropic. (2025). *Effective harnesses for long-running agents*. [Read more](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)`,
+- Anthropic. (2025). *Effective harnesses for long-running agents*. [Read more](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+- [Claude Code Hooks Documentation](https://code.claude.com/docs/en/hooks)
+- [Ralph for Claude Code](https://github.com/frankbria/ralph-claude-code)`,
     author: {
       name: 'Samantha Zakow',
       role: 'Cardiology Agentic Laboratory',
     },
     coverImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&h=630&fit=crop',
-    tags: ['AI Harness', 'Autonomous Agents', 'Security', 'Healthcare AI', 'Red Teaming', 'HIPAA'],
+    tags: ['AI Harness', 'Autonomous Agents', 'Security', 'Healthcare AI', 'Red Teaming', 'HIPAA', 'Hooks', 'Sub-Agents'],
     category: 'Security',
     status: 'published',
     publishedAt: '2026-01-15T10:00:00Z',
-    updatedAt: '2026-01-15T10:00:00Z',
-    readingTime: 7,
+    updatedAt: '2026-01-21T10:00:00Z',
+    readingTime: 9,
     featured: true,
   },
   {
