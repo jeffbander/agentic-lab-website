@@ -9,6 +9,12 @@ export type BlogPost = {
     name: string;
     role: string;
     avatar?: string;
+    bio?: string;
+    social?: {
+      twitter?: string;
+      linkedin?: string;
+      github?: string;
+    };
   };
   coverImage?: string;
   tags: string[];
@@ -18,6 +24,13 @@ export type BlogPost = {
   updatedAt: string; // ISO date string
   readingTime: number; // minutes
   featured: boolean;
+  // SEO enhancements
+  metaDescription?: string;
+  keywords?: string[];
+  canonicalUrl?: string;
+  // Social sharing
+  ogImage?: string;
+  twitterCard?: 'summary' | 'summary_large_image';
 };
 
 // Initial blog posts data - can be extended via API
@@ -28,6 +41,10 @@ export const blogPosts: BlogPost[] = [
     title: 'Modern AI Coding Architecture: Skills, Harness, Ralph & Hooks for Healthcare',
     subtitle: 'The 2026 stack for building secure, autonomous healthcare applications with Claude Code',
     excerpt: 'Move beyond MCP basics. Learn about Agent Skills, AI Harnesses, the Ralph autonomous development loop, and lifecycle hooks—the modern architecture stack enabling clinicians to build production healthcare software.',
+    metaDescription: 'Comprehensive guide to the 2026 AI coding stack for healthcare: Agent Skills, AI Harnesses, Ralph autonomous loops, and Lifecycle Hooks for building secure clinical applications.',
+    keywords: ['Agent Skills', 'AI Harness', 'Ralph Loop', 'Lifecycle Hooks', 'Healthcare AI', 'Claude Code', 'Autonomous Development'],
+    ogImage: 'https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=1200&h=630&fit=crop',
+    twitterCard: 'summary_large_image',
     content: `## The Evolution of AI-Assisted Healthcare Development
 
 In 2024, Anthropic introduced the Model Context Protocol (MCP)—an open standard for connecting AI agents to external data sources. By 2026, the landscape has evolved dramatically. While MCP remains foundational for FHIR integration and EHR connectivity, a new stack of technologies has emerged that transforms how we build secure healthcare software.
@@ -496,7 +513,12 @@ At the MSW Agentic Lab, we're using these tools to build the next generation of 
 - [Claude Code Hooks Mastery](https://github.com/disler/claude-code-hooks-mastery)`,
     author: {
       name: 'Jeff Bander, MD',
-      role: 'Hospitalist & AI Developer',
+      role: 'Chief of Cardiology & AI Developer',
+      bio: 'Dr. Bander leads the Mount Sinai West Agentic Lab, developing next-generation AI tools for healthcare. He pioneers clinician-led software development using advanced AI coding techniques.',
+      social: {
+        linkedin: 'https://linkedin.com/in/jeffbander',
+        github: 'https://github.com/jeffbander'
+      }
     },
     coverImage: 'https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=1200&h=630&fit=crop',
     tags: ['Skills', 'AI Harness', 'Ralph', 'Hooks', 'Claude Code', 'Healthcare AI', 'Security', 'Architecture'],
