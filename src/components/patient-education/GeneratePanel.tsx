@@ -255,12 +255,24 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
     const savedPart1 = loadJobFromStorage('part1');
     const savedPart2 = loadJobFromStorage('part2');
 
-    if (savedPart1 || savedPart2) {
+    // For 24-second videos (promptPart2 exists), only restore if BOTH parts are saved
+    // For 12-second videos, only restore if part1 is saved
+    // This prevents stale localStorage from a previous session causing only one job to be created
+    const shouldRestore = promptPart2
+      ? (savedPart1 && savedPart2)  // 24s: need both parts
+      : savedPart1;                  // 12s: just need part1
+
+    if (shouldRestore) {
+      console.log('[GeneratePanel] Restoring jobs from localStorage');
       if (savedPart1) setPart1Job(savedPart1);
       if (savedPart2) setPart2Job(savedPart2);
       setCanLeave(true);
       setCurrentPhase(promptPart2 ? 'parallel' : 'single');
     } else {
+      // Clear any stale partial data before creating new jobs
+      clearJobFromStorage('part1');
+      clearJobFromStorage('part2');
+      console.log('[GeneratePanel] Creating new jobs (cleared stale localStorage)');
       createJobs();
     }
   }, [prompt, promptPart2, createVideoJob]);
