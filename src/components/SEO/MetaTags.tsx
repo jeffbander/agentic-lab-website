@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
 
 interface MetaTagsProps {
   title: string;
@@ -12,6 +12,20 @@ interface MetaTagsProps {
   updatedAt?: string;
   twitterCard?: 'summary' | 'summary_large_image';
   noIndex?: boolean;
+}
+
+function setMeta(attr: 'name' | 'property', key: string, content: string) {
+  let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.content = content;
+}
+
+function removeMeta(attr: 'name' | 'property', key: string) {
+  document.querySelector(`meta[${attr}="${key}"]`)?.remove();
 }
 
 export function MetaTags({
@@ -29,86 +43,119 @@ export function MetaTags({
 }: MetaTagsProps) {
   const siteUrl = 'https://mswagenticlab.netlify.app';
   const fullTitle = title.includes('MSW Agentic Lab') ? title : `${title} | MSW Agentic Lab`;
-  
-  return (
-    <Helmet>
-      {/* Basic Meta */}
-      <title>{fullTitle}</title>
-      <meta name="description" content={description} />
-      {keywords && <meta name="keywords" content={keywords} />}
-      {author && <meta name="author" content={author} />}
-      
-      {/* Robots */}
-      {noIndex && <meta name="robots" content="noindex, nofollow" />}
-      
-      {/* Canonical URL */}
-      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
-      
-      {/* Open Graph */}
-      <meta property="og:type" content={ogType} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={ogImage} />
-      <meta property="og:url" content={canonicalUrl || siteUrl} />
-      <meta property="og:site_name" content="MSW Agentic Lab" />
-      
-      {/* Twitter Card */}
-      <meta name="twitter:card" content={twitterCard} />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage} />
-      <meta name="twitter:creator" content="@mswagenticlab" />
-      
-      {/* Article specific */}
-      {ogType === 'article' && (
-        <>
-          {author && <meta property="article:author" content={author} />}
-          {publishedAt && <meta property="article:published_time" content={publishedAt} />}
-          {updatedAt && <meta property="article:modified_time" content={updatedAt} />}
-          <meta property="article:section" content="Healthcare AI" />
-        </>
-      )}
-      
-      {/* Healthcare/Medical specific structured data */}
-      {ogType === 'article' && (
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: title,
-            description,
-            author: author ? {
-              '@type': 'Person',
-              name: author,
-            } : undefined,
-            datePublished: publishedAt,
-            dateModified: updatedAt,
-            image: ogImage,
-            url: canonicalUrl,
-            publisher: {
-              '@type': 'Organization',
-              name: 'MSW Agentic Lab',
-              url: siteUrl,
-              logo: {
-                '@type': 'ImageObject',
-                url: `${siteUrl}/logo.png`,
-              },
-            },
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id': canonicalUrl,
-            },
-            about: [
-              'Healthcare AI',
-              'Artificial Intelligence',
-              'Medical Technology',
-              'Clinical Applications',
-            ],
-          })}
-        </script>
-      )}
-    </Helmet>
-  );
+
+  useEffect(() => {
+    // Title
+    document.title = fullTitle;
+
+    // Basic Meta
+    setMeta('name', 'description', description);
+    if (keywords) setMeta('name', 'keywords', keywords);
+    if (author) setMeta('name', 'author', author);
+
+    // Robots
+    if (noIndex) {
+      setMeta('name', 'robots', 'noindex, nofollow');
+    } else {
+      removeMeta('name', 'robots');
+    }
+
+    // Canonical URL
+    let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (canonicalUrl) {
+      if (!canonicalEl) {
+        canonicalEl = document.createElement('link');
+        canonicalEl.rel = 'canonical';
+        document.head.appendChild(canonicalEl);
+      }
+      canonicalEl.href = canonicalUrl;
+    } else {
+      canonicalEl?.remove();
+    }
+
+    // Open Graph
+    setMeta('property', 'og:type', ogType);
+    setMeta('property', 'og:title', fullTitle);
+    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:image', ogImage);
+    setMeta('property', 'og:url', canonicalUrl || siteUrl);
+    setMeta('property', 'og:site_name', 'MSW Agentic Lab');
+
+    // Twitter Card
+    setMeta('name', 'twitter:card', twitterCard);
+    setMeta('name', 'twitter:title', fullTitle);
+    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:image', ogImage);
+    setMeta('name', 'twitter:creator', '@mswagenticlab');
+
+    // Article specific
+    if (ogType === 'article') {
+      if (author) setMeta('property', 'article:author', author);
+      if (publishedAt) setMeta('property', 'article:published_time', publishedAt);
+      if (updatedAt) setMeta('property', 'article:modified_time', updatedAt);
+      setMeta('property', 'article:section', 'Healthcare AI');
+    } else {
+      removeMeta('property', 'article:author');
+      removeMeta('property', 'article:published_time');
+      removeMeta('property', 'article:modified_time');
+      removeMeta('property', 'article:section');
+    }
+
+    // Structured data (JSON-LD)
+    const existingScript = document.querySelector('script[data-metatags-jsonld]');
+    if (ogType === 'article') {
+      const jsonLd = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: title,
+        description,
+        author: author ? { '@type': 'Person', name: author } : undefined,
+        datePublished: publishedAt,
+        dateModified: updatedAt,
+        image: ogImage,
+        url: canonicalUrl,
+        publisher: {
+          '@type': 'Organization',
+          name: 'MSW Agentic Lab',
+          url: siteUrl,
+          logo: { '@type': 'ImageObject', url: `${siteUrl}/logo.png` },
+        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+        about: [
+          'Healthcare AI',
+          'Artificial Intelligence',
+          'Medical Technology',
+          'Clinical Applications',
+        ],
+      });
+      if (existingScript) {
+        existingScript.textContent = jsonLd;
+      } else {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-metatags-jsonld', '');
+        script.textContent = jsonLd;
+        document.head.appendChild(script);
+      }
+    } else {
+      existingScript?.remove();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      removeMeta('name', 'keywords');
+      removeMeta('name', 'author');
+      removeMeta('name', 'robots');
+      document.querySelector('link[rel="canonical"]')?.remove();
+      removeMeta('property', 'article:author');
+      removeMeta('property', 'article:published_time');
+      removeMeta('property', 'article:modified_time');
+      removeMeta('property', 'article:section');
+      document.querySelector('script[data-metatags-jsonld]')?.remove();
+    };
+  }, [fullTitle, description, keywords, ogImage, ogType, canonicalUrl, author, publishedAt, updatedAt, twitterCard, noIndex, title, siteUrl]);
+
+  return null;
 }
 
 // Helper function to generate blog post meta
