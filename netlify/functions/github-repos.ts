@@ -19,6 +19,10 @@ export interface GitHubRepo {
   summary?: string;
 }
 
+// GitHub topic used to control which repos appear on the website.
+// To show a repo: add this topic on GitHub. To hide it: remove it.
+const FEATURED_TOPIC = 'mswlab';
+
 // Map repository names to categories and display names
 const repoMetadata: Record<string, { category: string; displayName: string; summary: string }> = {
   'Albert-CareSync-AI': {
@@ -255,9 +259,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
       repos = repos.filter(repo => repo.category === category);
     }
 
-    // Filter to only featured (those with metadata) if specified
+    // Filter to only repos tagged with the featured topic on GitHub
     if (featured) {
-      repos = repos.filter(repo => repoMetadata[repo.name]);
+      repos = repos.filter(repo => repo.topics.includes(FEATURED_TOPIC));
+      // Strip the gate topic from displayed topics
+      repos = repos.map(repo => ({
+        ...repo,
+        topics: repo.topics.filter(t => t !== FEATURED_TOPIC)
+      }));
     }
 
     // Apply limit

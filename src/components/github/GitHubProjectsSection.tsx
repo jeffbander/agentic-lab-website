@@ -236,9 +236,28 @@ export function GitHubProjectsSection() {
                   </div>
 
                   {/* Summary */}
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                     {repo.summary}
                   </p>
+
+                  {/* Topics/Tags */}
+                  {repo.topics.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {repo.topics.slice(0, 5).map(topic => (
+                        <span
+                          key={topic}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 hover:bg-sinai-blue-50 hover:text-sinai-blue-700 transition-colors"
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                      {repo.topics.length > 5 && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-400">
+                          +{repo.topics.length - 5}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Meta */}
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
