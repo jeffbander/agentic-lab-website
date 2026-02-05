@@ -154,7 +154,7 @@ const featuredCategories = [
 
 // Simple in-memory cache
 let cache: { data: GitHubRepo[]; timestamp: number } | null = null;
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 async function fetchGitHubRepos(username: string): Promise<GitHubRepo[]> {
   // Check cache
@@ -231,7 +231,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Content-Type': 'application/json',
-    'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
+    'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' // Short browser cache; server-side cache handles the rest
   };
 
   if (event.httpMethod === 'OPTIONS') {
