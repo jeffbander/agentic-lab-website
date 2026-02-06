@@ -1,0 +1,34 @@
+# Agentic Laboratory Video Script
+## "Breaking Barriers: The Future of Healthcare Software"
+
+### Scene 1: The Problem (0-10 seconds)
+**Visual:** Traditional healthcare development barriers - walls, silos, frustrated clinicians
+**Narration:** "For decades, brilliant clinical minds have been locked out of software creation by technical barriers."
+
+### Scene 2: The Breakthrough (10-20 seconds)  
+**Visual:** AI agents bridging the gap, barriers crumbling, doctors + AI collaboration
+**Narration:** "Mount Sinai West's Agentic Laboratory changes everything. AI agents with coding ability don't just assist—they eliminate barriers entirely."
+
+### Scene 3: Real Results (20-30 seconds)
+**Visual:** Dr. Bander building IRBVer2, HeartVoice Monitor interface, statistics overlay
+**Narration:** "Dr. Jeff Bander, cardiologist, built IRBVer2 in 8 weeks. 83.8% code acceptance rate. Voice AI that detects heart failure 2-3 weeks early."
+
+### Scene 4: The Vision (30-40 seconds)
+**Visual:** Clinicians effortlessly creating software, innovation flowing freely
+**Narration:** "When clinical expertise directly becomes software reality, innovation moves at the speed of insight, not implementation."
+
+### Scene 5: Call to Action (40-45 seconds)
+**Visual:** Agentic Laboratory logo, contact information
+**Narration:** "Software agents aren't just tools—they're barrier breakers. The question is no longer 'Can we build it?' but 'What should we build next?' At Agentic Laboratory, next is now."
+
+## Key Statistics to Display:
+- 83.8% PR Acceptance Rate
+- 60-80% Faster Development  
+- $50K-200K Annual Savings
+- 8 Weeks: IRBVer2 Development
+- AUC 0.82: HeartVoice Accuracy
+
+## Color Scheme:
+- Mount Sinai Medical Blue (#1e40af)
+- Clean White Backgrounds
+- Professional Medical Aesthetic
