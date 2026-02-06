@@ -57,11 +57,11 @@ export function BarrierBreaking() {
           className="grid lg:grid-cols-2 gap-12 items-center mb-20"
         >
           <div>
-            <img
-              src="/generated-content/breaking-barriers.png"
-              alt="AI agents breaking down barriers between clinical teams and software development"
-              className="rounded-2xl shadow-2xl"
-            />
+            <div className="rounded-2xl shadow-2xl bg-gradient-to-br from-blue-100 to-red-100 p-12 text-center">
+              <div className="text-6xl mb-4">🚧💥</div>
+              <h4 className="text-xl font-bold text-gray-800 mb-2">Barrier-Breaking Visualization</h4>
+              <p className="text-gray-600">AI agents demolishing traditional development barriers</p>
+            </div>
           </div>
           <div>
             <h3 className="text-3xl font-bold text-gray-900 mb-6">
@@ -152,11 +152,11 @@ export function BarrierBreaking() {
             </div>
           </div>
           <div className="order-1 lg:order-2">
-            <img
-              src="/generated-content/clinicians-coding.png"
-              alt="Healthcare professionals using AI coding assistants"
-              className="rounded-2xl shadow-2xl"
-            />
+            <div className="rounded-2xl shadow-2xl bg-gradient-to-br from-green-100 to-blue-100 p-12 text-center">
+              <div className="text-6xl mb-4">👩‍⚕️💻</div>
+              <h4 className="text-xl font-bold text-gray-800 mb-2">Clinicians Coding</h4>
+              <p className="text-gray-600">Healthcare professionals empowered with AI coding abilities</p>
+            </div>
           </div>
         </motion.div>
 
