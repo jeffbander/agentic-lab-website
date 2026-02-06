@@ -50,37 +50,37 @@ export function Hero() {
           </motion.div>
 
           <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            Healthcare Teams Building
-            <br />
             <span className="bg-gradient-to-r from-sinai-blue-600 to-sinai-maroon-600 bg-clip-text text-transparent">
-              Production Software
+              Breaking Down Barriers
             </span>
             <br />
-            <span className="text-4xl md:text-6xl">In Weeks, Not Years</span>
+            Between Clinical Vision
+            <br />
+            <span className="text-4xl md:text-6xl">and Software Reality</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto mb-8">
-            Clinicians, nurses, administrators, and operations teams transforming domain expertise into HIPAA-compliant applications with AI-assisted development.
+            Software agents with coding ability demolish traditional barriers. When clinical expertise directly becomes software reality, innovation moves at the speed of insight, not implementation.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <motion.a
               href="#projects"
-              onClick={() => trackCTAClick('Hero', 'See Our Projects')}
+              onClick={() => trackCTAClick('Hero', 'See Barrier-Breaking Projects')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-sinai-blue-600 text-white rounded-lg font-semibold text-lg shadow-lg hover:bg-sinai-blue-700 transition-colors"
             >
-              See Our Projects
+              See Barrier-Breaking Projects
             </motion.a>
             <motion.a
               href="#contact"
-              onClick={() => trackCTAClick('Hero', 'Schedule a Demo')}
+              onClick={() => trackCTAClick('Hero', 'Break Down Your Barriers')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-white text-sinai-blue-600 border-2 border-sinai-blue-600 rounded-lg font-semibold text-lg hover:bg-sinai-blue-50 transition-colors"
             >
-              Schedule a Demo
+              Break Down Your Barriers
             </motion.a>
           </div>
         </motion.div>
