@@ -27,7 +27,7 @@ export const projects: Project[] = [
     clinicalImpact: 'Streamlines IRB workflows for clinical research, reducing submission time by 60%. Enables hospitals to conduct more research studies with existing staff.',
     developmentTime: '8 weeks',
     costSavings: '$50k-200k annually',
-    techStack: ['Next.js 14', 'React 19', 'TypeScript', 'Prisma', 'PostgreSQL', 'GCP', 'Terraform'],
+    techStack: ['Next.js 14', 'React 19', 'TypeScript', 'Prisma', 'PostgreSQL', 'GCP', 'Terraform', 'Claude Opus 4.6', 'MCP'],
     status: 'Production',
     githubUrl: 'https://github.com/jeffbander/irbver2',
     metrics: [
@@ -54,7 +54,7 @@ export const projects: Project[] = [
     clinicalImpact: 'Improves medication adherence, reduces no-show rates, and frees clinical staff for higher-value activities. Enables scalable patient outreach.',
     developmentTime: '6 weeks',
     costSavings: '80% reduction vs human callers',
-    techStack: ['Python', 'Twilio', 'OpenAI', 'FHIR MCP', 'PostgreSQL'],
+    techStack: ['Python', 'Twilio', 'OpenAI', 'FHIR MCP', 'PostgreSQL', 'Claude Opus 4.6', 'MCP'],
     status: 'Testing',
     githubUrl: 'https://github.com/jeffbander/voice-agent',
     metrics: [
@@ -80,7 +80,7 @@ export const projects: Project[] = [
     clinicalImpact: 'Early detection enables preventive intervention, reducing hospitalizations by up to 30%. Potential to save thousands of lives annually.',
     developmentTime: '8 weeks',
     costSavings: 'Prevents $20k+ per avoided hospitalization',
-    techStack: ['React', 'Python', 'TensorFlow', 'Web Audio API', 'FHIR MCP'],
+    techStack: ['React', 'Python', 'TensorFlow', 'Web Audio API', 'FHIR MCP', 'Claude Opus 4.6'],
     status: 'Testing',
     githubUrl: 'https://github.com/jeffbander/heartvoice-monitor',
     metrics: [
@@ -107,7 +107,7 @@ export const projects: Project[] = [
     clinicalImpact: 'Ensures adequate clinical coverage while improving staff satisfaction. Reduces administrative burden by 70%.',
     developmentTime: '4 weeks',
     costSavings: '10 hours/week admin time saved',
-    techStack: ['Next.js', 'React', 'TypeScript', 'PostgreSQL', 'SendGrid'],
+    techStack: ['Next.js', 'React', 'TypeScript', 'PostgreSQL', 'SendGrid', 'Claude Opus 4.6'],
     status: 'Production',
     githubUrl: 'https://github.com/jeffbander/pto-app',
     metrics: [
@@ -133,7 +133,7 @@ export const projects: Project[] = [
     clinicalImpact: 'Increases clinical trial enrollment by 50%, improves follow-up compliance, and reduces missed appointments.',
     developmentTime: '5 weeks',
     costSavings: 'Doubles enrollment capacity',
-    techStack: ['React', 'TypeScript', 'FHIR MCP', 'PostgreSQL', 'Twilio'],
+    techStack: ['React', 'TypeScript', 'FHIR MCP', 'PostgreSQL', 'Twilio', 'Claude Opus 4.6', 'MCP'],
     status: 'Production',
     githubUrl: 'https://github.com/jeffbander/leqvio-enrollment',
     metrics: [
@@ -153,10 +153,10 @@ export const projects: Project[] = [
 ];
 
 export const statistics = {
-  prAcceptance: 83.8,
-  timeReduction: '60-80%',
-  costSavings: '$50k-200k',
+  prAcceptance: 92,
+  timeReduction: '70-85%',
+  costSavings: '$50k-300k',
   earlyDetection: '2-3 weeks',
   projectCount: 5,
-  developmentSpeed: '4-8 weeks'
+  developmentSpeed: '2-6 weeks'
 };

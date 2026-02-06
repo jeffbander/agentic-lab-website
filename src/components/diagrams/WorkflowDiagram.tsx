@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Clock, CheckCircle, Code, User, Package, Wrench } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, CheckCircle, Code, User, Package, Wrench, UserCheck } from 'lucide-react';
 import { workflowPhases, workflowStats } from '../../data/workflow-phases';
 import type { WorkflowPhase } from '../../data/workflow-phases';
 
@@ -33,10 +33,13 @@ export function WorkflowDiagram() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            The Agentic Development Workflow
+            Multi-Agent Development Workflow
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            How AI and human expertise collaborate to build production-ready healthcare applications in weeks, not months
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-2">
+            Powered by Agent Teams with human-in-the-loop review at every phase
+          </p>
+          <p className="text-base text-gray-500 max-w-2xl mx-auto mb-8">
+            How specialized AI agents and clinical expertise collaborate to build production-ready healthcare applications in weeks
           </p>
 
           {/* Stats Bar */}
@@ -99,6 +102,10 @@ export function WorkflowDiagram() {
           <div className="flex items-center space-x-2">
             <User className="w-5 h-5 text-purple-600" />
             <span>Human Tasks</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <UserCheck className="w-5 h-5 text-green-600" />
+            <span>HITL Gate</span>
           </div>
           <div className="flex items-center space-x-2">
             <Package className="w-5 h-5 text-green-600" />
@@ -179,6 +186,12 @@ function PhaseCard({ phase, index, isExpanded, isSelected, onToggle, onSelect }:
                   <Clock className="w-4 h-4 mr-1" />
                   {phase.duration}
                 </div>
+                {phase.hasHITL && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                    <UserCheck className="w-3 h-3" />
+                    HITL
+                  </span>
+                )}
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{phase.title}</h3>
               <p className="text-gray-600">{phase.description}</p>

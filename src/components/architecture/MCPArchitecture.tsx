@@ -11,37 +11,75 @@ import ReactFlow, {
 import type { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Server, Brain, Database, Lock, Activity, Layers, Zap, Shield, GitBranch, Code2, RefreshCw } from 'lucide-react';
+import { Server, Brain, Database, Lock, Layers, Zap, Shield, RefreshCw, Users, Heart, UserCheck } from 'lucide-react';
 
 const initialNodes: Node[] = [
+  // Row 1
   {
     id: 'skills',
     type: 'custom',
     position: { x: 50, y: 50 },
     data: {
       label: 'Agent Skills',
-      subtitle: 'FHIR, Clinical, PDF',
+      subtitle: 'FHIR, Clinical, PDF, Browser',
       icon: Layers,
       color: '#8b5cf6',
-      description: 'Reusable capabilities loaded on-demand'
+      description: 'Reusable capabilities incl. Claude in Chrome browser automation'
     },
   },
   {
+    id: 'agentteams',
+    type: 'custom',
+    position: { x: 310, y: 50 },
+    data: {
+      label: 'Agent Teams',
+      subtitle: 'Opus 4.6 Orchestrated',
+      icon: Users,
+      color: '#0ea5e9',
+      description: 'Specialist agents: code, test, security, FHIR'
+    },
+  },
+  {
+    id: 'hitl',
+    type: 'custom',
+    position: { x: 570, y: 50 },
+    data: {
+      label: 'Human-in-the-Loop',
+      subtitle: 'EU AI Act Compliant',
+      icon: UserCheck,
+      color: '#22c55e',
+      description: 'Mandatory clinical review, approval gates'
+    },
+  },
+  // Row 2
+  {
     id: 'ralph',
     type: 'custom',
-    position: { x: 300, y: 50 },
+    position: { x: 50, y: 200 },
     data: {
       label: 'Ralph Loop',
-      subtitle: 'Autonomous Dev',
+      subtitle: 'Agent Team Orchestrator',
       icon: RefreshCw,
       color: '#06b6d4',
-      description: 'Iterative development with exit detection'
+      description: 'Multi-loop with Agent Teams + plan feedback'
+    },
+  },
+  {
+    id: 'harness',
+    type: 'custom',
+    position: { x: 310, y: 200 },
+    data: {
+      label: 'AI Harness',
+      subtitle: 'Opus 4.6 + Agent Teams',
+      icon: Brain,
+      color: '#3b82f6',
+      description: '1M-token context, sub-agent orchestration'
     },
   },
   {
     id: 'hooks',
     type: 'custom',
-    position: { x: 550, y: 50 },
+    position: { x: 570, y: 200 },
     data: {
       label: 'Lifecycle Hooks',
       subtitle: '8 Control Points',
@@ -50,34 +88,35 @@ const initialNodes: Node[] = [
       description: 'Deterministic control over AI behavior'
     },
   },
+  // Row 3
   {
-    id: 'harness',
+    id: 'healthcare',
     type: 'custom',
-    position: { x: 300, y: 200 },
+    position: { x: 50, y: 350 },
     data: {
-      label: 'AI Harness',
-      subtitle: 'Claude Code',
-      icon: Brain,
-      color: '#3b82f6',
-      description: 'Tool mgmt, context, safety rails'
+      label: 'Claude for Healthcare',
+      subtitle: 'HIPAA-Ready AI',
+      icon: Heart,
+      color: '#ec4899',
+      description: 'Native CMS, ICD-10, PubMed, prior auth workflows'
     },
   },
   {
     id: 'mcp',
     type: 'custom',
-    position: { x: 100, y: 350 },
+    position: { x: 310, y: 350 },
     data: {
       label: 'MCP Server',
-      subtitle: 'FHIR Bridge',
+      subtitle: '97M+ SDK Downloads/mo',
       icon: Server,
       color: '#10b981',
-      description: 'Standardized healthcare data access'
+      description: 'OAuth-secured, 40-60% faster deployment'
     },
   },
   {
     id: 'ehr',
     type: 'custom',
-    position: { x: 500, y: 350 },
+    position: { x: 570, y: 350 },
     data: {
       label: 'EHR System',
       subtitle: 'Epic/Cerner',
@@ -86,10 +125,11 @@ const initialNodes: Node[] = [
       description: 'Patient health records'
     },
   },
+  // Row 4
   {
     id: 'security',
     type: 'custom',
-    position: { x: 300, y: 500 },
+    position: { x: 310, y: 500 },
     data: {
       label: 'Security Layer',
       subtitle: 'HIPAA + Zero Trust',
@@ -101,6 +141,7 @@ const initialNodes: Node[] = [
 ];
 
 const initialEdges: Edge[] = [
+  // Existing edges (updated)
   {
     id: 'skills-to-harness',
     source: 'skills',
@@ -182,9 +223,66 @@ const initialEdges: Edge[] = [
     markerEnd: { type: MarkerType.ArrowClosed },
     style: { stroke: '#dc2626', strokeWidth: 2, strokeDasharray: '5,5' },
   },
+  // New edges for Agent Teams
+  {
+    id: 'agentteams-to-ralph',
+    source: 'agentteams',
+    target: 'ralph',
+    animated: true,
+    label: 'Coordinate',
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: '#0ea5e9', strokeWidth: 2 },
+  },
+  {
+    id: 'agentteams-to-harness',
+    source: 'agentteams',
+    target: 'harness',
+    animated: true,
+    label: 'Dispatch',
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: '#0ea5e9', strokeWidth: 2 },
+  },
+  // New edges for Claude for Healthcare
+  {
+    id: 'healthcare-to-mcp',
+    source: 'healthcare',
+    target: 'mcp',
+    animated: true,
+    label: 'Clinical APIs',
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: '#ec4899', strokeWidth: 2 },
+  },
+  {
+    id: 'healthcare-to-harness',
+    source: 'healthcare',
+    target: 'harness',
+    animated: true,
+    label: 'Clinical Context',
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: '#ec4899', strokeWidth: 2 },
+  },
+  // New edges for Human-in-the-Loop
+  {
+    id: 'hitl-to-hooks',
+    source: 'hitl',
+    target: 'hooks',
+    animated: true,
+    label: 'Review Gates',
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: '#22c55e', strokeWidth: 2 },
+  },
+  {
+    id: 'hitl-to-ralph',
+    source: 'hitl',
+    target: 'ralph',
+    animated: true,
+    label: 'Approve/Reject',
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: '#22c55e', strokeWidth: 2 },
+  },
 ];
 
-type TabType = 'skills' | 'harness' | 'hooks' | 'ralph';
+type TabType = 'skills' | 'harness' | 'hooks' | 'ralph' | 'agentteams';
 
 const tabContent: Record<TabType, { title: string; code: string }> = {
   skills: {
@@ -192,7 +290,8 @@ const tabContent: Record<TabType, { title: string; code: string }> = {
     code: `---
 name: fhir-patient-query
 description: Query FHIR patient resources
-tools: [read_file, execute_command]
+tools: [read_file, execute_command, claude-in-chrome]
+auth: MCP OAuth 2.1
 ---
 
 # FHIR Patient Query Skill
@@ -201,27 +300,37 @@ tools: [read_file, execute_command]
 - Query patient demographics
 - Validate LOINC/ICD-10 codes
 - Generate FHIR-compliant resources
+- Browser automation via Claude in Chrome
 
 ## Workflow
-1. Authenticate via SMART on FHIR
+1. Authenticate via SMART on FHIR (OAuth 2.1)
 2. Construct validated query
 3. Return with audit logging`,
   },
   harness: {
     title: 'Healthcare Harness Config',
     code: `interface HealthcareHarness {
-  // Security
+  model: 'claude-opus-4-6';
+  contextWindow: '1M tokens';
+  agentTeam: {
+    agents: ['code', 'test', 'security', 'fhir'];
+    orchestrator: 'opus-4-6';
+    planFeedback: true;
+  };
+  healthcareIntegrations: {
+    cms: true;
+    icd10: true;
+    pubmed: true;
+    priorAuth: true;
+  };
+  humanInTheLoop: {
+    codeReview: 'required';
+    deployApproval: 'required';
+    clinicalValidation: 'mandatory';
+  };
+  mcpAuth: 'OAuth 2.1';
   phiAccessControl: RBACConfig;
   auditLogger: HIPAACompliantLogger;
-
-  // Safety Rails
-  codeReviewRequired: boolean;
-  maxAutonomousChanges: number;
-  bannedOperations: ['DELETE FROM'];
-
-  // Compliance
-  baaSigned: boolean;
-  dataResidency: 'hipaa-region';
 }`,
   },
   hooks: {
@@ -249,26 +358,61 @@ tools: [read_file, execute_command]
 git clone https://github.com/frankbria/ralph-claude-code
 ./install.sh
 
-# Run autonomous development
+# Run autonomous development with Agent Teams
 ralph --spec prior-auth-prd.md \\
+      --model claude-opus-4-6 \\
+      --agent-team code,test,security,fhir \\
+      --plan-feedback enabled \\
+      --human-review required \\
       --tests "HIPAA logging enabled" \\
-      --exit-on "100% coverage"
-
-# Exit conditions:
-# MAX_CONSECUTIVE_TEST_LOOPS=3
-# MAX_CONSECUTIVE_DONE_SIGNALS=2`,
+      --exit-on "100% coverage"`,
+  },
+  agentteams: {
+    title: 'Agent Teams Orchestrator',
+    code: `// agent-team.config.ts
+export const agentTeam = {
+  orchestrator: 'claude-opus-4-6',
+  agents: [
+    {
+      name: 'code-agent',
+      role: 'Primary development',
+      skills: ['react', 'nextjs', 'prisma', 'fhir'],
+      focus: ['feature implementation', 'API design']
+    },
+    {
+      name: 'test-agent',
+      role: 'Quality assurance',
+      skills: ['vitest', 'playwright', 'coverage'],
+      focus: ['unit tests', 'E2E tests', 'edge cases']
+    },
+    {
+      name: 'security-agent',
+      role: 'HIPAA compliance',
+      skills: ['owasp', 'hipaa-scan', 'phi-detection'],
+      focus: ['vulnerability scan', 'PHI protection']
+    },
+    {
+      name: 'fhir-agent',
+      role: 'EHR integration',
+      skills: ['fhir-r4', 'smart-on-fhir', 'hl7'],
+      focus: ['FHIR resources', 'EHR validation']
+    }
+  ],
+  planFeedback: true,
+  humanReviewGates: ['deploy', 'phi-access', 'schema-change']
+};`,
   },
 };
 
 export function MCPArchitecture() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
-  const [activeTab, setActiveTab] = useState<TabType>('skills');
+  const [activeTab, setActiveTab] = useState<TabType>('agentteams');
 
   const nodeTypes = useMemo(() => ({ custom: CustomNode }), []);
 
   const onInit = useCallback(() => {
-    console.log('Agentic Architecture diagram initialized');
+    console.log('Multi-Agent Healthcare Architecture diagram initialized');
   }, []);
 
   return (
@@ -282,10 +426,10 @@ export function MCPArchitecture() {
           className="text-center mb-12"
         >
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Agentic Coding Architecture
+            Multi-Agent Healthcare Architecture
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            The modern stack for building secure healthcare AI: Skills, Harness, Hooks, and MCP working together
+            Agent Teams, Claude for Healthcare, and MCP working together with human-in-the-loop review at every critical path
           </p>
         </motion.div>
 
@@ -295,7 +439,7 @@ export function MCPArchitecture() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
-          style={{ height: '650px' }}
+          style={{ height: '750px' }}
         >
           <ReactFlow
             nodes={nodes}
@@ -312,12 +456,45 @@ export function MCPArchitecture() {
           </ReactFlow>
         </motion.div>
 
-        {/* Key Components Cards */}
+        {/* Edge Color Legend */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-gray-600"
+        >
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-0.5 bg-[#0ea5e9]" />
+            <span>Agent Teams</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-0.5 bg-[#ec4899]" />
+            <span>Healthcare</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-0.5 bg-[#22c55e]" />
+            <span>Human Review</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-0.5 bg-[#3b82f6]" />
+            <span>Harness</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-0.5 bg-[#10b981]" />
+            <span>MCP Data</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-0.5 bg-[#dc2626] border-dashed border-t border-[#dc2626]" />
+            <span>Security</span>
+          </div>
+        </motion.div>
+
+        {/* Key Components Cards - 6 cards in 3-col grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 grid md:grid-cols-4 gap-4"
+          className="mt-12 grid md:grid-cols-3 gap-4"
         >
           <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-purple-500">
             <div className="flex items-center gap-3 mb-3">
@@ -327,7 +504,18 @@ export function MCPArchitecture() {
               <h3 className="font-semibold text-gray-900">Agent Skills</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Reusable capabilities for FHIR, PDFs, clinical protocols. Model-invoked and token-efficient.
+              Reusable capabilities for FHIR, PDFs, clinical protocols, and browser automation via Claude in Chrome.
+            </p>
+          </div>
+          <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-sky-500">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 text-sky-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Agent Teams</h3>
+            </div>
+            <p className="text-gray-600 text-sm">
+              Opus 4.6 orchestrated specialist agents for code, test, security, and FHIR working in parallel.
             </p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
@@ -338,7 +526,18 @@ export function MCPArchitecture() {
               <h3 className="font-semibold text-gray-900">AI Harness</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Infrastructure wrapping Claude: tool management, context, safety rails, sub-agents.
+              Opus 4.6 infrastructure: 1M-token context, sub-agent orchestration, and safety rails.
+            </p>
+          </div>
+          <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-pink-500">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                <Heart className="w-5 h-5 text-pink-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Claude for Healthcare</h3>
+            </div>
+            <p className="text-gray-600 text-sm">
+              Native CMS, ICD-10, PubMed integrations with HIPAA-ready prior authorization workflows.
             </p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-cyan-500">
@@ -349,7 +548,7 @@ export function MCPArchitecture() {
               <h3 className="font-semibold text-gray-900">Ralph Loop</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Autonomous development with intelligent exit detection. $49K+ savings per project.
+              Agent Team orchestrator with multi-loop development, plan feedback, and intelligent exit detection.
             </p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-orange-500">
@@ -374,7 +573,7 @@ export function MCPArchitecture() {
         >
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-700">
-            {(['skills', 'harness', 'hooks', 'ralph'] as TabType[]).map((tab) => (
+            {(['agentteams', 'skills', 'harness', 'hooks', 'ralph'] as TabType[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -384,6 +583,7 @@ export function MCPArchitecture() {
                     : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
                 }`}
               >
+                {tab === 'agentteams' && 'Agent Teams'}
                 {tab === 'skills' && 'Skills'}
                 {tab === 'harness' && 'Harness'}
                 {tab === 'hooks' && 'Hooks'}
@@ -430,7 +630,7 @@ export function MCPArchitecture() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">2026 Security Standards</h3>
               <p className="text-gray-600 text-sm mb-3">
-                Following HSCC AI Cybersecurity Guidance, NIST AI RMF, and Zero Trust principles for healthcare AI.
+                Following HSCC AI Cybersecurity Guidance, NIST AI RMF, EU AI Act compliance, and Zero Trust principles for healthcare AI.
               </p>
               <div className="flex flex-wrap gap-2">
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">HIPAA</span>
@@ -438,6 +638,7 @@ export function MCPArchitecture() {
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">HSCC 2026</span>
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">NIST AI RMF</span>
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">ISO 42001</span>
+                <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">EU AI Act</span>
               </div>
             </div>
           </div>

@@ -8,26 +8,27 @@ export type WorkflowPhase = {
   deliverables: string[];
   tools: string[];
   color: string;
+  hasHITL?: boolean;
 }
 
 export const workflowPhases: WorkflowPhase[] = [
   {
     id: 1,
     title: 'Requirements & Planning',
-    description: 'AI analyzes clinical needs and generates technical specifications',
+    description: 'Agent Team analyzes clinical needs and generates technical specifications with plan feedback loop',
     duration: '2-3 days',
     aiTasks: [
-      'Analyze similar healthcare applications',
-      'Generate technical architecture',
-      'Create database schema proposals',
-      'Draft API specifications',
-      'Generate test scenarios'
+      'Agent Team generates and validates technical architecture',
+      'FHIR agent maps EHR integration points',
+      'Security agent performs initial HIPAA compliance assessment',
+      'Generate database schema proposals via Claude for Healthcare',
+      'Generate test scenarios and acceptance criteria'
     ],
     humanTasks: [
-      'Define clinical workflows',
-      'Review AI-generated specs',
+      'Define clinical workflows and pain points',
+      'Review AI-generated specs at HITL gate',
       'Approve architecture decisions',
-      'Set compliance requirements'
+      'Set compliance requirements and review gates'
     ],
     deliverables: [
       'Technical specification document',
@@ -35,23 +36,24 @@ export const workflowPhases: WorkflowPhase[] = [
       'API documentation',
       'Project timeline'
     ],
-    tools: ['Claude Code', 'GitHub', 'Figma', 'Linear'],
-    color: '#3b82f6'
+    tools: ['Claude Opus 4.6', 'Agent Teams', 'MCP OAuth', 'GitHub', 'Linear'],
+    color: '#3b82f6',
+    hasHITL: true
   },
   {
     id: 2,
     title: 'Development Setup',
-    description: 'AI scaffolds project structure and configures development environment',
+    description: 'Agent Team scaffolds project structure with parallel agent execution',
     duration: '1 day',
     aiTasks: [
-      'Generate project boilerplate',
-      'Configure build tools',
-      'Set up CI/CD pipelines',
-      'Create Docker configurations',
-      'Generate initial tests'
+      'Code agent generates project boilerplate',
+      'Test agent configures CI/CD pipelines',
+      'Security agent sets up HIPAA compliance hooks',
+      'FHIR agent configures MCP server connections',
+      'Generate initial test suite'
     ],
     humanTasks: [
-      'Review generated code',
+      'Review generated code at HITL checkpoint',
       'Configure cloud resources',
       'Set up monitoring',
       'Configure secrets management'
@@ -62,27 +64,28 @@ export const workflowPhases: WorkflowPhase[] = [
       'Docker containers',
       'Initial test suite'
     ],
-    tools: ['Vite', 'Docker', 'GitHub Actions', 'Terraform'],
-    color: '#10b981'
+    tools: ['Vite', 'Docker', 'GitHub Actions', 'Terraform', 'Ralph Loop'],
+    color: '#10b981',
+    hasHITL: true
   },
   {
     id: 3,
     title: 'Core Development',
-    description: 'AI generates features while human reviews and guides implementation',
-    duration: '3-4 weeks',
+    description: 'Agent Team generates and tests in parallel while clinician reviews and guides implementation',
+    duration: '1-3 weeks',
     aiTasks: [
-      'Generate React components',
-      'Write API endpoints',
-      'Create database migrations',
-      'Implement authentication',
-      'Write unit tests',
-      'Generate documentation'
+      'Agent Team generates and tests in parallel',
+      'Code agent implements React components and API endpoints',
+      'Test agent writes unit and integration tests concurrently',
+      'Security agent performs HIPAA compliance scan',
+      'FHIR agent validates EHR integrations',
+      'Generate documentation via Claude for Healthcare'
     ],
     humanTasks: [
-      'Review pull requests',
+      'Review pull requests at mandatory HITL gates',
       'Test clinical workflows',
       'Provide feedback on UX',
-      'Validate business logic'
+      'Validate business logic and clinical accuracy'
     ],
     deliverables: [
       'Working application',
@@ -91,26 +94,27 @@ export const workflowPhases: WorkflowPhase[] = [
       'Authentication system',
       'Test coverage >80%'
     ],
-    tools: ['Claude Code', 'React', 'Next.js', 'Prisma', 'PostgreSQL'],
-    color: '#8b5cf6'
+    tools: ['Claude Opus 4.6', 'Agent Teams', 'Ralph Loop', 'React', 'Next.js 15', 'Prisma', 'PostgreSQL'],
+    color: '#8b5cf6',
+    hasHITL: true
   },
   {
     id: 4,
     title: 'Integration & Testing',
-    description: 'AI generates comprehensive tests and integration scenarios',
+    description: 'Agent Team runs comprehensive test suites with security and FHIR validation',
     duration: '1-2 weeks',
     aiTasks: [
-      'Generate integration tests',
-      'Create E2E test scenarios',
-      'Generate test data',
-      'Write performance tests',
-      'Create accessibility tests'
+      'Test agent generates integration and E2E tests',
+      'Security agent performs penetration testing prep',
+      'FHIR agent validates all EHR data flows',
+      'Generate performance benchmarks',
+      'Claude Analytics API monitors test metrics'
     ],
     humanTasks: [
-      'Perform manual testing',
-      'Validate clinical workflows',
-      'Security review',
-      'Performance testing'
+      'Perform manual clinical workflow testing',
+      'Validate FHIR resource conformance at HITL gate',
+      'Security review and sign-off',
+      'Performance validation'
     ],
     deliverables: [
       'Integration test suite',
@@ -119,25 +123,26 @@ export const workflowPhases: WorkflowPhase[] = [
       'Security audit report',
       'HIPAA compliance checklist'
     ],
-    tools: ['Playwright', 'Vitest', 'Lighthouse', 'OWASP ZAP'],
-    color: '#f59e0b'
+    tools: ['Playwright', 'Vitest', 'Lighthouse', 'OWASP ZAP', 'Claude Analytics API'],
+    color: '#f59e0b',
+    hasHITL: true
   },
   {
     id: 5,
     title: 'Deployment',
-    description: 'AI configures infrastructure and automates deployment process',
+    description: 'Agent Team configures infrastructure with mandatory human approval gates',
     duration: '3-5 days',
     aiTasks: [
-      'Generate Terraform configs',
-      'Create deployment scripts',
-      'Configure monitoring',
-      'Set up alerting rules',
+      'Code agent generates Terraform configs',
+      'Security agent validates infrastructure security',
+      'Create deployment scripts with rollback',
+      'Configure monitoring and alerting',
       'Generate runbooks'
     ],
     humanTasks: [
-      'Review infrastructure setup',
-      'Validate security configs',
-      'Approve production deploy',
+      'Review infrastructure at mandatory HITL gate',
+      'Validate security configurations',
+      'Approve production deployment',
       'Monitor initial rollout'
     ],
     deliverables: [
@@ -147,25 +152,26 @@ export const workflowPhases: WorkflowPhase[] = [
       'Alert configurations',
       'Disaster recovery plan'
     ],
-    tools: ['Terraform', 'GCP', 'Datadog', 'PagerDuty'],
-    color: '#ec4899'
+    tools: ['Terraform', 'GCP', 'Datadog', 'PagerDuty', 'Claude for Healthcare'],
+    color: '#ec4899',
+    hasHITL: true
   },
   {
     id: 6,
     title: 'Monitoring & Iteration',
-    description: 'AI analyzes usage patterns and suggests improvements',
+    description: 'Agent Team analyzes usage patterns and proposes improvements with human oversight',
     duration: 'Ongoing',
     aiTasks: [
-      'Analyze user behavior',
-      'Generate optimization suggestions',
-      'Create bug fix PRs',
+      'Analyze user behavior via Claude Analytics API',
+      'Agent Team generates optimization suggestions',
+      'Create bug fix PRs with automated testing',
       'Update documentation',
       'Generate release notes'
     ],
     humanTasks: [
       'Prioritize feature requests',
-      'Review analytics',
-      'Approve updates',
+      'Review analytics at scheduled HITL checkpoints',
+      'Approve updates and deployments',
       'Train end users'
     ],
     deliverables: [
@@ -175,15 +181,16 @@ export const workflowPhases: WorkflowPhase[] = [
       'User training materials',
       'Performance optimizations'
     ],
-    tools: ['Google Analytics', 'Sentry', 'Linear', 'Notion'],
-    color: '#06b6d4'
+    tools: ['Claude Analytics API', 'Sentry', 'Linear', 'Notion', 'Agent Teams'],
+    color: '#06b6d4',
+    hasHITL: true
   }
 ];
 
 export const workflowStats = {
   totalPhases: 6,
-  avgDevelopmentTime: '4-8 weeks',
-  aiCodeGeneration: '83.8%',
-  timeReduction: '60-80%',
-  costSavings: '$50k-200k'
+  avgDevelopmentTime: '2-6 weeks',
+  aiCodeGeneration: '92%+',
+  timeReduction: '70-85%',
+  costSavings: '$50k-300k'
 };

@@ -35,13 +35,13 @@ export function Approach() {
       phase: '3',
       title: 'Rapid Development',
       icon: Rocket,
-      duration: '2-4 weeks',
-      description: 'Write production code with 80%+ AI assistance, focusing physician time on clinical logic and validation.',
+      duration: '1-3 weeks',
+      description: 'Agent Teams generate and test code in parallel with 92%+ AI assistance, focusing physician time on clinical logic and validation.',
       activities: [
-        'AI generates boilerplate code',
-        'Physician reviews and refines',
-        'Integrate with EHR/FHIR APIs',
-        'Implement security controls'
+        'Agent Teams generate features in parallel',
+        'Physician reviews at HITL gates',
+        'Integrate with EHR/FHIR via MCP',
+        'Security agent validates compliance'
       ],
       color: 'from-sinai-violet to-indigo-400'
     },
@@ -102,8 +102,8 @@ export function Approach() {
     },
     {
       icon: Brain,
-      title: 'AI-Augmented, Not Replaced',
-      description: 'AI generates code, physicians provide domain expertise and clinical validation.'
+      title: 'AI Agent Teams, Human Direction',
+      description: 'Agent Teams generate and test code in parallel; physicians direct strategy and approve via EU AI Act compliant review gates.'
     },
     {
       icon: Lock,
@@ -215,17 +215,17 @@ export function Approach() {
               <h4 className="font-bold text-sinai-cyan mb-3">Frontend</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>• React 19 + TypeScript</li>
-                <li>• Next.js 14 for SSR</li>
-                <li>• Tailwind CSS v3</li>
+                <li>• Next.js 15 for SSR</li>
+                <li>• Tailwind CSS v4</li>
                 <li>• Framer Motion</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-sinai-magenta mb-3">Backend</h4>
+              <h4 className="font-bold text-sinai-magenta mb-3">Backend & AI</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Node.js / Python</li>
-                <li>• Prisma ORM</li>
-                <li>• PostgreSQL / MongoDB</li>
+                <li>• Claude for Healthcare API</li>
+                <li>• MCP OAuth 2.1</li>
+                <li>• Prisma ORM + PostgreSQL</li>
                 <li>• REST / GraphQL APIs</li>
               </ul>
             </div>

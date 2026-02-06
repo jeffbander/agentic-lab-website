@@ -20,7 +20,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-gray-400 text-sm max-w-md">
-              Pioneering AI-driven healthcare software development where clinical specialists build production applications with developer assistance, transforming research into real-world impact in weeks, not years.
+              Pioneering multi-agent healthcare AI development where physician-developers orchestrate Agent Teams to build production applications, transforming clinical expertise into real-world impact in weeks, not years.
             </p>
           </div>
 
