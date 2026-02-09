@@ -38,308 +38,124 @@ export const blogPosts: BlogPost[] = [
   {
     id: '15',
     slug: 'msw-lab-workflow-building-healthcare-software-at-scale',
-    title: 'Inside the MSW Agentic Lab Workflow: Building Healthcare Software at Scale with AI',
-    subtitle: 'How custom Claude Code skills, containerized development, and enterprise-grade security enable clinicians to ship production applications in weeks',
-    excerpt: 'From onboarding to deployment, the MSW Agentic Lab has built a proprietary end-to-end workflow that combines custom AI skills, secure containerized development, HIPAA-compliant infrastructure, and human-in-the-loop review to produce healthcare software at scale. Here\'s exactly how it works.',
-    metaDescription: 'Deep dive into the MSW Agentic Lab development workflow: custom Claude Code skills, Docker containers, HIPAA-compliant databases, CI/CD pipelines, security scanning, and how clinicians deploy production software in 2-3 weeks.',
-    keywords: ['MSW Agentic Lab', 'Healthcare Software Development', 'Claude Code', 'HIPAA Compliance', 'Docker', 'CI/CD', 'Clerk Authentication', 'Convex', 'Neon', 'GCP', 'Security', 'Custom Skills'],
+    title: 'How We Actually Build Software at the MSW Agentic Lab',
+    subtitle: 'The proprietary workflow that lets clinicians ship production healthcare applications in weeks, not months',
+    excerpt: 'We\'ve spent the past year refining a development workflow that turns clinicians into software builders. Custom AI skills, secure containers, HIPAA-grade infrastructure, and relentless human review — here\'s the full playbook.',
+    metaDescription: 'Inside the MSW Agentic Lab development workflow: how custom Claude Code skills, Docker containers, HIPAA-compliant infrastructure, and human-in-the-loop review enable clinicians to build and deploy production healthcare software.',
+    keywords: ['MSW Agentic Lab', 'Healthcare Software', 'Claude Code', 'HIPAA', 'Docker', 'CI/CD', 'Clerk', 'Convex', 'Neon', 'GCP', 'Development Workflow'],
     ogImage: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=630&fit=crop',
     twitterCard: 'summary_large_image',
-    content: `## How We Build Healthcare Software from Scratch — Every Time
+    content: `Every few weeks, someone asks us the same question: "How does a cardiology department at a New York City hospital keep shipping production software this fast?"
 
-At the MSW Agentic Laboratory at Mount Sinai West, we don't just talk about AI-assisted development — we've built an entire production workflow around it. Over the past year, we've refined a repeatable, secure, end-to-end process that takes a healthcare problem from initial concept to deployed application. This post pulls back the curtain on exactly how that workflow operates, what tools we use, and why it works.
+The honest answer is that we've built a system. Not a single clever tool or a brilliant shortcut — a complete, end-to-end workflow that we've refined over the past year through dozens of projects and hundreds of development sessions. It starts with talking to real users and ends with deployed, secure, HIPAA-compliant applications. And remarkably, the people building this software aren't traditional engineers. They're clinicians, fellows, and students — many of whom had never written a line of code before walking into our lab.
 
-What makes our approach different isn't any single tool or technique. It's the integration: custom AI skills that guide every phase of development, enterprise security baked in from day one, and a human-in-the-loop architecture that ensures clinical accuracy at every step.
+This post is the full story of how that workflow actually operates, from the first conversation to the final deployment.
 
-## Phase 1: Discovery and User Interviews
+## It Starts with a Conversation, Not a Codebase
 
-Every project at the lab begins the same way — by talking to the people who will actually use the software. Before a single line of code is written, we run structured user interviews with clinicians, nurses, administrators, and other stakeholders.
+Every project at the MSW Agentic Lab begins with the same ritual: we sit down with the people who will actually use the software. Clinicians, nurses, administrators, researchers — whoever owns the problem. Before a single line of code is written, we need to understand what's broken, who's affected, and what success looks like.
 
-We've developed a **custom Claude Code skill** specifically for this phase. When activated, it guides the developer through a structured interview framework:
+We've codified this process into a **custom Claude Code skill** — one of several proprietary skills we've developed that guide our developers through each phase of a project. When a developer activates our discovery skill, Claude walks them through a structured interview framework. It asks about the clinical workflow that needs fixing, the different types of users involved, the step-by-step process as it exists today, and the regulatory constraints that apply. HIPAA requirements, institutional policies, IRB considerations — all of it gets captured upfront.
 
-- **Problem definition**: What clinical workflow is broken? What are the pain points?
-- **User personas**: Who are the primary, secondary, and tertiary users?
-- **Workflow mapping**: What does the current process look like step by step?
-- **Success criteria**: How will we know the solution actually works?
-- **Compliance requirements**: What regulatory constraints apply (HIPAA, institutional policies, IRB)?
+The critical thing about this skill is that the context it captures persists throughout the entire development session. When the AI eventually starts writing code, it already knows the clinical domain, the user needs, and the constraints. There's no re-explaining, no context loss, no drift from what the users actually asked for. The interview becomes the foundation that everything else builds on.
 
-The skill captures all of this context in a structured format that persists throughout the entire development session. This means that when the AI begins writing code, it already understands the clinical domain, the user needs, and the constraints — it doesn't need to be re-explained every time.
+## Choosing the Right Architecture — and Enforcing It
 
-## Phase 2: Architecture and Scoping
+Once we understand the problem, we move to architecture. This is where a lot of AI-assisted development projects go sideways: the AI generates whatever architecture it feels like, and you end up with an inconsistent mess. We solved this by building custom skills that enforce our architectural standards on every single project.
 
-Once the problem is defined, we move to architecture. This is where our custom skills really shine. We've built specialized skills that enforce architectural best practices for healthcare applications:
+Our standard stack is built around **Next.js** on the frontend with **React** and **TypeScript**. Next.js gives us server-side rendering, which matters for both performance and security — sensitive data never appears in client-side JavaScript bundles. TypeScript catches entire categories of bugs at compile time, which is critical when you're building software that clinicians depend on during patient care.
 
-### Our Standard Stack
+For the backend, we use Next.js API routes and serverless functions. This eliminates the need for a separate backend service and keeps our architecture clean. For databases, we run a dual approach. **Convex** handles projects that need real-time data sync but don't involve Protected Health Information — dashboards, messaging tools, collaborative features. When we're working with PHI or anything that falls under HIPAA, we use **Neon**, a managed PostgreSQL service that provides encryption at rest, encryption in transit, audit logging, and the compliance documentation that healthcare deployments require.
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | Next.js + React + TypeScript | Server-side rendering, type safety, component architecture |
-| **Backend** | Next.js API routes / serverless functions | API endpoints with built-in middleware |
-| **Database (Standard)** | Convex | Real-time data sync, type-safe queries, serverless |
-| **Database (HIPAA)** | Neon (PostgreSQL) | HIPAA-compliant managed PostgreSQL with encryption at rest and in transit |
-| **Authentication** | Clerk | OpenID Connect, multi-factor auth, session management |
-| **Cloud Infrastructure** | Google Cloud Platform (GCP) | Enterprise hosting with Business Associate Agreements |
-| **Deployment** | Vercel | Edge deployment with CI/CD pipeline |
+Authentication runs through **Clerk** with OpenID Connect, multi-factor authentication, and fine-grained session management. Our cloud infrastructure lives on **Google Cloud Platform**, and our deployment pipeline runs through **Vercel**. Every one of these choices exists for a specific reason, but the two non-negotiable decisions are the ones involving compliance: we use GCP because we have **Business Associate Agreements** in place, and we use Neon for HIPAA data because it meets the encryption and audit requirements. Without a BAA, storing or processing PHI on a cloud platform is a HIPAA violation. There are no exceptions to this rule.
 
-### Why This Stack?
+Beyond the stack itself, our architecture skill enforces that every project includes certain capabilities from the very first scaffold. Structured logging is built in from day one — every API call, every database query, every user action gets logged with timestamps, user context, and request IDs. This isn't optional; it's required for HIPAA audit trails. Authentication is enforced on every route. Error boundaries wrap every page. Rate limiting protects every public endpoint. Server-side input validation runs on every form submission. None of these are afterthoughts. They're generated as part of the initial project setup, before any feature code is written.
 
-Every choice in our stack is deliberate. **Next.js** gives us server-side rendering for performance and SEO, plus API routes that eliminate the need for a separate backend service. **TypeScript** catches entire categories of bugs at compile time — critical when you're building software that clinicians depend on.
+## Building Inside Secure Containers
 
-For databases, we use **Convex** when projects need real-time sync and don't involve PHI (Protected Health Information). When we're handling healthcare data that falls under HIPAA, we switch to **Neon** — a managed PostgreSQL service that provides encryption at rest, encryption in transit, audit logging, and the compliance documentation required for healthcare deployments.
+Here's where our workflow diverges from most development shops. All development at the MSW Agentic Lab happens inside **Docker containers**.
 
-**Google Cloud Platform** is our cloud provider because we have **Business Associate Agreements (BAAs)** in place. This is non-negotiable for healthcare: without a BAA, storing or processing PHI on a cloud platform is a HIPAA violation. We maintain BAAs with both Google and our AI providers.
+The reasoning is straightforward. When you're teaching fellows and students to develop healthcare software with AI assistance, the development environment itself becomes a security boundary. We cannot have AI tools or student code accidentally reaching production systems, institutional networks, or sensitive data. Docker gives us isolation — each session runs in its own container with no access to the host beyond what's explicitly mounted. It gives us reproducibility — every student gets the exact same Node.js version, the same dependencies, the same tooling. And it gives us disposability — if something goes wrong, we destroy the container and start fresh. No damage done.
 
-### Built-In from Day One
+Our students and fellows work entirely inside **Claude Code** running within these containers. A typical session looks like this: the student spins up a container from our pre-configured image, Claude Code initializes with our custom skills already loaded, and the architecture skill scaffolds the project based on the requirements from the discovery phase. From there, the student works conversationally — describing features in natural language, reviewing the code Claude generates, and iterating. Everything gets committed to a feature branch in GitHub, and automated checks run on every push.
 
-Our architecture skill enforces that every project includes these capabilities from the initial scaffold:
+The container is the sandbox. Claude Code is the development partner. The skills are the guardrails. And the student is the domain expert driving the entire process.
 
-- **Structured logging** — Every API call, database query, and user action is logged with timestamps, user context, and request IDs. This isn't optional — it's required for HIPAA audit trails
-- **Authentication and authorization** — No unauthenticated routes. Every endpoint requires a valid session token
-- **Error boundaries** — React error boundaries on every page to prevent cascading failures
-- **Rate limiting** — API rate limiting on all public endpoints
-- **Input validation** — Server-side validation on every form submission and API call
+## Authentication and Databases in Minutes, Not Days
 
-These aren't afterthoughts bolted on before deployment. They're part of the initial project scaffold that our skills generate.
+One of our most impactful proprietary workflows handles the setup of Clerk authentication and database connections. In a traditional development environment, configuring authentication middleware, setting up OAuth providers, defining protected routes, implementing role-based access control, and wiring up database connections can easily consume several days. We've compressed this into a guided, semi-automated process that our skill handles step by step.
 
-## Phase 3: Development Environment — Secure Containers
+The Clerk integration skill walks the developer through creating the application with the correct OAuth providers — Google, Microsoft, and email/password are our defaults. It configures the Next.js middleware that intercepts every request and validates the session token. It defines which pages require authentication and which are public. It sets up role-based access for the roles we commonly need: admin, clinician, nurse, patient, and any custom roles the project requires. And it configures webhooks so that Clerk user events stay synced with our database.
 
-Here's where our workflow diverges from typical development shops. All development at the MSW Agentic Lab happens inside **Docker containers**.
+The middleware piece is especially important. Every API route is protected. Every page that handles clinical data requires a valid session. Our skill generates the middleware configuration automatically, including the route matchers that ensure nothing slips through. This is the kind of setup that's easy to get wrong manually and catastrophic to get wrong in healthcare.
 
-### Why Containers?
+For databases, the workflow provisions either a Convex project or a Neon PostgreSQL instance depending on the compliance requirements. Both get configured with encrypted connection strings, proper environment variable management — credentials are never hardcoded — schema migration tooling, and seed data for development. What used to be a multi-day configuration exercise now happens in the first hour of a new project.
 
-When you're training fellows and students to develop healthcare software with AI assistance, the development environment itself becomes a security boundary. We can't have AI tools or student code accidentally accessing production systems, institutional networks, or sensitive data.
+## Security That Runs Continuously
 
-Docker containers give us:
+Security isn't a phase in our workflow. It's a constant.
 
-- **Isolation**: Each development session runs in its own container with no access to the host network or filesystem beyond what's explicitly mounted
-- **Reproducibility**: Every student gets the exact same environment — same Node.js version, same dependencies, same tooling
-- **Security**: Containers can't reach production databases or internal hospital systems
-- **Disposability**: If something goes wrong, destroy the container and start fresh
+We've built specialized Claude Code skills that function as security agents running alongside development. One skill audits every API endpoint for authentication checks, input validation, SQL injection vectors, and proper error handling. Another validates that any user input being passed to AI models is properly sanitized — protecting against prompt injection attacks. We have skills that enforce rate limiting on all public-facing endpoints, skills that scan for the full OWASP Top 10 — XSS, CSRF, broken authentication, security misconfiguration, and the rest — and skills that detect accidental exposure of Protected Health Information in code or logs.
 
-Our students and fellows develop entirely inside **Claude Code** running within these containers. Claude Code provides the AI-assisted development experience — code generation, debugging, refactoring, test writing — while the container provides the security boundary.
+Beyond the skills running during development, every push to GitHub triggers a multi-layer automated security review. First, **CodeQL** — GitHub's semantic code analysis engine — scans for vulnerabilities across the entire codebase, checking for SQL injection, cross-site scripting, path traversal, and dozens of other vulnerability patterns. Then a second pass runs more aggressive static analysis heuristics to catch issues that pattern-based scanners miss. On top of that, automated dependency scanning checks every npm package for known CVEs, and secret scanning ensures no API keys, tokens, or credentials were accidentally committed.
 
-### The Typical Development Session
+If any of these checks fail, the pull request is blocked. The code cannot be merged. This is not a suggestion — it's an automated gate that cannot be bypassed.
 
-A typical development session looks like this:
+## From Feature Branch to Production
 
-1. Student spins up a Docker container with our pre-configured image
-2. Claude Code is initialized with our custom skills loaded
-3. The architecture skill guides project scaffolding based on the requirements gathered in Phase 1
-4. The student works conversationally with Claude Code — describing features in natural language, reviewing generated code, and iterating
-5. All code is committed to a feature branch in GitHub
-6. Automated checks run on every push (more on this below)
+We deploy through **Vercel** using a continuous integration and continuous deployment pipeline, but deployment at the lab is never a casual affair. It's a controlled, gated process with human checkpoints at every stage.
 
-## Phase 4: Authentication and Database Setup
+The pipeline works like this. A developer pushes code to a feature branch. They open a pull request on GitHub with a structured description of the changes. The automated checks fire — CodeQL, static analysis, tests, linting, type checking. Everything must pass. Then a senior engineer on the team reviews the code. This isn't a rubber stamp. The reviewer is checking for clinical accuracy in any healthcare logic, security vulnerabilities the automated tools might have missed, code quality, maintainability, and proper handling of edge cases. Once the review passes, Vercel automatically deploys a preview URL so the changes can be tested in a staging environment. Only after all of that does a merge to main trigger production deployment.
 
-One of our most impactful custom workflows handles the setup of **Clerk** authentication and database connections. What used to be a multi-day configuration exercise is now a guided, semi-automated process.
+One detail that's easy to overlook but critically important: all of our API calls to AI providers — whether Anthropic, OpenAI, or Google — go through **corporate accounts** with Business Associate Agreements in place. Every interaction is encrypted in transit with TLS 1.3. All data stored by providers is encrypted at rest. The providers are contractually bound to HIPAA compliance, and none of them train on our data without explicit consent. We never use personal API keys or free-tier accounts for healthcare work. Every single interaction with an AI model runs through an enterprise agreement with the appropriate legal protections in place.
 
-### Clerk Integration
+## The Human in the Loop
 
-Our Clerk setup skill walks through:
+AI writes the code. Humans verify it. This is the rule, and it is never broken.
 
-1. **Creating the Clerk application** with the correct OAuth providers (Google, Microsoft, email/password)
-2. **Configuring middleware** — Next.js middleware that intercepts every request and validates the session token
-3. **Setting up protected routes** — Defining which pages require authentication and which are public
-4. **Implementing role-based access control** — Admin, clinician, nurse, patient, and custom roles
-5. **Configuring webhooks** — Syncing Clerk user events with our database
+Senior engineers on our team review every pull request before it can be merged. They're looking for the things AI consistently misses — edge cases in clinical workflows that require domain knowledge to anticipate. What happens when a lab result is pending? When a patient has multiple active medication orders? When a provider has 500 patients on their panel and a query needs to scale? Is this workflow intuitive for a nurse at 3 AM during a busy overnight shift? Does this integration play nicely with the hospital's existing systems? These are questions that require clinical context and engineering judgment, and no amount of automated testing can replace them.
 
-The middleware configuration is particularly important. We use Clerk's middleware to:
+For applications that involve clinical decision-making, we add another layer: practicing clinicians test the software against real-world scenarios before it ships. They check whether prior authorization forms capture every required field for specific payers, whether patient education content matches current clinical guidelines, whether medication alerts are accurate and actionable. When reviewers at any level find issues, the feedback goes directly back into the development loop. The developer works with Claude Code to address the problems, and the cycle repeats until the code meets our standards.
 
-\`\`\`typescript
-// Simplified example of our middleware pattern
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+## Two to Three Weeks from Zero to Deployed
 
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/webhooks(.*)',
-]);
+Perhaps the most striking result of this workflow is how quickly completely new developers become productive.
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
-});
+We routinely onboard students and fellows with no prior programming experience and have them deploy their first real application in approximately two to three weeks. These aren't tutorial exercises or toy projects. These are functional applications that address actual clinical workflows, built with production-grade security and deployed to real users.
 
-export const config = {
-  matcher: [
-    '/((?!_next|[^?]*\\\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
-  ],
-};
-\`\`\`
+The first week focuses on environment setup, an introduction to Claude Code and our custom skills, and a guided pair-programming project where the student works alongside an experienced mentor. The second week shifts to independent feature development on an existing project, where the student learns our security scanning, code review, and deployment workflows by contributing real code. By the third week, the student is planning and building their own application based on a clinical problem they've identified, with mentor review at every stage.
 
-Every API route is protected. Every page that handles clinical data requires authentication. There are no exceptions.
+The reason this works is that our workflow lets students focus entirely on **what** they want to build rather than **how** to build it. The AI handles syntax, boilerplate, and implementation details. The custom skills enforce security and architectural standards automatically. The containers prevent accidents. And the human reviewers catch everything else. The student's job is to bring their clinical expertise — their understanding of the problem, the users, and the domain — and the system handles the rest.
 
-### Database Provisioning
+## Why the People Building the Software Are the People Using It
 
-For databases, we have workflows that rapidly provision either:
+There's a deeper philosophy behind everything we do at the lab, and it comes down to this: the best healthcare software gets built when the people who understand the clinical problem are the same people writing the solution.
 
-- **Convex projects** for real-time applications (dashboards, messaging, collaborative tools)
-- **Neon PostgreSQL instances** for HIPAA-regulated data (patient records, clinical notes, PHI)
+Traditional healthcare IT operates on a long chain of translation. A clinician describes a problem to a project manager, who writes requirements for a developer, who builds something that gets tested by QA, who sends it back for clinical review months later. At every handoff, context is lost. Nuance evaporates. The final product works in theory but misses the hundred small details that make software genuinely useful in a clinical setting.
 
-Both are configured with:
-- Connection string encryption
-- Environment variable management (never hardcoded credentials)
-- Schema migration tooling
-- Seed data for development and testing
+Our model collapses that chain. The clinician who identified the problem sits down with Claude Code and builds the solution directly. They don't need to translate their knowledge into requirements documents. They don't need to wait months for a development cycle. They describe what they need in natural language, the AI implements it, and the clinician reviews it immediately — catching the nuances that only someone who lives in that workflow every day would notice.
 
-## Phase 5: Security-First Development
-
-Security isn't a phase in our workflow — it runs continuously. But it deserves its own section because of how deeply it's integrated.
-
-### Custom Security Skills
-
-We've built specialized Claude Code skills that act as security agents during development:
-
-- **API Route Auditing**: Scans every API endpoint for authentication checks, input validation, SQL injection vectors, and proper error handling
-- **Prompt Injection Protection**: Validates that any user input passed to AI models is properly sanitized and bounded
-- **Rate Limiting Enforcement**: Ensures all public-facing endpoints have rate limiting configured
-- **OWASP Top 10 Scanning**: Checks for the full OWASP Top 10 including XSS, CSRF, broken authentication, security misconfiguration, and more
-- **PHI Detection**: Scans code and logs for accidental exposure of Protected Health Information
-
-### Automated Code Checks on GitHub
-
-Every push to GitHub triggers a multi-layer security review:
-
-1. **CodeQL analysis** — GitHub's semantic code analysis engine scans for vulnerabilities, checking for SQL injection, XSS, path traversal, and dozens of other vulnerability patterns
-2. **Secondary scanning with advanced static analysis** — A second pass using more aggressive heuristics catches issues that pattern-based scanners miss
-3. **Dependency vulnerability scanning** — Automated checks for known CVEs in all npm dependencies
-4. **Secret scanning** — Ensures no API keys, tokens, or credentials were accidentally committed
-
-These checks run automatically. If any check fails, the pull request is blocked. No exceptions.
-
-## Phase 6: CI/CD and Deployment
-
-We deploy through **Vercel** using a continuous integration and continuous deployment pipeline. But deployment isn't a simple "push and pray" — it's a controlled, gated process.
-
-### The Deployment Pipeline
-
-\`\`\`
-Feature Branch → Pull Request → Automated Checks → Code Review → Staging → Production
-\`\`\`
-
-Each stage:
-
-1. **Feature branch**: Developer pushes code to a feature branch
-2. **Pull request**: GitHub PR is created with a structured description of changes
-3. **Automated checks**: CodeQL, static analysis, tests, linting, type checking — all must pass
-4. **Code review**: A senior engineer on the team reviews the AI-generated code, checking for:
-   - Clinical accuracy of any healthcare logic
-   - Security vulnerabilities the automated tools might have missed
-   - Code quality and maintainability
-   - Proper error handling and edge cases
-5. **Staging deployment**: Vercel automatically deploys a preview URL for the PR
-6. **Production deployment**: After approval, merge to main triggers production deployment
-
-### Environment Security
-
-All of our API calls — whether to Anthropic, OpenAI, or Google — go through **corporate accounts** with Business Associate Agreements in place. This ensures:
-
-- All data transmitted to AI providers is **encrypted in transit** (TLS 1.3)
-- All data stored by providers is **encrypted at rest**
-- Providers are contractually bound to HIPAA compliance
-- No training on our data without explicit consent
-- Audit logging for all API interactions
-
-We never use personal API keys or free-tier accounts for healthcare work. Every interaction with an AI model is through an enterprise agreement with appropriate legal protections.
-
-## Phase 7: Human-in-the-Loop Review
-
-AI writes the code. Humans verify it. This is not optional.
-
-Every piece of software produced at the MSW Agentic Lab goes through human review at multiple stages:
-
-### Engineering Review
-
-Senior engineers on our team review every pull request. They're looking for things AI consistently misses:
-
-- **Edge cases** in clinical workflows (What happens when a lab result is pending? When a patient has multiple active orders?)
-- **Performance implications** (Will this query scale when a provider has 500 active patients?)
-- **UX considerations** (Is this workflow intuitive for a nurse at 3 AM during a busy shift?)
-- **Integration issues** (Does this play nicely with existing hospital systems?)
-
-### Clinical Validation
-
-For applications that involve clinical decision-making, we add a **clinical validation step** where practicing clinicians test the software against real-world scenarios:
-
-- Does the prior authorization form capture all required fields for the specific payer?
-- Does the patient education content match current clinical guidelines?
-- Are the medication interaction alerts accurate and actionable?
-
-### Feedback Loop
-
-When reviewers find issues, the feedback goes directly back into the development loop. The developer works with Claude Code to address the issues, and the cycle repeats until the code meets our standards.
-
-## The Results: Onboarding and Scale
-
-Perhaps the most remarkable outcome of this workflow is how quickly new developers become productive.
-
-### Onboarding Timeline
-
-We routinely onboard **completely naive students** — individuals with no prior programming experience — and have them **successfully deploy their first application in approximately 2-3 weeks**. This isn't a toy app or a tutorial exercise. These are functional applications that address real clinical workflows.
-
-The 2-3 week timeline breaks down roughly as:
-
-- **Week 1**: Environment setup, introduction to Claude Code and our custom skills, first guided project with pair programming
-- **Week 2**: Independent feature development on an existing project, learning our security and deployment workflows
-- **Week 3**: Planning and building their own application based on a clinical problem they've identified, with mentor review at each stage
-
-### Why This Works
-
-The combination of custom skills, containerized development, and guardrails means students can focus on **what** they want to build rather than **how** to build it. The AI handles syntax, boilerplate, and implementation details. The skills enforce security and architecture. The containers prevent accidents. The human reviewers catch everything else.
-
-By having our own users — the founders, clinicians, and fellows — actively developing software, we can **rapidly prototype usable solutions that actually address real clinical needs**. The people who understand the problems best are the ones building the solutions, with AI handling the technical heavy lifting.
-
-## The Stack in Summary
-
-\`\`\`
-┌─────────────────────────────────────────────────────┐
-│                   MSW Agentic Lab Workflow           │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  Discovery          → Custom interview skills       │
-│  Architecture       → Enforced patterns & logging   │
-│  Development        → Claude Code in Docker         │
-│  Authentication     → Clerk + middleware workflow    │
-│  Database           → Convex or Neon (HIPAA)        │
-│  Security           → OWASP skills + CodeQL + SA    │
-│  Deployment         → Vercel CI/CD pipeline         │
-│  Review             → Engineer + clinician HITL     │
-│  Infrastructure     → GCP with BAAs                 │
-│  AI Providers       → Corporate accounts, encrypted │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-\`\`\`
-
-## Looking Forward
-
-This workflow isn't static. We're continuously refining our skills, adding new security checks, and improving the onboarding experience. As Claude Code's capabilities expand — particularly with Agent Teams and more sophisticated skill orchestration — our workflow becomes more powerful.
-
-The fundamental insight is that **AI-assisted development isn't about replacing developers**. It's about enabling domain experts — clinicians, researchers, administrators — to build the software they need, with AI handling implementation complexity and engineering guardrails ensuring quality and security.
-
-We're proving every day that a hospitalist, a fellow, or a medical student can build production healthcare software — securely, compliantly, and at a pace that would have been impossible just two years ago.
+The custom skills, the secure containers, the automated security scanning, the gated deployment pipeline, the human review process — all of this infrastructure exists for one purpose: to make it safe and practical for domain experts to build production software. The technology is the enabler. The clinical expertise is the differentiator. And the results speak for themselves.
 
 ---
 
-*The MSW Agentic Lab at Mount Sinai West develops production healthcare software using AI-assisted development workflows. For more about our approach, explore our [other posts](/blog) or visit our [GitHub](https://github.com/jeffbander).*`,
+*The MSW Agentic Lab at Mount Sinai West builds production healthcare software using AI-assisted development workflows. To learn more about our work, explore our [other posts](/blog) or visit us on [GitHub](https://github.com/jeffbander).*`,
     author: {
       name: 'Jeffrey Bander, MD',
       role: 'Director, MSW Agentic Laboratory',
-      bio: 'Hospitalist and physician-developer pioneering AI-assisted healthcare software at Mount Sinai West. Dr. Bander leads the Agentic Lab, where clinicians build production applications using custom AI workflows.',
+      bio: 'Hospitalist and physician-developer leading the MSW Agentic Lab at Mount Sinai West, where clinicians build production healthcare applications using AI-assisted development workflows.',
       social: {
         github: 'jeffbander',
         linkedin: 'https://linkedin.com/in/jeffbander',
       },
     },
     coverImage: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=630&fit=crop',
-    tags: ['Workflow', 'Claude Code', 'Docker', 'HIPAA', 'CI/CD', 'Security', 'Clerk', 'Convex', 'Neon', 'GCP', 'Custom Skills', 'Onboarding'],
+    tags: ['Workflow', 'Claude Code', 'Docker', 'HIPAA', 'CI/CD', 'Security', 'Clerk', 'Convex', 'Neon', 'GCP', 'Custom Skills'],
     category: 'Development',
     status: 'published',
     publishedAt: '2026-02-09T12:00:00Z',
     updatedAt: '2026-02-09T12:00:00Z',
-    readingTime: 14,
+    readingTime: 12,
     featured: true,
   },
   {
