@@ -14,6 +14,15 @@ interface PodcastEpisode {
 
 const episodes: PodcastEpisode[] = [
   {
+    id: 'sofiya-ai-patients',
+    title: 'Sofiya: AI That Actually Helps Patients',
+    description: 'Albert goes fast on Sofiya, Mount Sinai\'s AI voice assistant making 16,000 cath lab patient calls a year. How AI gives nurses their time back, why Sofiya will develop her own personality, and Dr. Kini as proof that doctors should lead the digital revolution.',
+    duration: '5:04',
+    date: 'Feb 2026',
+    audioUrl: '/podcasts/sofiya-ai-patients-dr-kini.mp3',
+    tags: ['Sofiya', 'Patient Care', 'Dr. Kini', 'AI Voice'],
+  },
+  {
     id: 'hipaa-security-interview',
     title: 'Albert x Amy: HIPAA Security Deep Dive',
     description: 'Albert interviews Amy, the sassiest AI security agent in healthcare. They get technical about prompt injection, FHIR API security, encryption at rest and in transit, and why Amy has a naughty list for developers with old encryption keys. Featuring five-layer defense architecture and Amy\'s legendary pull request rejections.',
