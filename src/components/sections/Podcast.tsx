@@ -14,6 +14,15 @@ interface PodcastEpisode {
 
 const episodes: PodcastEpisode[] = [
   {
+    id: 'hipaa-security-interview',
+    title: 'Albert x Amy: HIPAA Security Deep Dive',
+    description: 'Albert interviews Amy, the sassiest AI security agent in healthcare. They get technical about prompt injection, FHIR API security, encryption at rest and in transit, and why Amy has a naughty list for developers with old encryption keys. Featuring five-layer defense architecture and Amy\'s legendary pull request rejections.',
+    duration: '7:59',
+    date: 'Feb 2026',
+    audioUrl: '/podcasts/albert-amy-hipaa-security.mp3',
+    tags: ['HIPAA', 'Security', 'Interview', 'Amy'],
+  },
+  {
     id: 'saas-collapse',
     title: 'The SaaS Collapse: Healthcare EHR is Next',
     description: 'Albert goes off on Monday.com, Salesforce, and Epic Systems. Why AI agent teams are making enterprise SaaS obsolete — and healthcare EHR is the next domino to fall. Features controversial predictions, Mount Sinai roasts, and terrible hospital coffee.',
