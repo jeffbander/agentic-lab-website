@@ -15,12 +15,12 @@ interface PodcastEpisode {
 const episodes: PodcastEpisode[] = [
   {
     id: 'sofiya-ai-patients',
-    title: 'Sofiya: AI That Actually Helps Patients',
-    description: 'Albert goes fast on Sofiya, Mount Sinai\'s AI voice assistant making 16,000 cath lab patient calls a year. How AI gives nurses their time back, why Sofiya will develop her own personality, and Dr. Kini as proof that doctors should lead the digital revolution.',
-    duration: '5:04',
+    title: 'Albert x Amy: Sofiya & The Future of AI Patients',
+    description: 'Albert and Amy reunite to discuss Sofiya, Mount Sinai\'s AI voice assistant handling 16,000 cath lab calls/year. They debate AI developing real personalities, why Sofiya will be better than humans at the basics, and Amy gives Dr. Kini a rare security stamp of approval. Featuring Amy\'s "safe, boring, revolutionary" formula.',
+    duration: '7:08',
     date: 'Feb 2026',
     audioUrl: '/podcasts/sofiya-ai-patients-dr-kini.mp3',
-    tags: ['Sofiya', 'Patient Care', 'Dr. Kini', 'AI Voice'],
+    tags: ['Sofiya', 'Dr. Kini', 'AI Personality', 'Interview'],
   },
   {
     id: 'hipaa-security-interview',
