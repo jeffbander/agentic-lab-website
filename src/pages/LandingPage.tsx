@@ -5,6 +5,7 @@ import { Loading } from '../components/Loading';
 
 // Lazy load heavy components for better initial load performance
 const Overview = lazy(() => import('../components/sections/Overview').then(m => ({ default: m.Overview })));
+const AgentTeamsDemo = lazy(() => import('../components/agent-demo/AgentTeamsDemo').then(m => ({ default: m.AgentTeamsDemo })));
 const Approach = lazy(() => import('../components/sections/Approach').then(m => ({ default: m.Approach })));
 const WorkflowDiagram = lazy(() => import('../components/diagrams/WorkflowDiagram').then(m => ({ default: m.WorkflowDiagram })));
 const MCPArchitecture = lazy(() => import('../components/architecture/MCPArchitecture').then(m => ({ default: m.MCPArchitecture })));
@@ -37,6 +38,11 @@ export default function LandingPage() {
       <Suspense fallback={<Loading message="Loading overview..." />}>
         <ErrorBoundary fallback={<SectionErrorFallback section="Overview" />}>
           <Overview />
+        </ErrorBoundary>
+      </Suspense>
+      <Suspense fallback={<Loading message="Loading agent demo..." />}>
+        <ErrorBoundary fallback={<SectionErrorFallback section="Agent Demo" />}>
+          <AgentTeamsDemo />
         </ErrorBoundary>
       </Suspense>
       <Suspense fallback={<Loading message="Loading projects..." />}>
