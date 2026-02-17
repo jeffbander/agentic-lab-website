@@ -42,15 +42,15 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
   'Albert-CareSync-AI': {
     category: 'Patient Communication',
     displayName: 'CareSync AI',
-    summary: 'AI-powered WhatsApp patient assistant with medical-grade reasoning, symptom assessment, red flag detection, and HIPAA-ready audit logging.',
+    summary: 'AI-powered WhatsApp patient assistant with medical-grade reasoning, symptom assessment, red flag detection, and per-patient semantic memory.',
     appType: 'Clinical',
-    techStack: ['TypeScript', 'Node.js', 'WhatsApp API', 'OpenAI', 'Claude AI', 'FHIR', 'PostgreSQL'],
+    techStack: ['Node.js', 'OpenAI GPT-4o', 'Turso (libSQL)', 'WhatsApp Cloud API', 'Mem0', 'Vercel'],
     keyFeatures: [
-      'Medical-grade AI symptom assessment',
-      'Red flag detection with clinician escalation',
-      'WhatsApp-based patient messaging',
-      'HIPAA-compliant audit logging',
-      'Multi-language patient support'
+      'Medical-grade AI symptom assessment with red flag detection',
+      'WhatsApp-based patient messaging via Meta Cloud API',
+      'Per-patient semantic memory with Mem0 personalization',
+      'Automatic alert creation for concerning symptoms',
+      'HIPAA-ready audit logging and crisis detection'
     ]
   },
   'Albert': {
@@ -70,15 +70,15 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
   'aigents-voice-agent': {
     category: 'Voice AI',
     displayName: 'AIGENTS Voice Agent',
-    summary: 'Voice AI for heart failure patient outreach using OpenAI Realtime API over Twilio with vocal biomarker analysis and early deterioration detection.',
+    summary: 'Voice AI for heart failure patient outreach using OpenAI Realtime API over Twilio with vocal biomarker analysis via Python sidecar and HMAC-secured webhooks.',
     appType: 'Clinical',
-    techStack: ['Python', 'OpenAI Realtime API', 'Twilio', 'TensorFlow', 'Web Audio API', 'PostgreSQL', 'FHIR MCP'],
+    techStack: ['Node.js/TypeScript', 'OpenAI Realtime API', 'Twilio', 'Python', 'librosa', 'Neon Postgres', 'Drizzle ORM', 'Docker', 'GCP'],
     keyFeatures: [
-      'Real-time vocal biomarker extraction',
-      'Heart failure early warning (2-3 weeks ahead)',
-      'Natural language patient conversations',
-      'Automated call transcription & analytics',
-      'EHR integration via FHIR'
+      'Real-time vocal biomarker extraction (eGeMAPS + drift analysis)',
+      'Heart failure symptom assessment via natural voice conversations',
+      'Python sidecar microservice for audio biomarker processing',
+      'HIPAA-compliant with HMAC signature verification',
+      'AIGENTS control plane integration with webhook callbacks'
     ]
   },
   'healthcare-ai-voice': {
@@ -97,72 +97,72 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
   },
   'CCU-app': {
     category: 'Clinical Operations',
-    displayName: 'CCU Application',
-    summary: 'Cardiac Care Unit management application for real-time patient monitoring, bed management, and care team coordination.',
+    displayName: 'CCU Census App',
+    summary: 'Cardiac Care Unit census and patient tracking application with AI-powered analysis, data import/export, and real-time care coordination.',
     appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'WebSocket', 'FHIR'],
+    techStack: ['Next.js 16', 'React 19', 'TypeScript', 'Convex', 'Anthropic Claude', 'Clerk Auth', 'Tailwind CSS'],
     keyFeatures: [
-      'Real-time patient vitals monitoring',
-      'CCU bed management & tracking',
-      'Care team coordination tools',
-      'Critical alert escalation system',
-      'Shift handoff documentation'
+      'Real-time CCU patient census tracking',
+      'AI-powered clinical analysis via Claude',
+      'CSV/Excel data import and export',
+      'Clerk-based authenticated access',
+      'Convex real-time backend sync'
     ]
   },
   'inpatient-app': {
     category: 'Clinical Operations',
-    displayName: 'Inpatient Manager',
-    summary: 'Inpatient care management and tracking system for hospital units with census management and discharge planning.',
+    displayName: 'NoteForge',
+    summary: 'AI-powered clinical documentation tool — paste patient data, select note type, and generate structured clinical notes with Anthropic Claude.',
     appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'FHIR'],
+    techStack: ['Next.js 14', 'TypeScript', 'Convex', 'Anthropic Claude API', 'Clerk Auth', 'Tailwind CSS'],
     keyFeatures: [
-      'Real-time unit census tracking',
-      'Patient rounding checklists',
-      'Discharge planning workflow',
-      'Length-of-stay analytics',
-      'Care team assignment management'
+      'AI-powered clinical note generation via Claude',
+      'Multiple note type templates',
+      'Paste-and-generate workflow for patient data',
+      'Clerk-based user authentication',
+      'Convex real-time backend database'
     ]
   },
   'PTO-App': {
     category: 'Scheduling',
     displayName: 'PTO Manager',
-    summary: 'Clinical staff PTO request and approval system with automated coverage checking, conflict resolution, and calendar integration.',
+    summary: 'Multi-role PTO management for Mount Sinai West Cardiovascular Institute with automatic balance calculation, approval workflows, and email notifications.',
     appType: 'Healthcare Management',
-    techStack: ['HTML', 'CSS', 'JavaScript', 'Node.js', 'PostgreSQL', 'SendGrid'],
+    techStack: ['Python', 'Flask', 'SQLAlchemy', 'SQLite', 'Jinja2', 'Bootstrap', 'Playwright'],
     keyFeatures: [
-      'One-click PTO request submission',
-      'Automated coverage gap detection',
-      'Manager approval workflows',
-      'Calendar sync integration',
-      'Staffing analytics dashboard'
+      'Multi-role PTO management (Admin, Clinical, MOA Supervisor, Echo Tech)',
+      'Automatic PTO balance calculation (7.5-hour workday)',
+      'Role-based approval workflows with dashboards',
+      'Calendar view for approved time off',
+      'Email notifications for all status changes'
     ]
   },
   'htn-prevention-app': {
     category: 'Preventive Care',
     displayName: 'HTN Prevention Program',
-    summary: 'Hypertension prevention platform for first responders with blood pressure monitoring, ASCVD risk assessment, and union-based analytics.',
+    summary: 'Hypertension prevention platform for first responders with AHA-guideline BP classification, ASCVD risk assessment, and union-based analytics.',
     appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Chart.js', 'FHIR'],
+    techStack: ['React 18', 'TypeScript', 'Vite', 'Express.js', 'SQLite', 'Drizzle ORM', 'Shadcn/ui', 'Recharts'],
     keyFeatures: [
-      'Blood pressure trend tracking',
-      'ASCVD risk score calculation',
-      'First responder health screening',
-      'Union-based aggregate analytics',
-      'Automated risk stratification alerts'
+      'AHA-guideline HTN classification (Normal through Crisis)',
+      'Blood pressure monitoring with trend tracking',
+      'First responder health screening (Fire, Police, EMS)',
+      'Union-based enrollment metrics and activity analytics',
+      'Communication/encounter tracking with follow-up compliance'
     ]
   },
   'mindminders-mvp': {
     category: 'Wellness',
     displayName: 'MindMinders',
-    summary: '30-day brain health fitness program focusing on nutrition, exercise, sleep, and cognitive stimulation with personalized daily plans.',
+    summary: '30-day brain health fitness program across 7 evidence-based pillars with validated cognitive tasks, age-normalized scoring, and reward system.',
     appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Claude AI'],
+    techStack: ['React 18', 'TypeScript', 'Vite', 'Firebase', 'Zustand', 'SendGrid', 'Tremendous API', 'Playwright'],
     keyFeatures: [
-      'Personalized 30-day brain health plan',
-      'Daily cognitive exercises & tracking',
-      'Sleep quality monitoring',
-      'Nutrition & exercise recommendations',
-      'Progress analytics dashboard'
+      '7 evidence-based pillars (nutrition, exercise, sleep, mental fitness, social, cognitive, brain stimulation)',
+      'Validated cognitive tasks (Word Recall, Symbol Substitution, 2-back Visual, Trail-Making)',
+      'Rewards system ($2/module, $3 completion bonus)',
+      'SLA monitoring with coach/IMRO escalation tiers',
+      'Program phases: Onboarding, Auto-extend, Sustain with personalized task selection'
     ]
   },
   'epic-medical-consultation': {
@@ -182,29 +182,29 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
   'leqvio-patient-management': {
     category: 'Clinical Trials',
     displayName: 'LEQVIO Patient Manager',
-    summary: 'Patient enrollment and tracking system for LEQVIO (inclisiran) medication program with automated EHR eligibility checking and follow-up scheduling.',
-    appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'FHIR MCP', 'PostgreSQL', 'Twilio', 'Claude AI'],
+    summary: 'Patient enrollment and tracking system for LEQVIO (inclisiran) with e-signature forms, OCR document processing, and automated PDF generation.',
+    appType: 'Healthcare Management',
+    techStack: ['React', 'TypeScript', 'Express.js', 'PostgreSQL', 'Drizzle ORM', 'OpenAI OCR', 'SendGrid', 'GCS', 'Tailwind CSS'],
     keyFeatures: [
-      'Automated patient eligibility screening',
-      'EHR integration via FHIR for lab data',
-      'Injection scheduling & reminders',
-      'LDL cholesterol trend tracking',
-      'Enrollment & compliance analytics'
+      'E-signature digital enrollment forms with signature capture',
+      'OCR document processing (insurance cards, Epic screenshots)',
+      'Automated LEQVIO PDF form generation',
+      'Multi-organization support with clinical documentation',
+      'AIGENTS webhook integration for workflow automation'
     ]
   },
   'IRBVer2': {
     category: 'Research',
     displayName: 'IRB Protocol System',
-    summary: 'AI-powered IRB protocol submission and review system built in 8 weeks, replacing $50k-200k enterprise software with automated compliance checking.',
+    summary: 'Research study management system with participant enrollment, electronic consent, version-controlled documents, and HIPAA-compliant audit trail.',
     appType: 'Healthcare Management',
-    techStack: ['HTML', 'JavaScript', 'Next.js', 'Prisma', 'PostgreSQL', 'GCP', 'Terraform', 'Claude AI', 'MCP'],
+    techStack: ['Node.js 18', 'TypeScript', 'PostgreSQL', 'Redis', 'Jest', 'Docker', 'Zod', 'Winston', 'Swagger'],
     keyFeatures: [
-      'AI-powered protocol compliance checking',
-      'Document OCR with Mistral Vision',
-      'Real-time multi-user collaboration',
-      'Automated submission workflow',
-      'Integrated audit logging system'
+      'Clinical research study management with IRB submission tracking',
+      'Participant enrollment with electronic consent',
+      'Version-controlled protocol document management',
+      'Team management with role-based assignments and effort tracking',
+      'HIPAA-compliant audit trail with budget tracking'
     ]
   },
   'strike-prep-v2.3': {
@@ -223,44 +223,44 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
   },
   'MSW-Heart---SZ': {
     category: 'Cardiology',
-    displayName: 'MSW Heart Program',
-    summary: 'Mount Sinai West Heart program application for cardiology patient management, structural heart zone tracking, and clinical workflow automation.',
-    appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'FHIR'],
+    displayName: 'Cardiology Scheduler',
+    summary: 'Drag-and-drop provider scheduling system for MSW cardiology services with PTO management, availability rules, and sandbox testing environment.',
+    appType: 'Healthcare Management',
+    techStack: ['Next.js 16', 'React 19', 'TypeScript', 'Supabase', '@dnd-kit', 'Clerk Auth', 'Shadcn/ui', 'XLSX'],
     keyFeatures: [
-      'Structural heart zone patient tracking',
-      'Cardiology procedure scheduling',
-      'Post-procedure follow-up management',
-      'Clinical outcome tracking',
-      'Referral management workflow'
+      'Drag-and-drop scheduling across cardiology services (Echo, Stress, Nuclear, Consults)',
+      'PTO management with approval workflows and conflict detection',
+      'Per-provider availability rules with hard/warn enforcement',
+      'Echo/Testing Lab scheduling with room allocation and capacity',
+      'Sandbox environment for testing schedule changes before publishing'
     ]
   },
   'PROTOCOL-EXTRACTOR': {
     category: 'Research',
     displayName: 'Protocol Extractor',
-    summary: 'AI-powered clinical protocol extraction and parsing tool that converts research documents into structured, queryable data.',
+    summary: 'AI-powered clinical trial protocol PDF extraction using Claude 3.5 Sonnet — reduces 4-8 hours of manual work to under 10 minutes.',
     appType: 'Healthcare Management',
-    techStack: ['TypeScript', 'React', 'Claude AI', 'PDF.js', 'Node.js'],
+    techStack: ['Next.js 14', 'React 18', 'TypeScript', 'Supabase', 'Claude 3.5 Sonnet', 'Tailwind CSS', 'Playwright'],
     keyFeatures: [
-      'PDF protocol document parsing',
-      'AI-powered data extraction',
-      'Structured protocol output format',
-      'Batch document processing',
-      'Protocol comparison tools'
+      'AI-powered clinical trial protocol PDF extraction',
+      'Role-based access for PIs, Coordinators, and Admins',
+      'Team management with member assignment to studies',
+      'Patient enrollment tracking against targets',
+      'OCR support for scanned documents'
     ]
   },
   'htn3.0': {
-    category: 'Preventive Care',
-    displayName: 'HTN 3.0',
-    summary: 'Next-generation hypertension management platform with comprehensive BP tracking, medication management, and population health analytics.',
+    category: 'Patient Communication',
+    displayName: 'CareSync AI v3',
+    summary: 'WhatsApp-based AI patient assistant with OpenAI GPT-4o clinical reasoning, Turso database, and Mem0 semantic memory for personalized care.',
     appType: 'Clinical',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Chart.js', 'FHIR'],
+    techStack: ['Node.js', 'OpenAI GPT-4o', 'Turso (libSQL)', 'WhatsApp Cloud API', 'Mem0', 'Vercel'],
     keyFeatures: [
-      'Advanced BP trend visualization',
-      'Medication titration tracking',
-      'Population health dashboards',
-      'Automated screening workflows',
-      'Risk-stratified patient panels'
+      'Medical-grade AI with clinical reasoning and red flag detection',
+      'WhatsApp patient communication via Meta Cloud API',
+      'Per-patient AI personalization with semantic memory',
+      'Crisis detection (suicidal ideation, emergency symptoms)',
+      'Automatic alerts for concerning symptoms to care team'
     ]
   },
   'MCG-study': {
@@ -279,44 +279,44 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
   },
   'magic-protocol': {
     category: 'Research',
-    displayName: 'Magic Protocol',
-    summary: 'Protocol automation and management system for clinical research workflows with AI-assisted protocol generation and review.',
+    displayName: 'Protocol Extractor v2',
+    summary: 'AI-powered clinical trial protocol PDF extraction using Claude AI with magic link auth, Supabase Row Level Security, and role-based study management.',
     appType: 'Healthcare Management',
-    techStack: ['TypeScript', 'React', 'Claude AI', 'Node.js', 'PostgreSQL'],
+    techStack: ['Next.js 14', 'React 19', 'TypeScript', 'Supabase', 'Claude 3.5 Sonnet', 'Tailwind CSS'],
     keyFeatures: [
-      'AI-assisted protocol generation',
-      'Protocol version control',
-      'Collaborative review workflow',
-      'Regulatory checklist automation',
-      'Study timeline management'
+      'AI-powered protocol PDF extraction via Claude AI',
+      'Magic link passwordless authentication',
+      'Role-based access (PI, Research Coordinator, Admin)',
+      'Study management with team collaboration',
+      'Patient enrollment tracking with progress monitoring'
     ]
   },
   'Billing-A28': {
     category: 'Revenue Cycle',
-    displayName: 'Billing A28',
-    summary: 'Healthcare billing and revenue cycle management application with charge capture, coding assistance, and denial management.',
+    displayName: 'Provider Reimbursement Tool',
+    summary: 'Provider reimbursement tracking and management application with tRPC type-safe APIs, AI-powered features, and data visualization.',
     appType: 'Healthcare Management',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL'],
+    techStack: ['React 19', 'TypeScript', 'Vite 7', 'Express.js', 'tRPC', 'MySQL', 'Drizzle ORM', 'Clerk Auth', 'AWS S3', 'OpenAI'],
     keyFeatures: [
-      'Automated charge capture',
-      'CPT/ICD coding assistance',
-      'Denial management workflow',
-      'Revenue analytics dashboard',
-      'Payer reconciliation tools'
+      'Provider reimbursement tracking and management',
+      'tRPC type-safe API communication',
+      'AI-powered features via OpenAI integration',
+      'Data visualization with Recharts',
+      'File storage and upload via AWS S3'
     ]
   },
   'Voice2.0': {
     category: 'Voice AI',
     displayName: 'Voice 2.0',
-    summary: 'Next-generation voice AI platform for healthcare communication with advanced NLP, multi-turn conversations, and clinical workflow integration.',
+    summary: 'AI-powered outbound calling system for healthcare wellness checks using Fastify, OpenAI Realtime API, and Twilio with E2E testing.',
     appType: 'Clinical',
-    techStack: ['Python', 'OpenAI Realtime API', 'Twilio', 'FastAPI', 'PostgreSQL', 'Redis'],
+    techStack: ['Node.js', 'Fastify 5', 'OpenAI Realtime API', 'Twilio', 'WebSocket', 'Pino', 'Tailwind CSS', 'Playwright'],
     keyFeatures: [
-      'Multi-turn clinical conversations',
-      'Advanced NLP intent recognition',
-      'Clinical workflow triggers',
-      'Voice-to-EHR documentation',
-      'Real-time conversation analytics'
+      'AI-powered outbound wellness check calls',
+      'Real-time voice AI conversation via OpenAI',
+      'Twilio telephony integration for PSTN calls',
+      'Structured logging with Pino',
+      'End-to-end tested with Playwright'
     ]
   },
   'agentic-lab-website': {
@@ -334,17 +334,17 @@ const repoMetadata: Record<string, RepoMetadataEntry> = {
     ]
   },
   'auth-app': {
-    category: 'Infrastructure',
-    displayName: 'Auth App',
-    summary: 'Authentication and authorization service for healthcare applications with role-based access control and SSO integration.',
-    appType: 'Healthcare Management',
-    techStack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'JWT', 'OAuth 2.0'],
+    category: 'EHR Integration',
+    displayName: 'Echo Qualification System',
+    summary: 'Intelligent NLP analysis of clinical notes to determine echocardiogram qualification, with specialist credibility hierarchy and insurance authorization letter generation.',
+    appType: 'Clinical',
+    techStack: ['Next.js 14', 'TypeScript', 'Convex', 'Clerk Auth', 'Custom NLP Engine', 'XLSX', 'Heroicons'],
     keyFeatures: [
-      'Role-based access control (RBAC)',
-      'Single sign-on integration',
-      'Session management',
-      'Audit logging',
-      'Multi-factor authentication'
+      'NLP analysis of clinical notes for cardiac symptom detection',
+      'Specialist credibility hierarchy (Cardiology > ED > IM > PCP)',
+      'Automated echocardiogram qualification determination',
+      'Insurance authorization letter generation (print-ready)',
+      'CSV/Excel export with clinical citations'
     ]
   },
   'WQ-APP': {
