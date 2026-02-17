@@ -1,4 +1,5 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
+import { isValidAccessCode } from './validate-access-code';
 
 // Supported video generation models
 type VideoModel = 'sora-2' | 'sora-2-pro' | 'wan-2.5' | 'hailuo-2.3' | 'kling-2.5' | 'veo-3.1-fast';
@@ -9,6 +10,7 @@ interface SoraCreateRequest {
   height?: number;
   n_seconds?: number;
   model?: VideoModel;
+  accessCode?: string;
 }
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
@@ -338,6 +340,17 @@ export const handler: Handler = async (event: HandlerEvent, _context: HandlerCon
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: 'Prompt is required' }),
+      };
+    }
+
+    // Validate access code
+    if (!body.accessCode || !isValidAccessCode(body.accessCode)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({
+          error: 'Valid access code is required to generate videos. Please enter a valid access code.',
+        }),
       };
     }
 

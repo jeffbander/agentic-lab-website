@@ -15,6 +15,7 @@ export default function PatientEducation() {
   const [finalOst, setFinalOst] = useState<OnScreenText | null>(null);
   const [finalPromptPart2, setFinalPromptPart2] = useState<string | undefined>(undefined);
   const [selectedModel, setSelectedModel] = useState<string>('wan-2.5');
+  const [accessCode, setAccessCode] = useState<string>('');
 
   const handlePreview = (result: SoraPromptResult, part2?: string) => {
     setPromptResult(result);
@@ -22,10 +23,11 @@ export default function PatientEducation() {
     setCurrentStep('preview');
   };
 
-  const handleGenerate = (prompt: string, ost: OnScreenText, part2?: string, model?: string) => {
+  const handleGenerate = (prompt: string, ost: OnScreenText, part2?: string, model?: string, code?: string) => {
     setFinalOst(ost);
     setFinalPromptPart2(part2);
     if (model) setSelectedModel(model);
+    if (code) setAccessCode(code);
     setCurrentStep('generate');
   };
 
@@ -163,6 +165,7 @@ export default function PatientEducation() {
                 promptPart2={finalPromptPart2}
                 ost={finalOst}
                 model={selectedModel}
+                accessCode={accessCode}
                 onBack={handleBackToPreview}
                 onReset={handleReset}
               />

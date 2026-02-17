@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Check, X, Play, AlertCircle, ChevronDown, Sparkles, Film } from 'lucide-react';
+import { Edit2, Check, X, Play, AlertCircle, ChevronDown, Sparkles, Film, KeyRound, Loader2 } from 'lucide-react';
 import type { SoraPromptResult, OnScreenText } from '../../lib/patientEducation';
+import { validateAccessCode, getRemainingUses, hasRemainingUses, MAX_USES_PER_CODE } from '../../lib/accessCodes';
 
 // Video model options for patient education
 type VideoModelOption = {
@@ -81,7 +82,7 @@ const VIDEO_MODELS: VideoModelOption[] = [
 interface PreviewCardProps {
   result: SoraPromptResult;
   promptPart2?: string; // New: Part 2 prompt if 24-second video
-  onGenerate: (prompt: string, ost: OnScreenText, promptPart2?: string, model?: string) => void;
+  onGenerate: (prompt: string, ost: OnScreenText, promptPart2?: string, model?: string, accessCode?: string) => void;
   onBack: () => void;
 }
 
@@ -242,6 +243,13 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
   const [selectedModel, setSelectedModel] = useState<string>('sora-2'); // Default to Sora 2 (proven performer)
   const [showModelDropdown, setShowModelDropdown] = useState(false);
 
+  // Access code state
+  const [accessCode, setAccessCode] = useState('');
+  const [accessCodeValidated, setAccessCodeValidated] = useState(false);
+  const [accessCodeError, setAccessCodeError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [remainingUses, setRemainingUses] = useState<number | null>(null);
+
   const handleBeatEdit = (beat: keyof OnScreenText, newText: string) => {
     setOst(prev => ({
       ...prev,
@@ -249,8 +257,35 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
     }));
   };
 
+  const handleValidateAccessCode = async () => {
+    setIsValidating(true);
+    setAccessCodeError(null);
+
+    const result_validation = await validateAccessCode(accessCode);
+
+    setIsValidating(false);
+
+    if (result_validation.valid) {
+      setAccessCodeValidated(true);
+      setRemainingUses(result_validation.remainingUses);
+    } else {
+      setAccessCodeError(result_validation.error || 'Invalid access code.');
+      setAccessCodeValidated(false);
+    }
+  };
+
   const handleGenerate = () => {
-    onGenerate(result.prompt, ost, promptPart2, selectedModel);
+    if (!accessCodeValidated) {
+      setAccessCodeError('Please validate your access code first.');
+      return;
+    }
+    // Double-check remaining uses
+    if (!hasRemainingUses(accessCode.trim())) {
+      setAccessCodeError('This access code has no remaining uses.');
+      setAccessCodeValidated(false);
+      return;
+    }
+    onGenerate(result.prompt, ost, promptPart2, selectedModel, accessCode.trim());
   };
 
   const selectedModelInfo = VIDEO_MODELS.find(m => m.id === selectedModel) || VIDEO_MODELS[0];
@@ -461,6 +496,92 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
         </div>
       </div>
 
+      {/* Access Code */}
+      <div className="bg-gradient-to-r from-gray-50 to-sinai-cyan-50 border border-gray-200 rounded-lg p-5 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <KeyRound className="w-5 h-5 text-sinai-cyan-600" />
+          <h3 className="font-semibold text-gray-900">Access Code Required</h3>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Enter your access code to generate a video. Each code can be used up to {MAX_USES_PER_CODE} times.
+        </p>
+
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={accessCode}
+            onChange={(e) => {
+              setAccessCode(e.target.value);
+              setAccessCodeError(null);
+              setAccessCodeValidated(false);
+              setRemainingUses(null);
+            }}
+            placeholder="Enter access code (e.g., MSWlab101)"
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sinai-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+            disabled={accessCodeValidated}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !accessCodeValidated && accessCode.trim()) {
+                handleValidateAccessCode();
+              }
+            }}
+          />
+          {accessCodeValidated ? (
+            <button
+              onClick={() => {
+                setAccessCode('');
+                setAccessCodeValidated(false);
+                setRemainingUses(null);
+                setAccessCodeError(null);
+              }}
+              className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Change
+            </button>
+          ) : (
+            <button
+              onClick={handleValidateAccessCode}
+              disabled={isValidating || !accessCode.trim()}
+              className="px-5 py-2.5 bg-sinai-cyan-600 text-white font-semibold rounded-lg hover:bg-sinai-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isValidating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                'Validate'
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Validation feedback */}
+        <AnimatePresence>
+          {accessCodeError && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2 mt-3 text-sm text-red-600"
+            >
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {accessCodeError}
+            </motion.div>
+          )}
+          {accessCodeValidated && remainingUses !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2 mt-3 text-sm text-green-700"
+            >
+              <Check className="w-4 h-4 flex-shrink-0" />
+              Access code verified. {remainingUses} use{remainingUses !== 1 ? 's' : ''} remaining.
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Action Buttons */}
       <div className="flex gap-4">
         <button
@@ -471,7 +592,12 @@ export default function PreviewCard({ result, promptPart2, onGenerate, onBack }:
         </button>
         <button
           onClick={handleGenerate}
-          className="flex-1 py-3 px-6 bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 text-black font-semibold rounded-lg hover:from-sinai-cyan-700 hover:to-sinai-magenta-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          disabled={!accessCodeValidated}
+          className={`flex-1 py-3 px-6 font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 ${
+            accessCodeValidated
+              ? 'bg-gradient-to-r from-sinai-cyan-600 to-sinai-magenta-600 hover:from-sinai-cyan-700 hover:to-sinai-magenta-700'
+              : 'bg-gray-300 cursor-not-allowed'
+          }`}
           style={{ color: '#000000' }}
         >
           <Play className="w-5 h-5" style={{ color: '#000000' }} />
