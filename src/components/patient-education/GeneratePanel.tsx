@@ -5,12 +5,14 @@ import type { OnScreenText } from '../../lib/patientEducation';
 import { concatenateVideos, preloadFFmpeg, type VideoStitcherProgress } from '../../lib/ffmpegVideoStitcher';
 import { useAuth } from '../../contexts/AuthContext';
 import { saveUserVideo } from '../../lib/auth';
+import { recordCodeUsage } from '../../lib/accessCodes';
 
 interface GeneratePanelProps {
   prompt: string; // This will be promptPart1
   promptPart2?: string; // New: Part 2 prompt
   ost: OnScreenText;
   model?: string; // Video model: 'sora-2' or 'sora-2-pro'
+  accessCode?: string; // Access code for video generation
   onBack: () => void;
   onReset: () => void;
 }
@@ -127,7 +129,7 @@ function updateDocumentTitle(message: string) {
   document.title = message;
 }
 
-export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2.5', onBack, onReset }: GeneratePanelProps) {
+export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2.5', accessCode, onBack, onReset }: GeneratePanelProps) {
   const modelDisplayName = MODEL_DISPLAY_NAMES[model] || model;
   const { user, isAuthenticated, showAuthModal } = useAuth();
 
@@ -185,6 +187,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
         height: 1080,
         n_seconds: 12,
         model: model,
+        accessCode: accessCode,
       }),
     });
 
@@ -197,7 +200,7 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
     const job: JobState = { id: data.id, status: data.status || 'queued' };
     saveJobToStorage(phase, data.id, data.status || 'queued');
     return job;
-  }, [model]);
+  }, [model, accessCode]);
 
   // Poll job status helper function
   const pollJobStatus = useCallback(async (jobId: string): Promise<StatusResponse> => {
@@ -216,6 +219,11 @@ export default function GeneratePanel({ prompt, promptPart2, ost, model = 'wan-2
     const createJobs = async () => {
       try {
         setCanLeave(true);
+
+        // Record access code usage when starting generation
+        if (accessCode) {
+          recordCodeUsage(accessCode);
+        }
 
         if (promptPart2) {
           // PARALLEL with slight stagger: Create both jobs with 2s delay to avoid rate limits
