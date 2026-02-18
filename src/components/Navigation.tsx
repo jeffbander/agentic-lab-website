@@ -1,38 +1,52 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Github, User, LogOut, Video, ChevronDown } from 'lucide-react';
+import { Menu, X, Github, User, LogOut, Video, ChevronDown, ExternalLink } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { user, isAuthenticated, logout, showAuthModal } = useAuth();
 
-  // Close user menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navLinks = [
-    { name: 'Overview', href: '#overview', isHash: true },
-    { name: 'Projects', href: '#projects', isHash: true },
-    { name: 'Approach', href: '#approach', isHash: true },
-    { name: 'Podcast', href: '#podcast', isHash: true },
-    { name: 'Video Generator', href: '#video-generator', isHash: true },
-    { name: 'Patient Education', href: '/patient-education', isHash: false },
-    { name: 'Secure Coding', href: '/secure-coding', isHash: false },
-    { name: 'Blog', href: '/blog', isHash: false },
-    { name: 'Contact', href: '#contact', isHash: true },
+  // Primary links shown directly in header
+  const primaryLinks = [
+    { name: 'Projects', href: '#projects', isHash: true, isExternal: false },
+    { name: 'Secure Coding', href: '/secure-coding', isHash: false, isExternal: false },
+    { name: 'Contact', href: '#contact', isHash: true, isExternal: false },
+    { name: 'About Us', href: 'https://the-agentic-laboratory-474mign.gamma.site/', isHash: false, isExternal: true },
   ];
+
+  // Secondary links in the hamburger/more menu
+  const moreLinks = [
+    { name: 'Overview', href: '#overview', isHash: true, isExternal: false },
+    { name: 'Approach', href: '#approach', isHash: true, isExternal: false },
+    { name: 'Podcast', href: '#podcast', isHash: true, isExternal: false },
+    { name: 'Video Generator', href: '#video-generator', isHash: true, isExternal: false },
+    { name: 'Patient Education', href: '/patient-education', isHash: false, isExternal: false },
+    { name: 'Blog', href: '/blog', isHash: false, isExternal: false },
+  ];
+
+  // All links combined for mobile menu
+  const allLinks = [...primaryLinks, ...moreLinks];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200" aria-label="Main navigation">
@@ -59,17 +73,33 @@ export function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link, index) => {
-              if (link.isHash) {
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Primary Links */}
+            {primaryLinks.map((link, index) => {
+              if (link.isExternal) {
+                return (
+                  <motion.a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors relative group flex items-center gap-1"
+                  >
+                    {link.name}
+                    <ExternalLink className="w-3 h-3" />
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-sinai-blue-600 group-hover:w-full transition-all duration-300" />
+                  </motion.a>
+                );
+              } else if (link.isHash) {
                 const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                  // If we're not on the home page, navigate there first
                   if (location.pathname !== '/') {
                     e.preventDefault();
                     window.location.href = '/' + link.href;
                   }
                 };
-
                 return (
                   <motion.a
                     key={link.name}
@@ -100,17 +130,79 @@ export function Navigation() {
                 );
               }
             })}
-            <motion.a
-              href="https://github.com/jeffbander"
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.1 }}
-              className="p-2 text-gray-700 hover:text-sinai-blue-600 transition-colors"
-            >
-              <Github className="w-5 h-5" />
-            </motion.a>
+
+            {/* More Menu (hamburger dropdown for remaining links) */}
+            <div className="relative" ref={moreMenuRef}>
+              <motion.button
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className="flex items-center gap-1 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors p-2 rounded-lg hover:bg-gray-100"
+                aria-label="More links"
+                aria-expanded={moreMenuOpen}
+              >
+                <Menu className="w-5 h-5" />
+                <ChevronDown className={`w-3 h-3 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
+              </motion.button>
+
+              <AnimatePresence>
+                {moreMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border py-2 z-50"
+                  >
+                    {moreLinks.map((link) => {
+                      if (link.isHash) {
+                        const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                          setMoreMenuOpen(false);
+                          if (location.pathname !== '/') {
+                            e.preventDefault();
+                            window.location.href = '/' + link.href;
+                          }
+                        };
+                        return (
+                          <a
+                            key={link.name}
+                            href={link.href}
+                            onClick={handleHashClick}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-sinai-blue-600 transition-colors"
+                          >
+                            {link.name}
+                          </a>
+                        );
+                      } else {
+                        return (
+                          <Link
+                            key={link.name}
+                            to={link.href}
+                            onClick={() => setMoreMenuOpen(false)}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-sinai-blue-600 transition-colors"
+                          >
+                            {link.name}
+                          </Link>
+                        );
+                      }
+                    })}
+                    <div className="border-t border-gray-100 mt-1 pt-1">
+                      <a
+                        href="https://github.com/jeffbander"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setMoreMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-sinai-blue-600 transition-colors"
+                      >
+                        <Github className="w-4 h-4" />
+                        GitHub
+                      </a>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* User Menu / Sign In */}
             {isAuthenticated ? (
@@ -200,8 +292,22 @@ export function Navigation() {
             aria-label="Mobile navigation menu"
           >
             <div className="px-4 py-4 space-y-3">
-              {navLinks.map((link) => {
-                if (link.isHash) {
+              {allLinks.map((link) => {
+                if (link.isExternal) {
+                  return (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-1 py-2 text-gray-700 hover:text-sinai-blue-600 font-medium transition-colors"
+                    >
+                      {link.name}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  );
+                } else if (link.isHash) {
                   const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                     setIsOpen(false);
                     // If we're not on the home page, navigate there first
