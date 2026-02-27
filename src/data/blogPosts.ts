@@ -3935,6 +3935,159 @@ The clinician-developers who succeed aren't the ones with the most technical apt
     readingTime: 18,
     featured: true,
   },
+  {
+    id: '17',
+    slug: 'ai-medical-services-act-cicero-institute-regulate-medicine-not-code',
+    title: 'The AI Medical Services Act: Why "Regulate the Practice of Medicine, Not the Code" Could Reshape Healthcare AI',
+    subtitle: 'The Cicero Institute\'s model bill proposes a new licensed provider category for autonomous clinical AI — and it might be the most sensible regulatory framework we\'ve seen yet',
+    excerpt: 'A new model bill from the Cicero Institute takes a fundamentally different approach to healthcare AI regulation: instead of restricting the technology itself, it creates a licensure pathway that holds AI medical services to the same accountability standards as human providers — with malpractice insurance, transparency mandates, and a regulatory sandbox built in.',
+    metaDescription: 'Analysis of the Cicero Institute\'s AI Medical Services Act model bill, which proposes regulating autonomous clinical AI through medical licensure rather than technology restrictions. Covers the Board of Autonomous Medical Practice, risk tiers, malpractice insurance requirements, and regulatory sandbox provisions.',
+    keywords: ['AI Medical Services Act', 'Cicero Institute', 'Healthcare AI Regulation', 'Autonomous Medical Practice', 'AI Licensure', 'Malpractice Insurance AI', 'Regulatory Sandbox', 'Clinical AI', 'Adam Meier', 'Healthcare Policy', 'AI Governance', 'Patient Safety'],
+    ogImage: 'https://images.unsplash.com/photo-1589994965851-a8f479c573a9?w=1200&h=630&fit=crop',
+    twitterCard: 'summary_large_image',
+    content: `On February 26, 2026, [Matt Pavelle](https://x.com/mattpavelle) — co-founder and CEO of Doctronic — posted a thread on X highlighting a piece of model legislation that had been quietly circulating among healthcare policy circles. The bill, developed by Adam Meier and the [Cicero Institute](https://ciceroinstitute.org/issues/regulatory-reform/artificial-intelligence/), is called the **AI Medical Services Act**. Its core philosophy is captured in a single, clarifying phrase:
+
+**"Regulate the practice of medicine, not the code."**
+
+That sentence may sound simple. It is not. It represents a fundamental reorientation in how we think about governing AI in healthcare — and if adopted by states, it could establish the most coherent regulatory framework for autonomous clinical AI that exists anywhere in the country.
+
+---
+
+## The Problem: We Are Regulating the Wrong Thing
+
+Right now, healthcare AI regulation in the United States is a patchwork. The FDA regulates AI-enabled medical devices through its Software as a Medical Device (SaMD) framework. Individual states are layering on their own AI laws — during the 2025 legislative session alone, all 50 states introduced AI-related legislation. HIPAA governs data privacy. And the updated HIPAA Security Rule expected to be finalized in 2026 will add additional compliance requirements for AI systems that handle protected health information.
+
+But here is the disconnect: most of these regulatory efforts focus on **the technology** — the algorithm, the model, the software artifact. They ask questions like: Is this AI safe? Has it been validated? Does it meet technical standards?
+
+These are important questions. But they miss the more fundamental one: **Who is accountable when an AI system practices medicine?**
+
+When a physician misdiagnoses a patient, we do not regulate the stethoscope. We hold the physician accountable through medical licensure, malpractice liability, peer review, and professional standards. The instrument is just a tool. The practice of medicine — the judgment, the decision, the recommendation — is what we regulate.
+
+The AI Medical Services Act applies this same logic to clinical AI. Instead of trying to regulate the code — a moving target that evolves faster than any regulatory body can keep pace with — it creates a framework for regulating the **medical practice** that AI systems deliver.
+
+---
+
+## What the Bill Actually Proposes
+
+The [AI Medical Services Act](https://ciceroinstitute.org/wp-content/uploads/2026/01/AI-Medical-Services-Act-Model-Bill.pdf) is a model bill — meaning it is designed as template legislation that individual states can adopt and adapt. Here are its key structural elements:
+
+### A New Licensed Provider Category
+
+The Act creates a formal licensure pathway for autonomous and augmented clinical AI services. This is a critical innovation. Rather than shoehorning AI into existing device regulation or leaving it in a regulatory gray zone, the bill establishes AI medical services as their own category of licensed clinical practice.
+
+This means that entities deploying clinical AI would need to meet licensure requirements analogous to those faced by human healthcare providers — tailored for the specific risks and characteristics of AI-delivered care.
+
+### The Board of Autonomous Medical Practice
+
+The bill establishes an eleven-member **Board of Autonomous Medical Practice**, appointed by the Governor and administratively attached to the Department of Health. This is not a technology review board. It is a medical practice oversight body — one that includes both technologists and clinicians.
+
+A key governance provision: any rule that restricts AI scope of practice requires a **two-thirds supermajority vote**. This asymmetric threshold is deliberate — it makes it structurally difficult to impose blanket restrictions on AI medical services without broad consensus, while maintaining the board's ability to address genuine safety concerns.
+
+### Autonomy-Based and Condition-Based Risk Tiers
+
+The Act introduces a dual risk classification system:
+
+- **Autonomy-Based Tiers** classify AI systems by the degree of human oversight involved — from fully augmented (AI assists a human clinician) to fully autonomous (AI makes independent clinical decisions).
+- **Condition-Based Tiers** classify by clinical severity — from preventive care applications to critical care interventions.
+
+Requirements scale with risk. A preventive health screening tool operating under physician oversight faces different requirements than an autonomous diagnostic system making independent decisions in acute care settings. This graduated approach avoids the one-size-fits-all problem that plagues most AI regulation.
+
+### Mandatory Malpractice Insurance
+
+Entities deploying clinical AI services must carry malpractice insurance. This is perhaps the most practically significant provision in the bill. By requiring insurance coverage, the Act creates a market-driven accountability mechanism: insurers will demand evidence of safety, performance monitoring, and risk management — or they will price the premiums accordingly.
+
+The liability framework establishes clear responsibility chains: developers are accountable for design defects, while deploying entities retain liability for deployment decisions. This mirrors existing medical device liability structures but adapts them for AI's unique characteristics.
+
+### Transparency and Reporting
+
+Licensed AI medical services must maintain detailed logs of clinical decisions, provide interpretable outputs explaining their recommendations, and submit regular public reporting on performance metrics and adverse events. This is not just regulatory compliance — it creates a feedback loop that drives continuous improvement and builds public trust.
+
+### A Regulatory Sandbox with Teeth
+
+The Act includes a regulatory sandbox provision that allows controlled real-world testing of AI medical services before full licensure. But unlike vague "innovation zone" proposals, this sandbox has specific timelines and accountability:
+
+- **30 days** for the Board to complete an initial application review
+- **90 days** for a comprehensive technical and safety evaluation
+
+These hard deadlines prevent the regulatory process itself from becoming a barrier to innovation — a common failure mode in healthcare regulation where applications languish in review for years.
+
+---
+
+## Why This Framework Makes Sense for Healthcare
+
+The AI Medical Services Act succeeds where other regulatory approaches struggle because it solves three problems simultaneously.
+
+### 1. It Addresses the Accountability Gap
+
+The fundamental challenge with AI in healthcare is not whether the technology works — increasingly, it does. The challenge is: when something goes wrong, who is responsible? By creating a licensure framework with malpractice insurance requirements, the Act ensures there is always an accountable entity. Patients harmed by AI medical services have a clear path to recourse.
+
+### 2. It Scales with the Technology
+
+Technology-focused regulation becomes obsolete the moment the technology changes. A rule written for a specific type of neural network architecture becomes meaningless when the next generation of AI uses a different approach. By regulating the practice rather than the code, the Act creates a framework that remains relevant regardless of how the underlying technology evolves. The question is never "what algorithm are you using?" — it is "what medical service are you providing, and how are you ensuring it is safe?"
+
+### 3. It Actually Enables Innovation
+
+This is the part that surprises people who expect regulation to be inherently restrictive. Right now, the absence of a clear regulatory pathway is itself a barrier to healthcare AI adoption. Health systems are reluctant to deploy autonomous AI tools because there is no established framework for doing so safely and legally. The AI Medical Services Act creates that framework. By defining what "compliant" looks like, it gives innovators a target to aim for — and gives health systems the regulatory clarity they need to adopt these tools confidently.
+
+As the bill's drafters put it: the Act "does not ask regulators to trust technology blindly. It asks them to govern it wisely."
+
+---
+
+## The Broader Context: Provider Shortages and Access
+
+The AI Medical Services Act is not being proposed in a vacuum. The United States faces a well-documented healthcare provider shortage. The Association of American Medical Colleges projects a shortage of up to 86,000 physicians by 2036. Rural communities are particularly affected — millions of Americans live in areas designated as Health Professional Shortage Areas.
+
+Autonomous clinical AI is not a replacement for human physicians. But for many patients, especially those in underserved communities, the practical alternative to AI-assisted care is not a visit with a specialist — it is no care at all. The Act's drafters explicitly acknowledge this reality, framing the legislation as a response to "critical provider shortages" that necessitate "a clear, safe licensure pathway for autonomous and augmented clinical services."
+
+This is not a theoretical argument. AI-driven diagnostic tools are already demonstrating clinical utility — early deployments of generative AI are improving patient outcomes by up to 45 percent in clinical trials for chronic diseases, according to the Cicero Institute's research. The question is no longer whether AI can contribute to healthcare delivery. It is whether we will create the regulatory structures to let it do so safely.
+
+---
+
+## What This Means for Healthcare Leaders
+
+If you are a CMO, CIO, or digital health leader at a health system, the AI Medical Services Act signals several things you should be paying attention to:
+
+**The regulatory landscape is taking shape.** The patchwork era is ending. Model legislation like the AI Medical Services Act provides a preview of where state-level regulation is headed. Health systems that understand these frameworks now will be better positioned than those that wait for rules to be imposed on them.
+
+**Malpractice and liability are becoming concrete.** The Act's malpractice insurance requirement means that deploying clinical AI will require the same risk management infrastructure that governs other clinical services. If your organization is piloting AI tools, start thinking about liability frameworks now.
+
+**Board governance matters.** The eleven-member Board of Autonomous Medical Practice will shape which AI services can be deployed and under what conditions. Healthcare leaders should be engaged in these governance structures — not watching from the sidelines.
+
+**The sandbox is an opportunity.** The regulatory sandbox provisions create a formal pathway for testing AI medical services in controlled settings. For health systems with innovation programs, this could be the mechanism that moves pilot projects from proof-of-concept to production.
+
+---
+
+## Why We Are Paying Attention
+
+At the MSW Agentic Lab, we build clinical software using AI-assisted development workflows. We care deeply about the governance structures that surround both the AI tools we use to build software and the AI-powered clinical applications we help create.
+
+The AI Medical Services Act aligns with principles we have advocated for since we started: that accountability must be built into the system, that transparency is non-negotiable, and that the goal of regulation should be to enable safe innovation — not to preserve the status quo.
+
+The phrase "regulate the practice of medicine, not the code" is not just a policy position. It is a design philosophy. It tells us what to optimize for: clinical outcomes, patient safety, and provider accountability. The code is the means. The medicine is the end.
+
+We will be tracking this legislation as it moves from model bill to state adoption. If your organization is thinking about how autonomous clinical AI fits into your strategy, [reach out](/blog) — this is exactly the kind of challenge we were built to help navigate.
+
+---
+
+*The AI Medical Services Act model bill is available in full from the [Cicero Institute](https://ciceroinstitute.org/wp-content/uploads/2026/01/AI-Medical-Services-Act-Model-Bill.pdf). Matt Pavelle's original thread discussing the bill can be found on [X](https://x.com/mattpavelle/status/2027057816758812770).*`,
+    author: {
+      name: 'Jeff Bander, MD',
+      role: 'Chief of Cardiology & AI Developer',
+      bio: 'Dr. Bander leads the Mount Sinai West Agentic Lab, developing next-generation AI tools for healthcare. He pioneers clinician-led software development using advanced AI coding techniques.',
+      social: {
+        linkedin: 'https://linkedin.com/in/jeffbander',
+        github: 'https://github.com/jeffbander'
+      }
+    },
+    coverImage: 'https://images.unsplash.com/photo-1589994965851-a8f479c573a9?w=1200&h=630&fit=crop',
+    tags: ['Healthcare AI', 'Regulation', 'Policy', 'AI Governance', 'Patient Safety', 'Malpractice', 'Autonomous AI', 'Cicero Institute'],
+    category: 'News',
+    status: 'published',
+    publishedAt: '2026-02-27T12:00:00Z',
+    updatedAt: '2026-02-27T12:00:00Z',
+    readingTime: 14,
+    featured: true,
+  },
 ];
 
 // Helper functions
