@@ -18,19 +18,34 @@ const REPLICATE_API_URL = 'https://api.replicate.com/v1';
  * Checks the status of a Sora video generation prediction
  */
 async function checkSoraStatus(jobId: string): Promise<ReplicatePrediction> {
-  const response = await fetch(`${REPLICATE_API_URL}/predictions/${jobId}`, {
-    headers: {
-      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  // Add 8-second timeout to prevent function from timing out
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to check status: ${response.status} ${error}`);
+  try {
+    const response = await fetch(`${REPLICATE_API_URL}/predictions/${jobId}`, {
+      headers: {
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to check status: ${response.status} ${error}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Replicate API timeout - will retry on next poll');
+    }
+    throw error;
   }
-
-  return await response.json();
 }
 
 /**
